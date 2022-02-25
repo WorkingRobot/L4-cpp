@@ -1,0 +1,9 @@
+LIBRARY "ntdll.dll"
+EXPORTS
+NtCreateSection
+NtMapViewOfSection
+NtExtendSection
+NtUnmapViewOfSection
+NtFlushVirtualMemory
+NtClose
+RtlNtStatusToDosError
