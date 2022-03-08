@@ -15,6 +15,8 @@
 #include <unordered_map>
 #include <memory>
 
+#include "archive/ArchiveCreator.h"
+
 namespace L4
 {
     class BasicDisk : public VirtualDisk
@@ -118,10 +120,12 @@ namespace L4
 
     void Main()
     {
-        BasicDisk Disk;
+        MmioFileWritable File("mmfile");
+        CreateArchive(File);
+        /*BasicDisk Disk;
         Disk.Start();
         _getch();
-        Disk.Stop();
+        Disk.Stop();*/
     }
 }
 
