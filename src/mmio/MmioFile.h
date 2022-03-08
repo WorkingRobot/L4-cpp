@@ -38,13 +38,14 @@ namespace L4
         size_t GetSize() const noexcept;
 
     protected:
-        MmioFile();
+        MmioFile() noexcept;
 
         void Flush(size_t Position, size_t Size);
 
         void Flush();
 
         MM_PVOID BaseAddress;
+        MM_HANDLE HFile;
         MM_HANDLE HSection;
         MM_LARGE_INTEGER SectionSize;
         MM_SIZE_T ViewSize;
@@ -65,6 +66,8 @@ namespace L4
         MmioFileWritable(MM_HANDLE HFile);
 
     public:
+        void* GetBaseAddress() noexcept;
+
         void Reserve(size_t Size);
 
         void Flush(size_t Position, size_t Size);

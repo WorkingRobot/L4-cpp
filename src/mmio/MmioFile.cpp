@@ -4,7 +4,6 @@
 #include <Psapi.h>
 
 #include "../utils/Align.h"
-#include "../utils/HandleWrapper.h"
 #include "../utils/Error.h"
 
 namespace L4
@@ -63,20 +62,21 @@ namespace L4
     MmioFile::MmioFile(MM_HANDLE HFile) :
         MmioFile()
     {
+        this->HFile = HFile;
+
         NTSTATUS Status;
         {
-            HandleWrapper File = (HANDLE)HFile;
-            if (File == INVALID_HANDLE_VALUE)
+            if (HFile == INVALID_HANDLE_VALUE)
             {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
-            if (!GetFileSizeEx(File, (PLARGE_INTEGER)&SectionSize))
+            if (!GetFileSizeEx(HFile, (PLARGE_INTEGER)&SectionSize))
             {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
 
             // Note: NtCreateSection can return STATUS_MAPPED_FILE_SIZE_ZERO if the file is empty
-            Status = NtCreateSection(&HSection, SECTION_MAP_READ, NULL, (PLARGE_INTEGER)&SectionSize, PAGE_READONLY, SEC_COMMIT, File);
+            Status = NtCreateSection(&HSection, SECTION_MAP_READ, NULL, (PLARGE_INTEGER)&SectionSize, PAGE_READONLY, SEC_COMMIT, HFile);
             if (Status != STATUS_SUCCESS)
             {
                 throw CreateErrorNtStatus(Status, __FUNCTION__);
@@ -93,6 +93,7 @@ namespace L4
 
     MmioFile::MmioFile(MmioFile&& Other) noexcept :
         BaseAddress(std::exchange(Other.BaseAddress, nullptr)),
+        HFile(std::exchange(Other.HFile, INVALID_HANDLE_VALUE)),
         HSection(std::exchange(Other.HSection, INVALID_HANDLE_VALUE)),
         SectionSize(std::exchange(Other.SectionSize, 0)),
         ViewSize(std::exchange(Other.ViewSize, 0))
@@ -110,6 +111,10 @@ namespace L4
         if (HSection != INVALID_HANDLE_VALUE)
         {
             NtClose(HSection);
+        }
+        if (HFile != INVALID_HANDLE_VALUE)
+        {
+            NtClose(HFile);
         }
     }
 
@@ -137,8 +142,9 @@ namespace L4
         return SectionSize;
     }
 
-    MmioFile::MmioFile() :
+    MmioFile::MmioFile() noexcept :
         BaseAddress(nullptr),
+        HFile(INVALID_HANDLE_VALUE),
         HSection(INVALID_HANDLE_VALUE),
         SectionSize(0),
         ViewSize(0)
@@ -181,14 +187,15 @@ namespace L4
     MmioFileWritable::MmioFileWritable(MM_HANDLE HFile) :
         MmioFile()
     {
+        this->HFile = HFile;
+
         NTSTATUS Status;
         {
-            HandleWrapper File = (HANDLE)HFile;
-            if (File == INVALID_HANDLE_VALUE)
+            if (HFile == INVALID_HANDLE_VALUE)
             {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
-            if (!GetFileSizeEx(File, (PLARGE_INTEGER)&SectionSize))
+            if (!GetFileSizeEx(HFile, (PLARGE_INTEGER)&SectionSize))
             {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
@@ -199,7 +206,7 @@ namespace L4
                 SectionSize = 1;
             }
 
-            Status = NtCreateSection(&HSection, SECTION_EXTEND_SIZE | SECTION_MAP_READ | SECTION_MAP_WRITE, NULL, (PLARGE_INTEGER)&SectionSize, PAGE_READWRITE, SEC_COMMIT, File);
+            Status = NtCreateSection(&HSection, SECTION_EXTEND_SIZE | SECTION_MAP_READ | SECTION_MAP_WRITE, NULL, (PLARGE_INTEGER)&SectionSize, PAGE_READWRITE, SEC_COMMIT, HFile);
             if (Status != STATUS_SUCCESS)
             {
                 throw CreateErrorNtStatus(Status, __FUNCTION__);
@@ -212,6 +219,11 @@ namespace L4
         {
             throw CreateErrorNtStatus(Status, __FUNCTION__);
         }
+    }
+
+    void* MmioFileWritable::GetBaseAddress() noexcept
+    {
+        return BaseAddress;
     }
 
     void MmioFileWritable::Reserve(size_t Size)
