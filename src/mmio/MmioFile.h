@@ -37,6 +37,12 @@ namespace L4
 
         size_t GetSize() const noexcept;
 
+        template<class T = void>
+        const T* Get(size_t ByteOffset = 0) const noexcept
+        {
+            return reinterpret_cast<const T*>(static_cast<const char*>(GetBaseAddress()) + ByteOffset);
+        }
+
     protected:
         MmioFile() noexcept;
 
@@ -73,5 +79,11 @@ namespace L4
         void Flush(size_t Position, size_t Size);
 
         void Flush();
+
+        template<class T = void>
+        T* Get(size_t ByteOffset = 0) noexcept
+        {
+            return reinterpret_cast<T*>(static_cast<char*>(GetBaseAddress()) + ByteOffset);
+        }
     };
 }

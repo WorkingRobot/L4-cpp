@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include "archive/ArchiveCreator.h"
+#include "archive/StreamView.h"
 
 namespace L4
 {
@@ -120,8 +120,8 @@ namespace L4
 
     void Main()
     {
-        MmioFileWritable File("mmfile");
-        CreateArchive(File);
+        //MmioFileWritable File("mmfile");
+        //CreateArchive(File);
         /*BasicDisk Disk;
         Disk.Start();
         _getch();
