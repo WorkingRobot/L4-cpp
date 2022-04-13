@@ -46,9 +46,9 @@ namespace L4
     protected:
         MmioFile() noexcept;
 
-        void Flush(size_t Position, size_t Size);
+        void Flush(size_t Position, size_t Size) const;
 
-        void Flush();
+        void Flush() const;
 
         MM_PVOID BaseAddress;
         MM_HANDLE HFile;
@@ -72,16 +72,16 @@ namespace L4
         MmioFileWritable(MM_HANDLE HFile);
 
     public:
-        void* GetBaseAddress() noexcept;
+        void* GetBaseAddress() const noexcept;
 
         void Reserve(size_t Size);
 
-        void Flush(size_t Position, size_t Size);
+        void Flush(size_t Position, size_t Size) const;
 
-        void Flush();
+        void Flush() const;
 
         template<class T = void>
-        T* Get(size_t ByteOffset = 0) noexcept
+        T* Get(size_t ByteOffset = 0) const noexcept
         {
             return reinterpret_cast<T*>(static_cast<char*>(GetBaseAddress()) + ByteOffset);
         }

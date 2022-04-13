@@ -4,11 +4,10 @@
 
 namespace L4
 {
-    template<class T = std::byte>
+    template<class T = std::byte, class ArchiveT = const Archive>
     class StreamDataConstIterator
     {
     public:
-        using iterator_concept = std::contiguous_iterator_tag;
         using iterator_category = std::random_access_iterator_tag;
         using value_type = T;
         using difference_type = ptrdiff_t;
@@ -17,14 +16,14 @@ namespace L4
 
         constexpr StreamDataConstIterator() noexcept = default;
 
-        constexpr explicit StreamDataConstIterator(const Archive* Archive, uint32_t StreamIdx, size_t Offset = 0) noexcept : Archive(Archive), StreamIdx(StreamIdx)
+        constexpr explicit StreamDataConstIterator(ArchiveT& Archive, uint32_t StreamIdx, size_t Offset = 0) noexcept : Archive(&Archive), StreamIdx(StreamIdx)
         {
             Offset *= sizeof(T);
 
-            auto& Header = Archive->GetStreamHeader(StreamIdx);
-            auto& Runlist = Archive->GetStreamRunlist(StreamIdx);
-            StreamSectorIdx = Offset / Archive->GetSectorSize();
-            SectorOffset = Offset % Archive->GetSectorSize();
+            auto& Header = Archive.GetStreamHeader(StreamIdx);
+            auto& Runlist = Archive.GetStreamRunlist(StreamIdx);
+            StreamSectorIdx = Offset / Archive.GetSectorSize();
+            SectorOffset = Offset % Archive.GetSectorSize();
             auto RunItr = std::lower_bound(Runlist.Runs, Runlist.Runs + Runlist.RunCount, StreamSectorIdx, [](const StreamRun& Interval, uint32_t Idx)
             {
                 return Interval.StreamSectorOffset + Interval.SectorCount <= Idx;
@@ -61,9 +60,9 @@ namespace L4
 
         constexpr StreamDataConstIterator operator++(int) noexcept
         {
-            StreamDataConstIterator _Tmp = *this;
+            StreamDataConstIterator Tmp = *this;
             Increment();
-            return _Tmp;
+            return Tmp;
         }
 
         constexpr StreamDataConstIterator& operator--() noexcept
@@ -74,9 +73,9 @@ namespace L4
 
         constexpr StreamDataConstIterator operator--(int) noexcept
         {
-            StreamDataConstIterator _Tmp = *this;
+            StreamDataConstIterator Tmp = *this;
             Decrement();
-            return _Tmp;
+            return Tmp;
         }
 
         constexpr StreamDataConstIterator& operator+=(const ptrdiff_t Offset) noexcept
@@ -87,9 +86,9 @@ namespace L4
 
         [[nodiscard]] constexpr StreamDataConstIterator operator+(const ptrdiff_t Offset) const noexcept
         {
-            StreamDataConstIterator _Tmp = *this;
-            _Tmp += Offset;
-            return _Tmp;
+            StreamDataConstIterator Tmp = *this;
+            Tmp += Offset;
+            return Tmp;
         }
 
         constexpr StreamDataConstIterator& operator-=(const ptrdiff_t Offset) noexcept
@@ -100,9 +99,9 @@ namespace L4
 
         [[nodiscard]] constexpr StreamDataConstIterator operator-(const ptrdiff_t Offset) const noexcept
         {
-            StreamDataConstIterator _Tmp = *this;
-            _Tmp -= Offset;
-            return _Tmp;
+            StreamDataConstIterator Tmp = *this;
+            Tmp -= Offset;
+            return Tmp;
         }
 
         [[nodiscard]] constexpr ptrdiff_t operator-(const StreamDataConstIterator& _Right) const noexcept
@@ -130,7 +129,7 @@ namespace L4
         {
             Count *= sizeof(T);
 
-            Count += SectorOffset;
+            SectorOffset += Count;
 
             // Within sector
             if (SectorOffset < Archive->GetSectorSize())
@@ -139,8 +138,8 @@ namespace L4
             }
 
             // Within run
-            StreamSectorIdx += Count / Archive->GetSectorSize();
-            SectorOffset = Count % Archive->GetSectorSize();
+            StreamSectorIdx += SectorOffset / Archive->GetSectorSize();
+            SectorOffset = SectorOffset % Archive->GetSectorSize();
             auto& Runlist = Archive->GetStreamRunlist(StreamIdx);
             if (auto& Run = Runlist.Runs[StreamRunIdx]; Run.StreamSectorOffset + Run.SectorOffset < StreamSectorIdx)
             {
@@ -216,7 +215,7 @@ namespace L4
 
         [[nodiscard]] constexpr const T* GetPtr() const noexcept
         {
-            return static_cast<const T*>(Archive->GetSector(FileSectorIdx)) + SectorOffset;
+            return reinterpret_cast<const T*>(static_cast<const char*>(Archive->GetSector(FileSectorIdx)) + SectorOffset);
         }
 
         [[nodiscard]] constexpr size_t GetPosition() const noexcept
@@ -224,7 +223,8 @@ namespace L4
             return ((size_t)StreamSectorIdx * Archive->GetSectorSize() + SectorOffset) / sizeof(T);
         }
 
-        const Archive* Archive;
+    protected:
+        ArchiveT* Archive;
 
         // Index of stream being read from
         uint32_t StreamIdx;

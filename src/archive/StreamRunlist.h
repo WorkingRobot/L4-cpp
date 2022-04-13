@@ -7,10 +7,8 @@ namespace L4
     struct StreamRunlist
     {
         uint32_t RunCount;
-        // TODO:
-        // uint32_t Reserved; ?
-        // size_t Size;
-        std::byte Reserved[12];
+        uint32_t Reserved;
+        size_t Size;
         StreamRun Runs[255];
     };
 

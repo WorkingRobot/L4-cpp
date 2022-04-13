@@ -95,8 +95,8 @@ namespace L4
                     Header.StreamCount = StreamInfo.size();
                 }
 
-                File.Reserve(sizeof(Header) + StreamInfo.size() * sizeof(StreamHeader));
-                StreamHeader* Header = File.Get<StreamHeader>(sizeof(Header));
+                File.Reserve(sizeof(L4::Header) + StreamInfo.size() * sizeof(L4::StreamHeader));
+                StreamHeader* Header = File.Get<StreamHeader>(sizeof(L4::Header));
                 for (auto& Info : StreamInfo)
                 {
                     Header->Guid = Info.Guid;
@@ -114,9 +114,14 @@ namespace L4
                 Header.Magic = ExpectedMagic;
                 Header.Version = ArchiveVersion::Latest;
 
-                auto FirstRunlistOffset = Align(sizeof(Header) + Header.StreamCount * sizeof(StreamHeader), Header.SectorSize);
-                File.Reserve(FirstRunlistOffset + Align(Header.StreamCount * sizeof(StreamRunlist), Header.SectorSize));
-                std::fill_n(File.Get<StreamRunlist>(FirstRunlistOffset), Header.StreamCount, StreamRunlist{});
+                auto FreelistOffset = Align(sizeof(L4::Header) + Header.StreamCount * sizeof(L4::StreamHeader), Header.SectorSize);
+                auto AllocatedSize = FreelistOffset + Align(sizeof(Freelist) + Header.StreamCount * sizeof(L4::StreamRunlist), Header.SectorSize);
+                File.Reserve(AllocatedSize);
+
+                Freelist& Freelist = *File.Get<L4::Freelist>(FreelistOffset);
+                Freelist.TotalSectorCount = AllocatedSize / Header.SectorSize;
+
+                std::fill_n(File.Get<StreamRunlist>(FreelistOffset + sizeof(Freelist)), Header.StreamCount, StreamRunlist{});
             }
 
         protected:
@@ -127,7 +132,7 @@ namespace L4
     template<class... ArgTs>
     void CreateArchive(MmioFileWritable& File, ArgTs&&... Args)
     {
-        Detail::ArchiveCreator Creator(File, std::forward<ArgTs>(Args));
+        Detail::ArchiveCreator Creator(File, std::forward<ArgTs>(Args)...);
         Creator.Build();
     }
 }

@@ -151,12 +151,12 @@ namespace L4
     {
     }
 
-    void MmioFile::Flush(size_t Position, size_t Size)
+    void MmioFile::Flush(size_t Position, size_t Size) const
     {
         VirtualUnlock((LPBYTE)BaseAddress + Position, Size);
     }
 
-    void MmioFile::Flush()
+    void MmioFile::Flush() const
     {
         SIZE_T FlushSize = 0;
         PVOID FlushAddr = BaseAddress;
@@ -221,7 +221,7 @@ namespace L4
         }
     }
 
-    void* MmioFileWritable::GetBaseAddress() noexcept
+    void* MmioFileWritable::GetBaseAddress() const noexcept
     {
         return BaseAddress;
     }
@@ -258,12 +258,12 @@ namespace L4
         }
     }
 
-    void MmioFileWritable::Flush(size_t Position, size_t Size)
+    void MmioFileWritable::Flush(size_t Position, size_t Size) const
     {
         MmioFile::Flush(Position, Size);
     }
 
-    void MmioFileWritable::Flush()
+    void MmioFileWritable::Flush() const
     {
         MmioFile::Flush();
     }
