@@ -154,9 +154,9 @@ namespace FastSpd
         }
     }
 
-    static DWORD Transact(HANDLE DeviceHandle, HANDLE IocpHandle, OverlappedEx** Overlapped)
+    static DWORD Transact(HANDLE DeviceHandle, HANDLE IocpHandle, OverlappedEx** OverlappedEx)
     {
-        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &(*Overlapped)->Call, sizeof(IoTransact), &(*Overlapped)->Call, sizeof(IoTransact), NULL, (LPOVERLAPPED)(*Overlapped)->Base.data()))
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &(*OverlappedEx)->Call, sizeof(IoTransact), &(*OverlappedEx)->Call, sizeof(IoTransact), NULL, (LPOVERLAPPED)(*OverlappedEx)->Base.data()))
         {
             DWORD Error = GetLastError();
             if (Error != ERROR_IO_PENDING)
@@ -171,9 +171,9 @@ namespace FastSpd
         DWORD Error;
         do
         {
-            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, (LPOVERLAPPED*)Overlapped, INFINITE);
+            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, (LPOVERLAPPED*)OverlappedEx, INFINITE);
             Error = GetLastError();
-        } while (!Result && !*Overlapped && Error != ERROR_ABANDONED_WAIT_0 && Error != ERROR_INVALID_HANDLE);
+        } while (!Result && !*OverlappedEx && Error != ERROR_ABANDONED_WAIT_0 && Error != ERROR_INVALID_HANDLE);
         if (Result)
         {
             if (CompletionKey != 0)
@@ -211,9 +211,9 @@ namespace FastSpd
             .BlockCount = BlockCount,
             .BlockLength = BlockSize,
             .DeviceType = 0,
-            .WriteProtected = 1,
-            .CacheSupported = 0,
-            .UnmapSupported = 0,
+            .WriteProtected = 0,
+            .CacheSupported = 1,
+            .UnmapSupported = 1,
             .EjectDisabled = 1,
             .MaxTransferLength = 1 << 21 // 2 MB
         };
@@ -303,26 +303,28 @@ namespace FastSpd
                 }
 
                 Call.IsResponseValid = true;
-                Call.Response.Status = {};
                 switch (Call.Request.Kind)
                 {
                     case TransactKind::Read:
                         Read(((void*)Call.DataBuffer), Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
+                        Call.Response.Status = {};
                         break;
                     case TransactKind::Write:
                         Write(((void*)Call.DataBuffer), Call.Request.Op.Write.BlockAddress, Call.Request.Op.Write.BlockCount);
+                        Call.Response.Status = {};
                         break;
                     case TransactKind::Flush:
                         Flush(Call.Request.Op.Flush.BlockAddress, Call.Request.Op.Flush.BlockCount);
+                        Call.Response.Status = {};
                         break;
                     case TransactKind::Unmap:
                         std::for_each_n((UnmapDescriptor*)Call.DataBuffer, Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor)
                         {
                             Unmap(Descriptor.BlockAddress, Descriptor.BlockCount);
                         });
+                        Call.Response.Status = {};
                         break;
                     default:
-                        // SpdStorageUnitStatusSetSense
                         Call.Response.Status = {
                             .ScsiStatus = SCSISTAT_CHECK_CONDITION,
                             .SenseKey = SCSI_SENSE_ILLEGAL_REQUEST,
