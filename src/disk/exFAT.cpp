@@ -10,9 +10,6 @@
 
 namespace L4
 {
-    static constexpr uint32_t PartitionSectorOffset = 256;
-    static constexpr uint32_t PartitionSectorCount = 268434944;
-
     static constexpr uint32_t SectorBits = 12;
     static constexpr uint32_t SectorsPerClusterBits = 9;
 
@@ -431,11 +428,12 @@ namespace L4
 
     void Validate(const BootSector& BootSector)
     {
+        return;
 //#define AssertRange(Variable, Minimum, Maximum) assert((Minimum) <= (Variable) && (Variable) <= (Maximum))
 #define AssertRange(Variable, Minimum, Maximum) AssertRange_((Variable), (decltype(Variable))(Minimum), (decltype(Variable))(Maximum))
 #define AssertEquals(Variable, Value) assert((Variable) == (Value))
 
-        AssertRange(BootSector.VolumeLength, 1llu << (20llu - BootSector.BytesPerSectorShift), (1llu << 64) - 1llu);
+        AssertRange(BootSector.VolumeLength, 1llu << (20llu - BootSector.BytesPerSectorShift), ~0llu - 1);
 
         AssertRange(BootSector.FatOffset, 24u, BootSector.ClusterHeapOffset - (BootSector.FatLength * BootSector.NumberOfFats));
 
@@ -463,7 +461,7 @@ namespace L4
     class ExFatSystem
     {
     public:
-        ExFatSystem() :
+        ExFatSystem(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount) :
             BootRegion{
                 .BootSector{
                     .JumpBoot{ (char)0xEB, 0x76, (char)0x90 },
@@ -500,7 +498,7 @@ namespace L4
 
                 // BootRegion.BootSector.FirstClusterOfRootDirectory = 0;
 
-                BootRegion.BootSector.VolumeSerialNumber = 0xABB5A168;// Random<uint32_t>();
+                BootRegion.BootSector.VolumeSerialNumber = Random<uint32_t>(); // 0xABB5A168
 
                 BootRegion.BootSector.BytesPerSectorShift = SectorBits;
 
@@ -652,8 +650,8 @@ namespace L4
         IntervalList Intervals;
     };
 
-    ExFatSystemPublic::ExFatSystemPublic() :
-        Private(std::make_unique<ExFatSystemPrivate>())
+    ExFatSystemPublic::ExFatSystemPublic(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount) :
+        Private(std::make_unique<ExFatSystemPrivate>(PartitionSectorOffset, PartitionSectorCount))
     {
 
     }

@@ -46,9 +46,11 @@ target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll)
 target_link_libraries(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll/ntdll64.lib)
 
 # WinSpd #
-target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/winspd)
-target_link_libraries(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/winspd/winspd-x64.lib)
+#target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/winspd)
+#target_link_libraries(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/winspd/winspd-x64.lib)
 
+target_link_libraries(L4 PRIVATE fastspd)
+target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/fastspd)
 
 ## Properties ##
 

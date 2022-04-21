@@ -98,7 +98,7 @@ endfunction()
 ## Add projects ##
 
 add_subdirectory(src)
-
+add_subdirectory(deps/fastspd)
 
 ## Define install targets ##
 

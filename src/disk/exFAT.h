@@ -9,7 +9,7 @@ namespace L4
     class ExFatSystemPublic
     {
     public:
-        ExFatSystemPublic();
+        ExFatSystemPublic(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount);
 
         ~ExFatSystemPublic();
 
