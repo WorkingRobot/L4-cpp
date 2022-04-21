@@ -6,7 +6,6 @@
 
 namespace L4
 {
-    static constexpr uint64_t BufferStep = 4096;
     // [Start, End]
     struct Interval
     {
@@ -38,6 +37,7 @@ namespace L4
 
         void Merge(uint64_t Offset, const IntervalList& List)
         {
+            Intervals.reserve(Intervals.size() + List.Intervals.size());
             std::transform(List.Intervals.begin(), List.Intervals.end(), std::back_inserter(Intervals), [Offset](const auto& Int)
             {
                 return Interval{ Int.Start + Offset, Int.End + Offset, Int.Buffer, Int.BufferSize };
