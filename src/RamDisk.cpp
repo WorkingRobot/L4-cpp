@@ -9,34 +9,37 @@ namespace L4
 
     void RamDisk::Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
-        //printf("READ %llu %u\n", BlockAddress, BlockCount);
-        //memset(Buffer, 0, (uint64_t)BlockCount * BlockSize);
+        // printf("READ %llu %u\n", BlockAddress, BlockCount);
 
-        return;
-        /*while (BlockCount)
+        while (BlockCount)
         {
             auto Itr = Disk.find(BlockAddress);
             if (Itr != Disk.end())
             {
                 memcpy(Buffer, Itr->second.data(), BlockSize);
             }
+            else
+            {
+                memset(Buffer, 0, BlockSize);
+            }
             ++BlockAddress;
             BlockCount--;
             Buffer = (char*)Buffer + BlockSize;
-        }*/
+        }
     }
 
     void RamDisk::Write(const void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
-        printf("WRITE %llu %u\n", BlockAddress, BlockCount);
-        /*while (BlockCount)
+        // printf("WRITE %llu %u\n", BlockAddress, BlockCount);
+
+        while (BlockCount)
         {
             auto Itr = Disk.try_emplace(BlockAddress);
             memcpy(Itr.first->second.data(), Buffer, BlockSize);
             ++BlockAddress;
             BlockCount--;
             Buffer = (char*)Buffer + BlockSize;
-        }*/
+        }
     }
 
     void RamDisk::Flush(uint64_t BlockAddress, uint32_t BlockCount) noexcept
@@ -55,11 +58,11 @@ namespace L4
             return;
         }
 
-        /*while (BlockCount)
+        while (BlockCount)
         {
             Disk.erase(BlockAddress);
             ++BlockAddress;
             BlockCount--;
-        }*/
+        }
     }
 }
