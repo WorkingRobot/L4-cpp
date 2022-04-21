@@ -1,7 +1,7 @@
-#include "Archive.h"
+#include "StreamView.h"
 
 namespace L4
 {
-    template Archive;
-    template ArchiveWritable;
+    template StreamView;
+    template StreamViewWritable;
 }
