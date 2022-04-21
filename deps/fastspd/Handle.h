@@ -2,7 +2,7 @@
 
 namespace FastSpd
 {
-    template<auto Deleter, class T, T InvalidValue>
+    template<auto Deleter, class T, auto InvalidValue>
     class Handle
     {
     public:
@@ -41,7 +41,7 @@ namespace FastSpd
 
         explicit operator bool() const noexcept
         {
-            return Internal != InvalidValue;
+            return Internal != T(InvalidValue);
         }
 
         T release() noexcept

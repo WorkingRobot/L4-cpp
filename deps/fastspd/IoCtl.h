@@ -55,9 +55,9 @@ namespace FastSpd
     template<char Id>
     struct IoCall;
 
-    struct IoCallBase
+    struct alignas(8) IoCallBase
     {
-        UINT16 alignas(8) Size;
+        UINT16 Size;
         UINT16 Code;
     };
 

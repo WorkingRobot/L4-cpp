@@ -9,7 +9,9 @@
 #include "archive/StreamDataIterator.h"
 #include "archive/ArchiveCreator.h"
 #include "archive/StreamView.h"
-#include "web/Http.h"
+//#include "web/Http.h"
+
+#include <numeric>
 
 void* operator new(std::size_t sz) // no inline, required by [replacement.functions]/3
 {
@@ -82,5 +84,5 @@ int main(int argc, char* argv[])
 {
     L4::Main();
 
-    return true;
+    return 0;
 }

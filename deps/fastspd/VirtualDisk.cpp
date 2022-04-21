@@ -3,6 +3,7 @@
 #include "Error.h"
 #include "Handle.h"
 #include "IoCtl.h"
+#include "Random.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -12,7 +13,6 @@
 #include <ntddscsi.h>
 #define _NTSCSI_USER_MODE_
 #include <scsi.h>
-#include <Rpc.h>
 
 #include <string>
 #include <ranges>
@@ -24,7 +24,7 @@ namespace FastSpd
         static constexpr std::string_view DeviceName = "root\\winspd";
         static constexpr std::string_view GLOBALROOT = "\\\\?\\GLOBALROOT";
 
-        using DiHandle = Handle<SetupDiDestroyDeviceInfoList, HDEVINFO, INVALID_HANDLE_VALUE>;
+        using DiHandle = Handle<SetupDiDestroyDeviceInfoList, HDEVINFO, ~0llu>;
 
         DiHandle Handle = SetupDiGetClassDevsA(NULL, NULL, NULL, DIGCF_ALLCLASSES | DIGCF_PRESENT);
 
@@ -219,7 +219,7 @@ namespace FastSpd
         };
         memcpy(Params.ProductId, ProductId, sizeof(Params.ProductId));
         memcpy(Params.ProductRevisionLevel, ProductRevisionLevel, sizeof(Params.ProductRevisionLevel));
-        UuidCreate(&Params.Guid);
+        Params.Guid = UuidCreate();
 
         Provision(DeviceHandle, Params, Btl);
 

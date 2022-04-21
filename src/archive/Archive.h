@@ -28,22 +28,22 @@ namespace L4
 
         const Header& GetHeader() const noexcept
         {
-            return *File.Get<Header>();
+            return *File.template Get<Header>();
         }
         
         Header& GetHeader() const noexcept requires(Writable)
         {
-            return *File.Get<Header>();
+            return *File.template Get<Header>();
         }
 
         const StreamHeader& GetStreamHeader(uint32_t Idx) const noexcept
         {
-            return *File.Get<StreamHeader>(sizeof(Header) + Idx * sizeof(StreamHeader));
+            return *File.template Get<StreamHeader>(sizeof(Header) + Idx * sizeof(StreamHeader));
         }
 
         StreamHeader& GetStreamHeader(uint32_t Idx) const noexcept requires(Writable)
         {
-            return *File.Get<StreamHeader>(sizeof(Header) + Idx * sizeof(StreamHeader));
+            return *File.template Get<StreamHeader>(sizeof(Header) + Idx * sizeof(StreamHeader));
         }
 
         const Freelist& GetFreelist() const noexcept
@@ -53,17 +53,17 @@ namespace L4
 
         Freelist& GetFreelist() const noexcept requires(Writable)
         {
-            return *File.Get<Freelist>(FreelistOffset);
+            return *File.template Get<Freelist>(FreelistOffset);
         }
 
         const StreamRunlist& GetStreamRunlist(uint32_t Idx) const noexcept
         {
-            return *File.Get<StreamRunlist>(FreelistOffset + sizeof(Freelist) + Idx * sizeof(StreamRunlist));
+            return *File.template Get<StreamRunlist>(FreelistOffset + sizeof(Freelist) + Idx * sizeof(StreamRunlist));
         }
 
         StreamRunlist& GetStreamRunlist(uint32_t Idx) const noexcept requires(Writable)
         {
-            return *File.Get<StreamRunlist>(FreelistOffset + sizeof(Freelist) + Idx * sizeof(StreamRunlist));
+            return *File.template Get<StreamRunlist>(FreelistOffset + sizeof(Freelist) + Idx * sizeof(StreamRunlist));
         }
 
         const void* GetSector(uint32_t Idx) const noexcept

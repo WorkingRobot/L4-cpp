@@ -190,6 +190,7 @@ else()
     message(FATAL_ERROR "Invalid build type ${CMAKE_BUILD_TYPE}")
 endif()
 
+if (FALSE)
 install(TARGETS L4 DESTINATION ".")
 install(PROGRAMS ${GTK_DLLS} ${GTKMM_DLLS} DESTINATION ".")
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ".")
@@ -206,3 +207,4 @@ set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "https://epic.gl")
 set(CPACK_WIX_PROPERTY_ARPURLUPDATEINFO "https://epic.gl/changelog")
 
 include(CPack)
+endif()

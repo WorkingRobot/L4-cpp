@@ -13,7 +13,7 @@ add_library(fastspd STATIC ${fastspd_SOURCES})
 
 ## Dependencies ##
 
-target_link_libraries(fastspd PRIVATE Setupapi Rpcrt4)
+target_link_libraries(fastspd PRIVATE setupapi rpcrt4)
 
 ## Properties ##
 

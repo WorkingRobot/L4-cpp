@@ -20,7 +20,7 @@ namespace L4
     public:
         void Add(uint64_t Offset, uint64_t Size, const void* Buffer, size_t BufferSize)
         {
-            Intervals.emplace_back(Offset, Offset + Size - 1, Buffer, BufferSize);
+            Intervals.emplace_back(Interval{Offset, Offset + Size - 1, Buffer, BufferSize});
         }
 
         template <class T, size_t BufferSize>
