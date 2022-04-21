@@ -4,8 +4,6 @@
 #define NOMINMAX
 #include <Windows.h>
 
-#include <utility>
-
 namespace FastSpd
 {
     struct StorageUnitParams

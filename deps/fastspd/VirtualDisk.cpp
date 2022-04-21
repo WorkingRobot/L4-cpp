@@ -16,8 +16,6 @@
 
 #include <string>
 #include <ranges>
-#include <algorithm>
-#include <cctype>
 
 namespace FastSpd
 {
@@ -82,13 +80,49 @@ namespace FastSpd
     {
         auto Call = CreateIoParams<'u'>({ .Guid = Guid });
 
-        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call, sizeof(Call), &Call, sizeof(Call), NULL, NULL))
+        OVERLAPPED Overlapped{
+            .hEvent = CreateEventA(NULL, TRUE, TRUE, NULL)
+        };
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call, sizeof(Call), &Call, sizeof(Call), NULL, &Overlapped))
         {
-            throw CreateErrorWin32(GetLastError());
+            DWORD Error = GetLastError();
+            if (Error == ERROR_IO_PENDING)
+            {
+                DWORD BytesTransferred;
+                if (!GetOverlappedResult(DeviceHandle, &Overlapped, &BytesTransferred, TRUE))
+                {
+                    throw CreateErrorWin32(GetLastError());
+                }
+            }
+            else
+            {
+                throw CreateErrorWin32(GetLastError());
+            }
         }
     }
 
-    static void Transact(HANDLE DeviceHandle, IoCall<'t'>& Call, LPOVERLAPPED Overlapped)
+    static void List(HANDLE DeviceHandle)
+    {
+        union
+        {
+            IoList Call = CreateIoCall<'l'>();
+            UINT32 Bitmap[256];
+        };
+
+        DWORD BytesTransferred;
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call, sizeof(Call), &Bitmap, sizeof(Bitmap), &BytesTransferred, NULL))
+        {
+            throw CreateErrorWin32(GetLastError());
+        }
+
+        for (ULONG Idx = 0; Idx < BytesTransferred / 4; ++Idx)
+        {
+            UINT32 Btl = Bitmap[Idx];
+            printf("%d %d %d\n", (((Btl) >> 16) & 0xff), (((Btl) >> 8) & 0xff), ((Btl) & 0xff));
+        }
+    }
+
+    static void Transact(HANDLE DeviceHandle, IoTransact& Call, LPOVERLAPPED Overlapped)
     {
         if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call, sizeof(Call), &Call, sizeof(Call), NULL, Overlapped))
         {
@@ -105,6 +139,56 @@ namespace FastSpd
             {
                 throw CreateErrorWin32(GetLastError());
             }
+        }
+    }
+
+    static void DispatchTransact(HANDLE DeviceHandle, OverlappedEx& Call)
+    {
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call.Call, sizeof(Call.Call), &Call.Call, sizeof(Call.Call), NULL, (LPOVERLAPPED)Call.Base.data()))
+        {
+            DWORD Error = GetLastError();
+            if (Error != ERROR_IO_PENDING)
+            {
+                throw CreateErrorWin32(GetLastError());
+            }
+        }
+    }
+
+    static DWORD Transact(HANDLE DeviceHandle, HANDLE IocpHandle, OverlappedEx** Overlapped)
+    {
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &(*Overlapped)->Call, sizeof(IoTransact), &(*Overlapped)->Call, sizeof(IoTransact), NULL, (LPOVERLAPPED)(*Overlapped)->Base.data()))
+        {
+            DWORD Error = GetLastError();
+            if (Error != ERROR_IO_PENDING)
+            {
+                throw CreateErrorWin32(GetLastError());
+            }
+        }
+
+        DWORD BytesTransferred;
+        ULONG_PTR CompletionKey;
+        BOOL Result;
+        DWORD Error;
+        do
+        {
+            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, (LPOVERLAPPED*)Overlapped, INFINITE);
+            Error = GetLastError();
+        } while (!Result && !*Overlapped && Error != ERROR_ABANDONED_WAIT_0 && Error != ERROR_INVALID_HANDLE);
+        if (Result)
+        {
+            if (CompletionKey != 0)
+            {
+                return ERROR_ABANDONED_WAIT_0;
+            }
+            return ERROR_SUCCESS;
+        }
+        else
+        {
+            if (Error == ERROR_INVALID_HANDLE)
+            {
+                return ERROR_ABANDONED_WAIT_0;
+            }
+            return Error;
         }
     }
 
@@ -147,98 +231,106 @@ namespace FastSpd
     {
         Stop();
         CloseHandle(DeviceHandle);
-        DeviceHandle = INVALID_HANDLE_VALUE;
-    }
-
-    static DWORD WINAPI SpdStorageUnitDispatcherThread(PVOID Arg)
-    {
-        ((VirtualDisk*)Arg)->ThreadFunc();
-        return 0;
     }
 
     void VirtualDisk::Start()
     {
-        ThreadFlag.clear();
-        std::generate_n(std::back_inserter(Threads), 8, [this]() { return std::async(std::launch::async, &VirtualDisk::ThreadFunc2, this); });
+        IocpHandle = CreateIoCompletionPort(DeviceHandle, NULL, NULL, ThreadCount);
+        if (IocpHandle == NULL)
+        {
+            throw CreateErrorWin32(GetLastError());
+        }
+        if (!SetFileCompletionNotificationModes(DeviceHandle, FILE_SKIP_SET_EVENT_ON_HANDLE))
+        {
+            throw CreateErrorWin32(GetLastError());
+        }
+
+        DataBuffer = std::make_unique<char[]>(CallCount * MaxTransferLength);
+        for (size_t Idx = 0; Idx < CallCount; ++Idx)
+        {
+            Threads[Idx] = std::thread(&VirtualDisk::ThreadFunc, this, Idx);
+        }
     }
 
     void VirtualDisk::Stop()
     {
-        try
+        OverlappedEx Temp{};
+        for (auto& Thread : Threads)
         {
-            ThreadFlag.test_and_set();
-            Unprovision(DeviceHandle, Guid);
-            Threads.clear();
+            PostQueuedCompletionStatus(IocpHandle, 0, 1, (LPOVERLAPPED)Temp.Base.data());
         }
-        catch (std::system_error e)
-        {
-            printf("%x %s\n", e.code().value(), e.what());
-        }
-        catch (std::exception e)
-        {
-            printf("%s\n", e.what());
-        }
+        Unprovision(DeviceHandle, Guid);
+        std::ranges::for_each(Threads, &std::thread::join);
+        CloseHandle(IocpHandle);
     }
 
-    void VirtualDisk::ThreadFunc2()
+    void VirtualDisk::List()
     {
-        try{
-        std::unique_ptr<char[]> DataBuffer = std::make_unique<char[]>(MaxTransferLength);
+        FastSpd::List(DeviceHandle);
+    }
 
-        OVERLAPPED Overlapped{
-            .hEvent = CreateEventA(NULL, TRUE, TRUE, NULL)
-        };
-
-        auto Call = CreateIoCall<'t'>();
+    void VirtualDisk::ThreadFunc(size_t Idx)
+    {
+        IocpRange[Idx] = {};
+        auto& Call = IocpRange[Idx].Call;
+        Call = CreateIoCall<'t'>();
         Call.Btl = Btl;
-        Call.DataBuffer = (UINT64)(UINT_PTR)DataBuffer.get();
+        Call.DataBuffer = (UINT64)(UINT_PTR)(DataBuffer.get() + Idx * MaxTransferLength);
         Call.IsRequestValid = true;
         Call.IsResponseValid = false;
 
-        while (!ThreadFlag.test())
+        try
         {
-            if (!ResetEvent(Overlapped.hEvent))
+            for (OverlappedEx* OverlappedEx = &IocpRange[Idx];;)
             {
-                throw CreateErrorWin32(GetLastError());
-            }
+                DWORD Ret = Transact(DeviceHandle, IocpHandle, &OverlappedEx);
+                if (Ret == ERROR_ABANDONED_WAIT_0)
+                {
+                    return;
+                }
+                if (Ret != ERROR_SUCCESS)
+                {
+                    throw CreateErrorWin32(Ret);
+                }
 
-            Transact(DeviceHandle, Call, &Overlapped);
+                LPOVERLAPPED Overlapped = (LPOVERLAPPED)OverlappedEx;
+                IoTransact& Call = OverlappedEx->Call;
 
-            if (Call.Request.Hint == 0)
-            {
-                Call.IsResponseValid = false;
-                continue;
-            }
+                if (Call.Request.Hint == 0)
+                {
+                    Call.IsResponseValid = false;
+                    continue;
+                }
 
-            Call.IsResponseValid = true;
-            Call.Response.Status = {};
-            switch (Call.Request.Kind)
-            {
-                case TransactKind::Read:
-                    Read(DataBuffer.get(), Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
-                    break;
-                case TransactKind::Write:
-                    //Write(DataBuffer.get(), Request.Op.Write.BlockAddress, Request.Op.Write.BlockCount);
-                    break;
-                case TransactKind::Flush:
-                    //Flush(Request.Op.Flush.BlockAddress, Request.Op.Flush.BlockCount);
-                    break;
-                case TransactKind::Unmap:
-                    std::for_each_n((UnmapDescriptor*)DataBuffer.get(), Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor)
-                    {
-                        //Unmap(Descriptor.BlockAddress, Descriptor.BlockCount);
-                    });
-                    break;
-                default:
-                    // SpdStorageUnitStatusSetSense
-                    Call.Response.Status = {
-                        .ScsiStatus = SCSISTAT_CHECK_CONDITION,
-                        .SenseKey = SCSI_SENSE_ILLEGAL_REQUEST,
-                        .ASC = SCSI_ADSENSE_ILLEGAL_COMMAND
-                    };
-                    break;
+                Call.IsResponseValid = true;
+                Call.Response.Status = {};
+                switch (Call.Request.Kind)
+                {
+                    case TransactKind::Read:
+                        Read(((void*)Call.DataBuffer), Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
+                        break;
+                    case TransactKind::Write:
+                        Write(((void*)Call.DataBuffer), Call.Request.Op.Write.BlockAddress, Call.Request.Op.Write.BlockCount);
+                        break;
+                    case TransactKind::Flush:
+                        Flush(Call.Request.Op.Flush.BlockAddress, Call.Request.Op.Flush.BlockCount);
+                        break;
+                    case TransactKind::Unmap:
+                        std::for_each_n((UnmapDescriptor*)Call.DataBuffer, Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor)
+                        {
+                            Unmap(Descriptor.BlockAddress, Descriptor.BlockCount);
+                        });
+                        break;
+                    default:
+                        // SpdStorageUnitStatusSetSense
+                        Call.Response.Status = {
+                            .ScsiStatus = SCSISTAT_CHECK_CONDITION,
+                            .SenseKey = SCSI_SENSE_ILLEGAL_REQUEST,
+                            .ASC = SCSI_ADSENSE_ILLEGAL_COMMAND
+                        };
+                        break;
+                }
             }
-        }
         }
         catch (std::system_error e)
         {
