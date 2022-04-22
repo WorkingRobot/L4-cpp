@@ -43,6 +43,7 @@ namespace L4
         //printf("Resp capacity %zu\n", Resp.text.capacity());
         //return;
 
+        /*
         {
             MmioFileWritable File("ar.iar");
             std::byte NoCtx[192]{};
@@ -74,9 +75,7 @@ namespace L4
                 ++Itr;
             }
             __debugbreak();
-        }
-
-        /**/
+        }*/
     }
 }
 
