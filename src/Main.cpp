@@ -13,9 +13,13 @@
 
 #include <numeric>
 
+static constexpr bool PrintAlloc = false;
 void* operator new(std::size_t sz) // no inline, required by [replacement.functions]/3
 {
-    std::printf("global op new called, size = %zu\n", sz);
+    if constexpr (PrintAlloc)
+    {
+        std::printf("global op new called, size = %zu\n", sz);
+    }
     if (sz == 0)
         ++sz; // avoid std::malloc(0) which may return nullptr on success
 
@@ -26,7 +30,10 @@ void* operator new(std::size_t sz) // no inline, required by [replacement.functi
 }
 void operator delete(void* ptr) noexcept
 {
-    std::puts("global op delete called");
+    if constexpr (PrintAlloc)
+    {
+        std::puts("global op delete called");
+    }
     std::free(ptr);
 }
 
@@ -34,7 +41,7 @@ namespace L4
 {
     void Main()
     {
-        RamDisk Disk;
+        BasicDisk Disk;
         Disk.Start();
         _getch();
         //FastSpd::VirtualDisk(0, 0);

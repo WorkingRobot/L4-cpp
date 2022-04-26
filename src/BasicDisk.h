@@ -42,7 +42,7 @@ namespace L4
     private:
         std::unordered_map<uint64_t, std::array<char, BlockSize>> RamDisk;
         GPTData Data;
-        ExFatSystemPublic Filesystem;
+        ExFatSystem Filesystem;
         IntervalTree Tree;
     };
 }

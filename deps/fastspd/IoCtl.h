@@ -1,48 +1,46 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include <guiddef.h>
 
 namespace FastSpd
 {
     struct StorageUnitParams
     {
         GUID Guid;
-        UINT64 BlockCount;
-        UINT32 BlockLength;
-        UCHAR ProductId[16];
-        UCHAR ProductRevisionLevel[4];
-        UINT8 DeviceType;
-        UINT32 WriteProtected : 1;
-        UINT32 CacheSupported : 1;
-        UINT32 UnmapSupported : 1;
-        UINT32 EjectDisabled : 1;
-        UINT32 MaxTransferLength;
-        UINT64 Reserved[8];
+        uint64_t BlockCount;
+        uint32_t BlockLength;
+        char ProductId[16];
+        char ProductRevisionLevel[4];
+        uint8_t DeviceType;
+        uint32_t WriteProtected : 1;
+        uint32_t CacheSupported : 1;
+        uint32_t UnmapSupported : 1;
+        uint32_t EjectDisabled : 1;
+        uint32_t MaxTransferLength;
+        uint64_t Reserved[8];
     };
 
     struct StorageUnitStatus
     {
-        UINT8 ScsiStatus;
-        UINT8 SenseKey;
-        UINT8 ASC;
-        UINT8 ASCQ;
-        UINT64 Information;
-        UINT64 ReservedCSI;
-        UINT32 ReservedSKS;
-        UINT32 ReservedFRU : 8;
-        UINT32 InformationValid : 1;
+        uint8_t ScsiStatus;
+        uint8_t SenseKey;
+        uint8_t ASC;
+        uint8_t ASCQ;
+        uint64_t Information;
+        uint64_t ReservedCSI;
+        uint32_t ReservedSKS;
+        uint32_t ReservedFRU : 8;
+        uint32_t InformationValid : 1;
     };
 
     struct UnmapDescriptor
     {
-        UINT64 BlockAddress;
-        UINT32 BlockCount;
-        UINT32 Reserved;
+        uint64_t BlockAddress;
+        uint32_t BlockCount;
+        uint32_t Reserved;
     };
 
-    enum class TransactKind : UINT8
+    enum class TransactKind : uint8_t
     {
         Reserved = 0,
         Read,
@@ -57,8 +55,8 @@ namespace FastSpd
 
     struct IoCallBase
     {
-        alignas(8) UINT16 Size;
-        UINT16 Code;
+        alignas(8) uint16_t Size;
+        uint16_t Code;
     };
 
     template<>
@@ -72,7 +70,7 @@ namespace FastSpd
             } Params;
             struct
             {
-                UINT32 Btl;
+                uint32_t Btl;
             } Return;
         };
     };
@@ -112,47 +110,47 @@ namespace FastSpd
     template<>
     struct IoCall<'t'> : public IoCallBase
     {
-        UINT32 Btl;
-        UINT32 IsRequestValid : 1;
-        UINT32 IsResponseValid : 1;
-        UINT64 DataBuffer;
+        uint32_t Btl;
+        uint32_t IsRequestValid : 1;
+        uint32_t IsResponseValid : 1;
+        uint64_t DataBuffer;
         union
         {
             struct
             {
-                UINT64 Hint;
+                uint64_t Hint;
                 TransactKind Kind;
                 union
                 {
                     struct
                     {
-                        UINT64 BlockAddress;
-                        UINT32 BlockCount;
-                        UINT32 ForceUnitAccess : 1;
-                        UINT32 Reserved : 31;
+                        uint64_t BlockAddress;
+                        uint32_t BlockCount;
+                        uint32_t ForceUnitAccess : 1;
+                        uint32_t Reserved : 31;
                     } Read;
                     struct
                     {
-                        UINT64 BlockAddress;
-                        UINT32 BlockCount;
-                        UINT32 ForceUnitAccess : 1;
-                        UINT32 Reserved : 31;
+                        uint64_t BlockAddress;
+                        uint32_t BlockCount;
+                        uint32_t ForceUnitAccess : 1;
+                        uint32_t Reserved : 31;
                     } Write;
                     struct
                     {
-                        UINT64 BlockAddress;
-                        UINT32 BlockCount;
+                        uint64_t BlockAddress;
+                        uint32_t BlockCount;
                     } Flush;
                     struct
                     {
-                        UINT32 Count;
+                        uint32_t Count;
                     } Unmap;
                 } Op;
             } Request;
             struct
             {
-                UINT64 Hint;
-                UINT8 Kind;
+                uint64_t Hint;
+                uint8_t Kind;
                 StorageUnitStatus Status;
             } Response;
         };
@@ -165,13 +163,13 @@ namespace FastSpd
         {
             struct
             {
-                UINT32 Btl;
-                UINT32 ProcessId;
+                uint32_t Btl;
+                uint32_t ProcessId;
             } Params;
             struct
             {
-                UINT32 Btl;
-                UINT32 ProcessId;
+                uint32_t Btl;
+                uint32_t ProcessId;
             } Return;
         };
     };

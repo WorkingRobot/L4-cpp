@@ -369,9 +369,11 @@ namespace L4
     constexpr uint16_t NameChecksum(const wchar_t(&Data)[Size]) noexcept
     {
         uint16_t Checksum = 0;
-        for (size_t i = 0; i < Size * sizeof(wchar_t); ++i)
+        for (size_t i = 0; i < Size - 1; ++i)
         {
-            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((uint8_t*)Data)[i];
+            wchar_t DataUpcase = towupper(Data[i]);
+            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 0) & 0xFF);
+            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 8) & 0xFF);
         }
         return Checksum;
     }
@@ -458,29 +460,19 @@ namespace L4
     }
 
     extern const uint8_t ExFatUpcaseTable[5836];
-    class ExFatSystem
+    class ExFatSystem::InternalData
     {
     public:
-        ExFatSystem(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount) :
-            BootRegion{
-                .BootSector{
-                    .JumpBoot{ (char)0xEB, 0x76, (char)0x90 },
-                    .FileSystemName = 0x2020205441465845,
-                    .MustBeZero = {},
-                    .FileSystemRevision = 0x0100,
-                    .VolumeFlags = 0x0000,
-                    .DriveSelect = 0x80,
-                    .Reserved{},
-                    .BootCode{},
-                    .BootSignature = 0xAA55,
-                    .ExcessSpace{}
-                },
-                .ExtendedBootSectors{},
-                .OEMParameters{},
-                .Reserved{}
-            }
+        InternalData(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount, const ExFatDirectory& Tree) :
+            BootRegion{}
         {
             {
+                BootRegion.BootSector.JumpBoot[0] = 0xEB;
+                BootRegion.BootSector.JumpBoot[1] = 0x76;
+                BootRegion.BootSector.JumpBoot[2] = 0x90;
+
+                BootRegion.BootSector.FileSystemName = 0x2020205441465845;
+
                 // Can also be 0 (this means Windows is supposed to ignore this field)
                 BootRegion.BootSector.PartitionOffset = PartitionSectorOffset;
 
@@ -500,13 +492,21 @@ namespace L4
 
                 BootRegion.BootSector.VolumeSerialNumber = Random<uint32_t>(); // 0xABB5A168
 
+                BootRegion.BootSector.FileSystemRevision = 0x0100;
+
+                BootRegion.BootSector.VolumeFlags = 0x0000;
+
                 BootRegion.BootSector.BytesPerSectorShift = SectorBits;
 
                 BootRegion.BootSector.SectorsPerClusterShift = SectorsPerClusterBits;
 
                 BootRegion.BootSector.NumberOfFats = 1;
 
-                BootRegion.BootSector.PercentInUse = 0;
+                BootRegion.BootSector.DriveSelect = 0x80;
+
+                BootRegion.BootSector.PercentInUse = 0xFF;
+
+                BootRegion.BootSector.BootSignature = 0xAA55;
 
                 for (auto& ExtendedBootSector : BootRegion.ExtendedBootSectors)
                 {
@@ -523,20 +523,21 @@ namespace L4
                 Fat[0] = 0xFFFFFFF8;
                 Fat[1] = 0xFFFFFFFF;
 
-                Intervals.Add(BootRegion.BootSector.FatOffset, BootRegion.BootSector.FatLength, Fat.get(), FatSize);
+                Intervals.Add(BootRegion.BootSector.FatOffset, BootRegion.BootSector.FatLength, std::as_bytes(std::span{ Fat.get(), FatSize }));
             }
 
             uint32_t AllocationBitmapCluster;
             {
                 AllocationBitmapSize = Align<8>(BootRegion.BootSector.ClusterCount + 2llu) / 8;
                 AllocationBitmap = std::make_unique<uint8_t[]>(AllocationBitmapSize);
+                AllocationBitmap[0] = 0x3;
 
-                AllocationBitmapCluster = AllocateClusters(AllocationBitmap.get(), AllocationBitmapSize);
+                AllocationBitmapCluster = AllocateClusters(std::span(AllocationBitmap.get(), 1));
             }
 
-            uint32_t UpcaseTableCluster = AllocateClusters(ExFatUpcaseTable, sizeof(ExFatUpcaseTable));
+            uint32_t UpcaseTableCluster = AllocateClusters(std::span(ExFatUpcaseTable, 1));
 
-            BootRegion.BootSector.FirstClusterOfRootDirectory = AllocateClusters(RootDirectory, sizeof(RootDirectory));
+            BootRegion.BootSector.FirstClusterOfRootDirectory = AllocateClusters(std::span(RootDirectory, 1));
 
             Validate(BootRegion.BootSector);
 
@@ -557,7 +558,7 @@ namespace L4
             AmogusDirData = std::make_unique<char[]>(ClusterSize);
             RootDirectory[3] = CreateDirectoryEntry(FileDirectoryEntry{
                 .SecondaryCount = 2,
-                .FileAttributes = 1 << 4,
+                .FileAttributes = 0x10,
                 .CreateTimestamp = 0x545712A9,
                 .LastModifiedTimestamp = 0x545712A9,
                 .LastAccessedTimestamp = 0x545712A9,
@@ -572,17 +573,47 @@ namespace L4
                 .NameLength = 6,
                 .NameHash = NameChecksum(L"amogus"),
                 .ValidDataLength = ClusterSize,
-                .FirstCluster = AllocateClusters(AmogusDirData.get(), ClusterSize),
+                .FirstCluster = AllocateClusters(std::span(AmogusDirData.get(), ClusterSize)),
                 .DataLength = ClusterSize
             });
             RootDirectory[5] = CreateDirectoryEntry(FileNameDirectoryEntry{
                 .FileName = L"amogus"
             });
             RootDirectory[3].Primary.SetChecksum = SetChecksum(&RootDirectory[3]);
+
+            SystemVolumeInfoDirData = std::make_unique<char[]>(ClusterSize);
+            RootDirectory[6] = CreateDirectoryEntry(FileDirectoryEntry{
+                .SecondaryCount = 3,
+                .FileAttributes = 0x16,
+                .CreateTimestamp = 0x545712A9,
+                .LastModifiedTimestamp = 0x545712A9,
+                .LastAccessedTimestamp = 0x545712A9,
+                .Create10msIncrement = 0x54,
+                .LastModified10msIncrement = 0x54,
+                .CreateUtcOffset = 0xE0,
+                .LastModifiedUtcOffset = 0xE0,
+                .LastAccessedUtcOffset = 0xE0
+            });
+            RootDirectory[7] = CreateDirectoryEntry(StreamExtensionDirectoryEntry{
+                .GeneralSecondaryFlags = 0x03,
+                .NameLength = 25,
+                .NameHash = NameChecksum(L"System Volume Information"),
+                .ValidDataLength = ClusterSize,
+                .FirstCluster = AllocateClusters(std::span(SystemVolumeInfoDirData.get(), ClusterSize)),
+                .DataLength = ClusterSize
+            });
+            RootDirectory[8] = CreateDirectoryEntry(FileNameDirectoryEntry{
+                .FileName = {'S', 'y', 's', 't', 'e', 'm', ' ', 'V', 'o', 'l', 'u', 'm', 'e', ' ', 'I'}
+            });
+            RootDirectory[9] = CreateDirectoryEntry(FileNameDirectoryEntry{
+                .FileName = L"nformation"
+            });
+            RootDirectory[6].Primary.SetChecksum = SetChecksum(&RootDirectory[6]);
         }
 
         void AllocateBitmapCluster(uint32_t Cluster)
         {
+            Cluster -= 2;
             AllocationBitmap[Cluster / 8] |= 1 << (Cluster % 8);
         }
 
@@ -592,21 +623,27 @@ namespace L4
             auto ClusterCount = Align<ClusterSize>(DataLength) / ClusterSize;
             for (; ClusterCount > 1; --ClusterCount, NextCluster++)
             {
-                AllocationBitmap[NextCluster / 8] |= 1 << (NextCluster % 8);
+                AllocateBitmapCluster(NextCluster);
                 Fat[NextCluster] = NextCluster + 1;
             }
-            AllocationBitmap[NextCluster / 8] |= 1 << (NextCluster % 8);
+            AllocateBitmapCluster(NextCluster);
             Fat[NextCluster] = 0xFFFFFFFF;
             NextCluster++;
             return Ret;
         }
 
-        uint32_t AllocateClusters(const void* Data, uint64_t DataLength)
+        uint32_t AllocateClusters(std::span<const std::byte> Data)
         {
-            auto FirstCluster = AllocateClusters(DataLength);
+            auto FirstCluster = AllocateClusters(Data.size());
             auto FirstClusterOffset = BootRegion.BootSector.ClusterHeapOffset + (FirstCluster - BeginCluster) * SectorsPerCluster;
-            Intervals.Add(FirstClusterOffset, Align<ClusterSize>(DataLength) / SectorSize, Data, DataLength);
+            Intervals.Add(FirstClusterOffset, Align<ClusterSize>(Data.size()) / SectorSize, Data);
             return FirstCluster;
+        }
+
+        template<class T, size_t Extent>
+        uint32_t AllocateClusters(std::span<T, Extent> Data)
+        {
+            return AllocateClusters(std::as_bytes(Data));
         }
 
         template<class T>
@@ -643,26 +680,28 @@ namespace L4
         std::unique_ptr<uint8_t[]> AllocationBitmap;
         size_t AllocationBitmapSize;
 
-        DirectoryEntry RootDirectory[6];
+        DirectoryEntry RootDirectory[10];
 
         std::unique_ptr<char[]> AmogusDirData;
+
+        std::unique_ptr<char[]> SystemVolumeInfoDirData;
 
         IntervalList Intervals;
     };
 
-    ExFatSystemPublic::ExFatSystemPublic(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount) :
-        Private(std::make_unique<ExFatSystemPrivate>(PartitionSectorOffset, PartitionSectorCount))
+    ExFatSystem::ExFatSystem(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount, const ExFatDirectory& Tree) :
+        Internal(std::make_unique<InternalData>(PartitionSectorOffset, PartitionSectorCount, Tree))
     {
 
     }
 
-    ExFatSystemPublic::~ExFatSystemPublic()
+    ExFatSystem::~ExFatSystem()
     {
 
     }
 
-    const IntervalList& ExFatSystemPublic::GetIntervalList() const
+    const IntervalList& ExFatSystem::GetIntervalList() const
     {
-        return Private->GetIntervalList();
+        return Internal->GetIntervalList();
     }
 }

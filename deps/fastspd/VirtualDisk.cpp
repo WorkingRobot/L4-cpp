@@ -211,7 +211,7 @@ namespace FastSpd
             .BlockCount = BlockCount,
             .BlockLength = BlockSize,
             .DeviceType = 0,
-            .WriteProtected = 0,
+            .WriteProtected = 1,
             .CacheSupported = 1,
             .UnmapSupported = 1,
             .EjectDisabled = 1,

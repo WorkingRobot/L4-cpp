@@ -6,6 +6,9 @@
 
 add_file(L4 Main.cpp)
 add_file(L4 RamDisk.cpp)
+add_file(L4 BasicDisk.cpp)
+add_dir(L4 disk)
+add_dir(L4 utils)
 ADD_VERSION_DEFS("utils/Version.cpp")
 
 ## Define L4 executable ##
