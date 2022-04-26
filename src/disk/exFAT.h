@@ -6,7 +6,7 @@
 
 namespace L4
 {
-    enum FileAttributes
+    enum FileAttributes : uint16_t
     {
         AttribReadOnly = 1 << 0,
         AttribHidden = 1 << 1,

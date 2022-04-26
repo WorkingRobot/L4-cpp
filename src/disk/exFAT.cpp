@@ -378,6 +378,18 @@ namespace L4
         return Checksum;
     }
 
+    constexpr uint16_t NameChecksum(const std::wstring_view Data) noexcept
+    {
+        uint16_t Checksum = 0;
+        for (size_t i = 0; i < Data.size(); ++i)
+        {
+            wchar_t DataUpcase = towupper(Data[i]);
+            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 0) & 0xFF);
+            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 8) & 0xFF);
+        }
+        return Checksum;
+    }
+
     constexpr uint16_t SetChecksum(const DirectoryEntry* Entry) noexcept
     {
         size_t Size = (1llu + Entry->Primary.SecondaryCount) * sizeof(DirectoryEntry);
@@ -528,87 +540,124 @@ namespace L4
 
             uint32_t AllocationBitmapCluster;
             {
-                AllocationBitmapSize = Align<8>(BootRegion.BootSector.ClusterCount + 2llu) / 8;
+                AllocationBitmapSize = Align<8>(FatSize) / 8;
                 AllocationBitmap = std::make_unique<uint8_t[]>(AllocationBitmapSize);
-                AllocationBitmap[0] = 0x3;
 
-                AllocationBitmapCluster = AllocateClusters(std::span(AllocationBitmap.get(), 1));
+                AllocationBitmapCluster = AllocateClusters(std::span(AllocationBitmap.get(), AllocationBitmapSize));
             }
 
             uint32_t UpcaseTableCluster = AllocateClusters(std::span(ExFatUpcaseTable, 1));
 
-            BootRegion.BootSector.FirstClusterOfRootDirectory = AllocateClusters(std::span(RootDirectory, 1));
+            auto RootDirectoryEntryCount = 3 + GetEntryCountDirectory(Tree);
+            RootDirectory = std::make_unique<DirectoryEntry[]>(RootDirectoryEntryCount);
+            BootRegion.BootSector.FirstClusterOfRootDirectory = AllocateClusters(std::span(RootDirectory.get(), RootDirectoryEntryCount));
 
             Validate(BootRegion.BootSector);
 
-            std::fill(std::begin(BootRegion.BootChecksum), std::end(BootRegion.BootChecksum), BootChecksumRegion(BootRegion));
+            std::ranges::fill(BootRegion.BootChecksum, BootChecksumRegion(BootRegion));
 
-            RootDirectory[0] = CreateDirectoryEntry(VolumeLabelDirectoryEntry{}, false);
-            RootDirectory[1] = CreateDirectoryEntry(AllocationBitmapDirectoryEntry{
+            auto DirItr = RootDirectory.get();
+            *DirItr++ = CreateDirectoryEntry(VolumeLabelDirectoryEntry{}, false);
+            *DirItr++ = CreateDirectoryEntry(AllocationBitmapDirectoryEntry{
                 .BitmapFlags = 0,
                 .FirstCluster = AllocationBitmapCluster,
                 .DataLength = AllocationBitmapSize
             });
-            RootDirectory[2] = CreateDirectoryEntry(UpcaseTableDirectoryEntry{
+            *DirItr++ = CreateDirectoryEntry(UpcaseTableDirectoryEntry{
                 .TableChecksum = Checksum(ExFatUpcaseTable),
                 .FirstCluster = UpcaseTableCluster,
                 .DataLength = sizeof(ExFatUpcaseTable)
             });
 
-            AmogusDirData = std::make_unique<char[]>(ClusterSize);
-            RootDirectory[3] = CreateDirectoryEntry(FileDirectoryEntry{
-                .SecondaryCount = 2,
-                .FileAttributes = 0x10,
-                .CreateTimestamp = 0x545712A9,
-                .LastModifiedTimestamp = 0x545712A9,
-                .LastAccessedTimestamp = 0x545712A9,
-                .Create10msIncrement = 0x54,
-                .LastModified10msIncrement = 0x54,
-                .CreateUtcOffset = 0xE0,
-                .LastModifiedUtcOffset = 0xE0,
-                .LastAccessedUtcOffset = 0xE0
-            });
-            RootDirectory[4] = CreateDirectoryEntry(StreamExtensionDirectoryEntry{
-                .GeneralSecondaryFlags = 0x03,
-                .NameLength = 6,
-                .NameHash = NameChecksum(L"amogus"),
-                .ValidDataLength = ClusterSize,
-                .FirstCluster = AllocateClusters(std::span(AmogusDirData.get(), ClusterSize)),
-                .DataLength = ClusterSize
-            });
-            RootDirectory[5] = CreateDirectoryEntry(FileNameDirectoryEntry{
-                .FileName = L"amogus"
-            });
-            RootDirectory[3].Primary.SetChecksum = SetChecksum(&RootDirectory[3]);
+            EmplaceDirectoryTree(DirItr, Tree);
+        }
 
-            SystemVolumeInfoDirData = std::make_unique<char[]>(ClusterSize);
-            RootDirectory[6] = CreateDirectoryEntry(FileDirectoryEntry{
-                .SecondaryCount = 3,
-                .FileAttributes = 0x16,
-                .CreateTimestamp = 0x545712A9,
-                .LastModifiedTimestamp = 0x545712A9,
-                .LastAccessedTimestamp = 0x545712A9,
-                .Create10msIncrement = 0x54,
-                .LastModified10msIncrement = 0x54,
-                .CreateUtcOffset = 0xE0,
-                .LastModifiedUtcOffset = 0xE0,
-                .LastAccessedUtcOffset = 0xE0
-            });
-            RootDirectory[7] = CreateDirectoryEntry(StreamExtensionDirectoryEntry{
+        void GetExFatTimestamp(const ExFatTime& Time, uint32_t& Timestamp, uint8_t& Increment, uint8_t& UTCOffset){
+            auto TimePoint = Time.get_local_time();
+            auto DatePoint = std::chrono::floor<std::chrono::days>(TimePoint);
+            auto Ymd = std::chrono::year_month_day(DatePoint);
+            auto Hms = std::chrono::hh_mm_ss(TimePoint - DatePoint);
+            union{
+                uint32_t TimestampStruct;
+                struct{
+                    uint32_t DoubleSeconds : 5;
+                    uint32_t Minute : 6;
+                    uint32_t Hour : 5;
+                    uint32_t Day : 5;
+                    uint32_t Month : 4;
+                    uint32_t Year : 7;
+                };
+            };
+            DoubleSeconds = Hms.seconds().count() / 2;
+            Minute = Hms.minutes().count();
+            Hour = Hms.hours().count();
+            Day = static_cast<unsigned>(Ymd.day());
+            Month = static_cast<unsigned>(Ymd.month());
+            Year = static_cast<int>(Ymd.year()) - 1980;
+            Timestamp = TimestampStruct;
+            Increment = (Hms.seconds().count() % 2) * 100 + Hms.subseconds().count();
+            UTCOffset = std::chrono::duration_cast<std::chrono::duration<long long, std::ratio<900>>>(Time.get_info().offset).count();
+        }
+
+        template<class Itr>
+        void EmplaceExFatEntry(Itr& OutputItr, const ExFatEntry& Entry, uint64_t DataLength, uint32_t FirstCluster){
+            auto FileDirEntry = FileDirectoryEntry{
+                .SecondaryCount = uint8_t(1 + ((Entry.Name.size() + 14) / 15)),
+                .FileAttributes = Entry.Attributes
+            };
+            GetExFatTimestamp(Entry.Created, FileDirEntry.CreateTimestamp, FileDirEntry.Create10msIncrement, FileDirEntry.CreateUtcOffset);
+            GetExFatTimestamp(Entry.Modified, FileDirEntry.LastModifiedTimestamp, FileDirEntry.LastModified10msIncrement, FileDirEntry.LastModifiedUtcOffset);
+            uint8_t LastAccessed10msIncrement;
+            GetExFatTimestamp(Entry.Accessed, FileDirEntry.LastAccessedTimestamp, LastAccessed10msIncrement, FileDirEntry.LastAccessedUtcOffset);
+            auto& DirEntry = (*OutputItr++ = CreateDirectoryEntry(FileDirEntry));
+            *OutputItr++ = CreateDirectoryEntry(StreamExtensionDirectoryEntry{
                 .GeneralSecondaryFlags = 0x03,
-                .NameLength = 25,
-                .NameHash = NameChecksum(L"System Volume Information"),
-                .ValidDataLength = ClusterSize,
-                .FirstCluster = AllocateClusters(std::span(SystemVolumeInfoDirData.get(), ClusterSize)),
-                .DataLength = ClusterSize
+                .NameLength = (uint8_t)Entry.Name.size(),
+                .NameHash = NameChecksum(Entry.Name),
+                .ValidDataLength = Align(DataLength, ClusterSize),
+                .FirstCluster = FirstCluster,
+                .DataLength = DataLength
             });
-            RootDirectory[8] = CreateDirectoryEntry(FileNameDirectoryEntry{
-                .FileName = {'S', 'y', 's', 't', 'e', 'm', ' ', 'V', 'o', 'l', 'u', 'm', 'e', ' ', 'I'}
-            });
-            RootDirectory[9] = CreateDirectoryEntry(FileNameDirectoryEntry{
-                .FileName = L"nformation"
-            });
-            RootDirectory[6].Primary.SetChecksum = SetChecksum(&RootDirectory[6]);
+            for(auto Idx = 0; Idx < Entry.Name.size(); Idx += 15){
+                FileNameDirectoryEntry NameEntry{};
+                Entry.Name.copy(NameEntry.FileName, 15, Idx);
+                *OutputItr++ = CreateDirectoryEntry(NameEntry);
+            }
+            DirEntry.Primary.SetChecksum = SetChecksum(&DirEntry);
+        }
+
+        uint32_t GetEntryCountGeneric(const ExFatEntry& Entry){
+            return 2 + ((Entry.Name.size() + 14) / 15);
+        }
+
+        uint32_t GetEntryCountDirectory(const ExFatDirectory& Directory){
+            uint32_t Count = 0;
+            for (auto& Dir : Directory.Directories){
+                Count += GetEntryCountGeneric(Dir);
+            }
+            for (auto& File : Directory.Files){
+                Count += GetEntryCountGeneric(File);
+            }
+            return Count;
+        }
+
+        template<class Itr>
+        void EmplaceDirectoryTree(Itr OutputItr, const ExFatDirectory& Tree){
+            for (auto& Directory : Tree.Directories){
+                // TODO: Ensure that at least one cluster is always allocated even if there are no entries!
+                auto EntryCount = GetEntryCountDirectory(Directory);
+                auto DirectoryData = std::make_unique<DirectoryEntry[]>(EntryCount);
+
+                EmplaceDirectoryTree(DirectoryData.get(), Directory);
+
+                auto DirectoryDataSpan = std::span(DirectoryData.get(), EntryCount);
+                auto ClusterIdx = AllocateClusters(DirectoryDataSpan);
+                EmplaceExFatEntry(OutputItr, Directory, Align(DirectoryDataSpan.size_bytes(), ClusterSize), ClusterIdx);
+            }
+            for(auto& File : Tree.Files){
+                auto ClusterIdx = AllocateClusters(File.DataLength, File.List);
+                EmplaceExFatEntry(OutputItr, File, File.DataLength, ClusterIdx);
+            }
         }
 
         void AllocateBitmapCluster(uint32_t Cluster)
@@ -632,6 +681,14 @@ namespace L4
             return Ret;
         }
 
+        uint32_t AllocateClusters(uint64_t DataLength, const IntervalList& List){
+            // Make sure List doesn't go past DataLength!
+            auto FirstCluster = AllocateClusters(DataLength);
+            auto FirstClusterOffset = BootRegion.BootSector.ClusterHeapOffset + (FirstCluster - BeginCluster) * SectorsPerCluster;
+            Intervals.Merge(FirstClusterOffset, List);
+            return FirstCluster;
+        }
+
         uint32_t AllocateClusters(std::span<const std::byte> Data)
         {
             auto FirstCluster = AllocateClusters(Data.size());
@@ -649,18 +706,20 @@ namespace L4
         template<class T>
         DirectoryEntry CreateDirectoryEntry(T&& Val, bool InUse = true)
         {
+            using DecayT = std::decay_t<T>;
             static_assert(sizeof(T) == 31);
-            using Traits = DirectoryEntryTraits<T>;
+            using Traits = DirectoryEntryTraits<DecayT>;
             union
             {
-                T Entry;
+                DecayT Entry;
                 EndOfDirectoryEntry Data;
             };
             Entry = std::move(Val);
-            return DirectoryEntry{
-                .EntryType = uint8_t(Traits::TypeCode | Traits::TypeImportance << 5 | Traits::TypeCategory << 6 | InUse << 7),
-                .EndOfDirectory = Data
-            };
+
+            DirectoryEntry Ret;
+            Ret.EntryType = uint8_t(Traits::TypeCode | Traits::TypeImportance << 5 | Traits::TypeCategory << 6 | InUse << 7);
+            Ret.EndOfDirectory = Data;
+            return Ret;
         }
 
         const IntervalList& GetIntervalList() const
@@ -680,11 +739,7 @@ namespace L4
         std::unique_ptr<uint8_t[]> AllocationBitmap;
         size_t AllocationBitmapSize;
 
-        DirectoryEntry RootDirectory[10];
-
-        std::unique_ptr<char[]> AmogusDirData;
-
-        std::unique_ptr<char[]> SystemVolumeInfoDirData;
+        std::unique_ptr<DirectoryEntry[]> RootDirectory;
 
         IntervalList Intervals;
     };
