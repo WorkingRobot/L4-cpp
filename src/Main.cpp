@@ -41,7 +41,19 @@ namespace L4
 {
     void Main()
     {
-        BasicDisk Disk;
+        ExFatTime Now = std::chrono::zoned_time{ std::chrono::time_point_cast<centiseconds>(std::chrono::system_clock::now()) };
+        IntervalList FileList;
+        FileList.Add(0, 1, std::span("122939293949939323949229", 24));
+        ExFatDirectory Directory
+        {
+            .Directories = {
+                CreateDirectory(L"Test", { CreateDirectory(L"A", {}, {CreateFile(L"B")})},{CreateFile(L"C")})
+            },
+            .Files = {
+                CreateFile(L"D", FileList, 24)
+            }
+        };
+        BasicDisk Disk(Directory);
         Disk.Start();
         _getch();
         //FastSpd::VirtualDisk(0, 0);

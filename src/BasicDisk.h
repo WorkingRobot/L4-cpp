@@ -29,7 +29,7 @@ namespace L4
             .BlockCount = BlockCount - 256 - 256 // 268434944
         };
 
-        BasicDisk();
+        BasicDisk(const ExFatDirectory& ExFatTree);
 
         void Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 

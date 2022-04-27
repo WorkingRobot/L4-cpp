@@ -525,8 +525,9 @@ namespace L4
                     ExtendedBootSector.ExtendedBootSignature = 0xAA550000;
                 }
 
-                Intervals.Add(0, 12, &BootRegion);
-                Intervals.Add(12, 12, &BootRegion);
+                auto BootRegionSpan = std::span(&BootRegion, 1);
+                Intervals.Add(0, 12, BootRegionSpan);
+                Intervals.Add(12, 12, BootRegionSpan);
             }
 
             {
@@ -546,7 +547,7 @@ namespace L4
                 AllocationBitmapCluster = AllocateClusters(std::span(AllocationBitmap.get(), AllocationBitmapSize));
             }
 
-            uint32_t UpcaseTableCluster = AllocateClusters(std::span(ExFatUpcaseTable, 1));
+            uint32_t UpcaseTableCluster = AllocateClusters(std::span(ExFatUpcaseTable, sizeof(ExFatUpcaseTable)));
 
             auto RootDirectoryEntryCount = 3 + GetEntryCountDirectory(Tree);
             RootDirectory = std::make_unique<DirectoryEntry[]>(RootDirectoryEntryCount);
@@ -600,7 +601,7 @@ namespace L4
         }
 
         template<class Itr>
-        void EmplaceExFatEntry(Itr& OutputItr, const ExFatEntry& Entry, uint64_t DataLength, uint32_t FirstCluster){
+        void EmplaceExFatEntry(Itr& OutputItr, const ExFatEntry& Entry, uint8_t SecondaryFlags, uint64_t DataLength, uint32_t FirstCluster){
             auto FileDirEntry = FileDirectoryEntry{
                 .SecondaryCount = uint8_t(1 + ((Entry.Name.size() + 14) / 15)),
                 .FileAttributes = Entry.Attributes
@@ -611,10 +612,10 @@ namespace L4
             GetExFatTimestamp(Entry.Accessed, FileDirEntry.LastAccessedTimestamp, LastAccessed10msIncrement, FileDirEntry.LastAccessedUtcOffset);
             auto& DirEntry = (*OutputItr++ = CreateDirectoryEntry(FileDirEntry));
             *OutputItr++ = CreateDirectoryEntry(StreamExtensionDirectoryEntry{
-                .GeneralSecondaryFlags = 0x03,
+                .GeneralSecondaryFlags = SecondaryFlags,
                 .NameLength = (uint8_t)Entry.Name.size(),
                 .NameHash = NameChecksum(Entry.Name),
-                .ValidDataLength = Align(DataLength, ClusterSize),
+                .ValidDataLength = DataLength,
                 .FirstCluster = FirstCluster,
                 .DataLength = DataLength
             });
@@ -644,19 +645,25 @@ namespace L4
         template<class Itr>
         void EmplaceDirectoryTree(Itr OutputItr, const ExFatDirectory& Tree){
             for (auto& Directory : Tree.Directories){
-                // TODO: Ensure that at least one cluster is always allocated even if there are no entries!
                 auto EntryCount = GetEntryCountDirectory(Directory);
-                auto DirectoryData = std::make_unique<DirectoryEntry[]>(EntryCount);
+                if (EntryCount)
+                {
+                    auto DirectoryData = SubDirectories.emplace_back(std::make_unique<DirectoryEntry[]>(EntryCount)).get();
 
-                EmplaceDirectoryTree(DirectoryData.get(), Directory);
+                    EmplaceDirectoryTree(DirectoryData, Directory);
 
-                auto DirectoryDataSpan = std::span(DirectoryData.get(), EntryCount);
-                auto ClusterIdx = AllocateClusters(DirectoryDataSpan);
-                EmplaceExFatEntry(OutputItr, Directory, Align(DirectoryDataSpan.size_bytes(), ClusterSize), ClusterIdx);
+                    auto DirectoryDataSpan = std::span(DirectoryData, EntryCount);
+                    auto ClusterIdx = AllocateClusters(DirectoryDataSpan);
+                    EmplaceExFatEntry(OutputItr, Directory, 0x03, Align(DirectoryDataSpan.size_bytes(), ClusterSize), ClusterIdx);
+                }
+                else
+                {
+                    EmplaceExFatEntry(OutputItr, Directory, 0x01, 0, 0);
+                }
             }
             for(auto& File : Tree.Files){
-                auto ClusterIdx = AllocateClusters(File.DataLength, File.List);
-                EmplaceExFatEntry(OutputItr, File, File.DataLength, ClusterIdx);
+                auto ClusterIdx = File.DataLength ? AllocateClusters(File.DataLength, File.List) : 0;
+                EmplaceExFatEntry(OutputItr, File, File.DataLength ? 0x03 : 0x01, File.DataLength, ClusterIdx);
             }
         }
 
@@ -740,6 +747,7 @@ namespace L4
         size_t AllocationBitmapSize;
 
         std::unique_ptr<DirectoryEntry[]> RootDirectory;
+        std::vector<std::unique_ptr<DirectoryEntry[]>> SubDirectories;
 
         IntervalList Intervals;
     };

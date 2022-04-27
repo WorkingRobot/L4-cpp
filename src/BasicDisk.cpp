@@ -2,25 +2,28 @@
 
 namespace L4
 {
-    BasicDisk::BasicDisk() :
+    BasicDisk::BasicDisk(const ExFatDirectory& ExFatTree) :
         VirtualDisk(BlockCount, BlockSize),
-        Filesystem(Partition.BlockAddress, Partition.BlockCount, {})
+        Filesystem(Partition.BlockAddress, Partition.BlockCount, ExFatTree)
     {
         Data = CreateGPT(&Partition, 1, BlockSize, BlockCount);
+        auto MBRSpan = std::span(Data.ProtectiveMBR.Data, sizeof(Data.ProtectiveMBR.Data));
+        auto TableSpan = std::span(Data.Table.Data, sizeof(Data.Table.Data));
+        auto SecondaryHeaderSpan = std::span(Data.SecondaryHeader.Data, sizeof(Data.SecondaryHeader.Data));
 
         IntervalList Ints;
-        Ints.Add(0, 1, Data.ProtectiveMBR.Data);
-        Ints.Add(1, 1, Data.ProtectiveMBR.Data);
+        Ints.Add(0, 1, MBRSpan);
+        Ints.Add(1, 1, MBRSpan);
 
         auto PrimaryTableStartOffset = 2;
         auto PrimaryTableSize = TableBlockSize;
-        Ints.Add(PrimaryTableStartOffset, PrimaryTableSize, Data.Table.Data);
+        Ints.Add(PrimaryTableStartOffset, PrimaryTableSize, TableSpan);
 
         auto SecondaryTableStartOffset = BasicDisk::BlockCount - 1 - TableBlockSize;
         auto SecondaryTableSize = TableBlockSize;
-        Ints.Add(SecondaryTableStartOffset, SecondaryTableSize, Data.Table.Data);
+        Ints.Add(SecondaryTableStartOffset, SecondaryTableSize, TableSpan);
 
-        Ints.Add(BasicDisk::BlockCount - 1, 1, Data.SecondaryHeader.Data);
+        Ints.Add(BasicDisk::BlockCount - 1, 1, SecondaryHeaderSpan);
 
         Ints.Merge(256, Filesystem.GetIntervalList());
 

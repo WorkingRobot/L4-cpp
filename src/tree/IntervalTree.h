@@ -23,16 +23,10 @@ namespace L4
             Intervals.emplace_back(Interval{ Offset, Offset + Size - 1, Buffer });
         }
 
-        template <class T, size_t BufferSize>
-        void Add(uint64_t Offset, uint64_t Size, const T(&Buffer)[BufferSize])
+        template<class T, size_t Extent>
+        void Add(uint64_t Offset, uint64_t Size, std::span<T, Extent> Buffer)
         {
-            Add(Offset, Size, std::as_bytes(std::span{ Buffer, BufferSize }));
-        }
-
-        template<class T>
-        void Add(uint64_t Offset, uint64_t Size, const T* Buffer)
-        {
-            Add(Offset, Size, std::as_bytes(std::span{ Buffer, 1 }));
+            Add(Offset, Size, std::as_bytes(Buffer));
         }
 
         void Merge(uint64_t Offset, const IntervalList& List)
