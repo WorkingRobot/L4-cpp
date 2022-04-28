@@ -1,12 +1,11 @@
-#include <string.h>
-#include <conio.h>
-
+#include "archive/ArchiveCreator.h"
+#include "archive/StreamDataIterator.h"
+#include "archive/StreamView.h"
 #include "BasicDisk.h"
 #include "RamDisk.h"
 
-#include "archive/StreamDataIterator.h"
-#include "archive/ArchiveCreator.h"
-#include "archive/StreamView.h"
+#include <conio.h>
+#include <string.h>
 //#include "web/Http.h"
 
 #include <numeric>
@@ -14,8 +13,7 @@
 static constexpr bool PrintAlloc = false;
 void* operator new(std::size_t sz) // no inline, required by [replacement.functions]/3
 {
-    if constexpr (PrintAlloc)
-    {
+    if constexpr (PrintAlloc) {
         std::printf("global op new called, size = %zu\n", sz);
     }
     if (sz == 0)
@@ -24,41 +22,35 @@ void* operator new(std::size_t sz) // no inline, required by [replacement.functi
     if (void* ptr = std::malloc(sz))
         return ptr;
 
-    throw std::bad_alloc{}; // required by [new.delete.single]/3
+    throw std::bad_alloc {}; // required by [new.delete.single]/3
 }
 void operator delete(void* ptr) noexcept
 {
-    if constexpr (PrintAlloc)
-    {
+    if constexpr (PrintAlloc) {
         std::puts("global op delete called");
     }
     std::free(ptr);
 }
 
-namespace L4
-{
+namespace L4 {
     void Main()
     {
-        ExFatTime Now = std::chrono::zoned_time{ std::chrono::time_point_cast<centiseconds>(std::chrono::system_clock::now()) };
+        ExFatTime Now = std::chrono::zoned_time { std::chrono::time_point_cast<centiseconds>(std::chrono::system_clock::now()) };
         IntervalList FileList;
         FileList.Add(0, 1, std::span("122939293949939323949229", 24));
-        ExFatDirectory Directory
-        {
+        ExFatDirectory Directory {
             .Directories = {
-                CreateDirectory(L"Test", { CreateDirectory(L"A", {}, {CreateFile(L"B")})},{CreateFile(L"C")})
-            },
-            .Files = {
-                CreateFile(L"D", FileList, 24)
-            }
+                CreateDirectory(L"Test", { CreateDirectory(L"A", {}, { CreateFile(L"B") }) }, { CreateFile(L"C") }) },
+            .Files = { CreateFile(L"D", FileList, 24) }
         };
         Disk::BasicDisk Disk(Directory);
         Disk.Start();
         _getch();
-        //FastSpd::VirtualDisk(0, 0);
+        // FastSpd::VirtualDisk(0, 0);
         return;
-        //auto Resp = Http::Get(cpr::Url{ "https://httpbin.org/json" }, Http::ReserveSize{4532});
-        //printf("Resp capacity %zu\n", Resp.text.capacity());
-        //return;
+        // auto Resp = Http::Get(cpr::Url{ "https://httpbin.org/json" }, Http::ReserveSize{4532});
+        // printf("Resp capacity %zu\n", Resp.text.capacity());
+        // return;
 
         /*
         {

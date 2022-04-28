@@ -2,10 +2,8 @@
 
 #include <type_traits>
 
-namespace L4
-{
-    struct StreamRun
-    {
+namespace L4 {
+    struct StreamRun {
         uint32_t StreamSectorOffset;
         uint32_t SectorOffset;
         uint32_t SectorCount;

@@ -2,11 +2,9 @@
 
 #include "StreamDataConstIterator.h"
 
-namespace L4
-{
-    template<class T = std::byte, class ArchiveT = ArchiveWritable>
-    class StreamDataIterator : public StreamDataConstIterator<T, ArchiveT>
-    {
+namespace L4 {
+    template <class T = std::byte, class ArchiveT = ArchiveWritable>
+    class StreamDataIterator : public StreamDataConstIterator<T, ArchiveT> {
         using Base = StreamDataConstIterator<T, ArchiveT>;
 
     public:

@@ -1,14 +1,12 @@
 #pragma once
 
-#include "Guid.h"
 #include "Consts.h"
+#include "Guid.h"
 
 #include <type_traits>
 
-namespace L4
-{
-    struct Header
-    {
+namespace L4 {
+    struct Header {
         uint32_t Magic;
         ArchiveVersion Version;
         uint32_t SectorSize;
@@ -26,14 +24,13 @@ namespace L4
     static_assert(sizeof(Header) == 256);
     static_assert(std::has_unique_object_representations_v<Header>);
 
-    template<size_t Size>
-    std::u8string_view GetSV(const char8_t(&Buffer)[Size])
+    template <size_t Size>
+    std::u8string_view GetSV(const char8_t (&Buffer)[Size])
     {
         // strnlen_s version of std::char_traits<char8_t>::length()
         size_t Count = 0;
         const char8_t* Buf = Buffer;
-        while (Count < Size && *Buf)
-        {
+        while (Count < Size && *Buf) {
             ++Count;
             ++Buf;
         }
@@ -41,11 +38,10 @@ namespace L4
         return std::u8string_view(Buffer, Count);
     }
 
-    template<size_t Size>
-    void SetSV(char8_t(&Buffer)[Size], const std::u8string_view Src)
+    template <size_t Size>
+    void SetSV(char8_t (&Buffer)[Size], const std::u8string_view Src)
     {
-        if (Src.size() > Size)
-        {
+        if (Src.size() > Size) {
             throw std::length_error("Input string is too large");
         }
         auto CopyCount = Src.copy(Buffer, Src.size());

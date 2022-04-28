@@ -2,7 +2,6 @@
 
 #include <guiddef.h>
 
-namespace FastSpd
-{
+namespace FastSpd {
     GUID UuidCreate();
 }

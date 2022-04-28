@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../tree/IntervalTree.h"
-#include <memory>
-#include <chrono>
+#include "../utils/IntervalTree.h"
 
-namespace L4
-{
-    enum FileAttributes : uint16_t
-    {
+#include <chrono>
+#include <memory>
+
+namespace L4 {
+    enum FileAttributes : uint16_t {
         AttribReadOnly = 1 << 0,
         AttribHidden = 1 << 1,
         AttribSystem = 1 << 2,
@@ -18,8 +17,7 @@ namespace L4
     using centiseconds = std::chrono::duration<long long, std::centi>;
     using ExFatTime = std::chrono::zoned_time<centiseconds>;
 
-    struct ExFatEntry
-    {
+    struct ExFatEntry {
         std::wstring_view Name;
         FileAttributes Attributes;
         ExFatTime Created;
@@ -27,14 +25,12 @@ namespace L4
         ExFatTime Accessed;
     };
 
-    struct ExFatFile : public ExFatEntry
-    {
+    struct ExFatFile : public ExFatEntry {
         IntervalList List;
         uint64_t DataLength;
     };
 
-    struct ExFatDirectory : public ExFatEntry
-    {
+    struct ExFatDirectory : public ExFatEntry {
         std::vector<ExFatDirectory> Directories;
         std::vector<ExFatFile> Files;
     };
@@ -54,26 +50,22 @@ namespace L4
         const ExFatTime* Accessed = nullptr)
     {
         std::optional<ExFatTime> Time;
-        if (!Created || !Modified || !Accessed)
-        {
+        if (!Created || !Modified || !Accessed) {
             Time = GetTime();
-            if (!Created)
-            {
+            if (!Created) {
                 Created = &Time.value();
             }
-            if (!Modified)
-            {
+            if (!Modified) {
                 Modified = &Time.value();
             }
-            if (!Accessed)
-            {
+            if (!Accessed) {
                 Accessed = &Time.value();
             }
         }
 
         Attributes = FileAttributes((Attributes & FileAttributes(~AttribArchive)) | AttribDirectory);
 
-        return ExFatDirectory{ Name, Attributes, *Created, *Modified, *Accessed, Directories, Files };
+        return ExFatDirectory { Name, Attributes, *Created, *Modified, *Accessed, Directories, Files };
     }
 
     static ExFatFile CreateFile(
@@ -83,34 +75,28 @@ namespace L4
         FileAttributes Attributes = AttribArchive,
         const ExFatTime* Created = nullptr,
         const ExFatTime* Modified = nullptr,
-        const ExFatTime* Accessed = nullptr
-    )
+        const ExFatTime* Accessed = nullptr)
     {
         std::optional<ExFatTime> Time;
-        if (!Created || !Modified || !Accessed)
-        {
+        if (!Created || !Modified || !Accessed) {
             Time = GetTime();
-            if (!Created)
-            {
+            if (!Created) {
                 Created = &Time.value();
             }
-            if (!Modified)
-            {
+            if (!Modified) {
                 Modified = &Time.value();
             }
-            if (!Accessed)
-            {
+            if (!Accessed) {
                 Accessed = &Time.value();
             }
         }
 
         Attributes = FileAttributes((Attributes & FileAttributes(~AttribDirectory)) | AttribArchive);
 
-        return ExFatFile{ Name, Attributes, *Created, *Modified, *Accessed, List, DataLength };
+        return ExFatFile { Name, Attributes, *Created, *Modified, *Accessed, List, DataLength };
     }
 
-    class ExFatSystem
-    {
+    class ExFatSystem {
     public:
         ExFatSystem(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount, const ExFatDirectory& Tree);
 

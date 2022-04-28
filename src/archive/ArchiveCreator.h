@@ -1,37 +1,34 @@
 #pragma once
 
 #include "../mmio/MmioFile.h"
+#include "../utils/Align.h"
+#include "Freelist.h"
 #include "Header.h"
 #include "StreamHeader.h"
 #include "StreamRunlist.h"
 
 #include <span>
 
-namespace L4
-{
-    struct SectorSize
-    {
+namespace L4 {
+    struct SectorSize {
         uint32_t Size;
     };
 
-    struct SourceInfo
-    {
+    struct SourceInfo {
         std::u8string_view Name;
         std::u8string_view Version;
         uint32_t VersionNumeric;
         Guid Guid;
     };
 
-    struct AppInfo
-    {
+    struct AppInfo {
         std::u8string_view Name;
         std::u8string_view Version;
         uint32_t VersionNumeric;
         Guid Guid;
     };
 
-    struct SingleStreamInfo
-    {
+    struct SingleStreamInfo {
         Guid Guid;
         uint32_t Version;
         uint32_t ElementSize;
@@ -41,13 +38,12 @@ namespace L4
 
     using StreamInfo = std::initializer_list<SingleStreamInfo>;
 
-    namespace Detail
-    {
-        class ArchiveCreator
-        {
+    namespace Detail {
+        class ArchiveCreator {
         public:
-            template<class... ArgTs>
-            ArchiveCreator(MmioFileWritable& File, ArgTs&&... Args) : File(File)
+            template <class... ArgTs>
+            ArchiveCreator(MmioFileWritable& File, ArgTs&&... Args) :
+                File(File)
             {
                 File.Reserve(sizeof(Header));
 
@@ -57,12 +53,10 @@ namespace L4
 
             void Set(const SectorSize& SectorSize)
             {
-                if (!std::has_single_bit(SectorSize.Size))
-                {
+                if (!std::has_single_bit(SectorSize.Size)) {
                     throw std::invalid_argument("Sector size must be a power of two");
                 }
-                if (SectorSize.Size < 4096)
-                {
+                if (SectorSize.Size < 4096) {
                     throw std::invalid_argument("Sector size must be at least 4 KiB");
                 }
 
@@ -97,8 +91,7 @@ namespace L4
 
                 File.Reserve(sizeof(L4::Header) + StreamInfo.size() * sizeof(L4::StreamHeader));
                 StreamHeader* Header = File.Get<StreamHeader>(sizeof(L4::Header));
-                for (auto& Info : StreamInfo)
-                {
+                for (auto& Info : StreamInfo) {
                     Header->Guid = Info.Guid;
                     Header->Version = Info.Version;
                     Header->ElementSize = Info.ElementSize;
@@ -121,7 +114,7 @@ namespace L4
                 Freelist& Freelist = *File.Get<L4::Freelist>(FreelistOffset);
                 Freelist.TotalSectorCount = AllocatedSize / Header.SectorSize;
 
-                std::fill_n(File.Get<StreamRunlist>(FreelistOffset + sizeof(Freelist)), Header.StreamCount, StreamRunlist{});
+                std::fill_n(File.Get<StreamRunlist>(FreelistOffset + sizeof(Freelist)), Header.StreamCount, StreamRunlist {});
             }
 
         protected:
@@ -129,7 +122,7 @@ namespace L4
         };
     }
 
-    template<class... ArgTs>
+    template <class... ArgTs>
     void CreateArchive(MmioFileWritable& File, ArgTs&&... Args)
     {
         Detail::ArchiveCreator Creator(File, std::forward<ArgTs>(Args)...);

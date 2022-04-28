@@ -1,9 +1,7 @@
 #include "Http.h"
 
-namespace L4::Http
-{
-    namespace Detail
-    {
+namespace L4::Http {
+    namespace Detail {
         cpr::Session CreateSession()
         {
             cpr::Session Session;

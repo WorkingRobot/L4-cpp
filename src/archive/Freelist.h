@@ -2,12 +2,9 @@
 
 #include <type_traits>
 
-namespace L4
-{
-    struct Freelist
-    {
-        struct Entry
-        {
+namespace L4 {
+    struct Freelist {
+        struct Entry {
             uint32_t SectorCount;
             uint32_t SectorOffset;
         };

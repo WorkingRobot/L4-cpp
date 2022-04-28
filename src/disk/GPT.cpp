@@ -6,18 +6,15 @@
 
 #include <utility>
 
-namespace L4::Disk::GPT
-{
-    struct Guid
-    {
+namespace L4::Disk::GPT {
+    struct Guid {
         uint32_t A;
         uint32_t B;
         uint32_t C;
         uint32_t D;
     };
 
-    struct PartitionPrivate
-    {
+    struct PartitionPrivate {
         Guid Type;
         Guid Id;
         uint64_t Start;
@@ -28,8 +25,7 @@ namespace L4::Disk::GPT
     static_assert(sizeof(PartitionPrivate) == 128, "GPT partition entry must be 16 bytes long");
 
 #pragma pack(push, 1)
-    struct HeaderPrivate
-    {
+    struct HeaderPrivate {
         uint64_t Magic;
         uint32_t Version;
         uint32_t HeaderLength;
@@ -50,32 +46,30 @@ namespace L4::Disk::GPT
 
     constexpr uint64_t MaxPartitionCount = 128;
     using TablePrivate = std::array<PartitionPrivate, MaxPartitionCount>;
-    
+
     constexpr uint64_t Magic = 0x5452415020494645;
     constexpr uint64_t Version1 = 0x10000;
-    constexpr Guid MsDataGuid{ 0xEBD0A0A2, 0x4433B9E5, 0xB668C087, 0xC79926B7 };
-    constexpr Guid MsReservedGuid{ 0xE3C9E316, 0x4DB80B5C, 0x2DF97D81, 0xAE1502F0 };
-    constexpr Guid LinuxHomeGuid{ 0x933AC7E1, 0x4F132EB4, 0x140E44B8, 0x15F9AEE2 };
-    constexpr Guid NullGuid{};
+    constexpr Guid MsDataGuid { 0xEBD0A0A2, 0x4433B9E5, 0xB668C087, 0xC79926B7 };
+    constexpr Guid MsReservedGuid { 0xE3C9E316, 0x4DB80B5C, 0x2DF97D81, 0xAE1502F0 };
+    constexpr Guid LinuxHomeGuid { 0x933AC7E1, 0x4F132EB4, 0x140E44B8, 0x15F9AEE2 };
+    constexpr Guid NullGuid {};
 
     GPT Create(uint64_t BlockSize, uint64_t DiskBlockCount, const Partition* Partitions, uint8_t PartitionCount)
     {
-        if (PartitionCount > 128)
-        {
+        if (PartitionCount > 128) {
             PartitionCount = 128;
         }
 
-        MBR::Partition ProtectiveMBRPartition{
+        MBR::Partition ProtectiveMBRPartition {
             .BlockAddress = 1,
             .BlockCount = 0xFFFFFFFFu,
             .Type = 0xEE
         };
 
-        TablePrivate TablePriv;
+        TablePrivate TablePriv {};
 
-        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx)
-        {
-            TablePriv[Idx] = PartitionPrivate{
+        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx) {
+            TablePriv[Idx] = PartitionPrivate {
                 .Type = MsDataGuid,
                 .Start = Partitions[Idx].BlockAddress,
                 .End = Partitions[Idx].BlockAddress + Partitions[Idx].BlockCount - 1,
@@ -86,7 +80,7 @@ namespace L4::Disk::GPT
 
         uint32_t TableChecksum = Crc32Large((const char*)&TablePriv, sizeof(Table));
 
-        HeaderPrivate PrimaryHeader{
+        HeaderPrivate PrimaryHeader {
             .Magic = Magic,
             .Version = Version1,
             .HeaderLength = sizeof(HeaderPrivate),

@@ -1,21 +1,26 @@
 #pragma once
 
-namespace FastSpd
-{
-    template<auto Deleter, class T, auto InvalidValue>
-    class Handle
-    {
+namespace FastSpd {
+    template <auto Deleter, class T, auto InvalidValue>
+    class Handle {
     public:
-        Handle() noexcept : Internal(InvalidValue) { }
+        Handle() noexcept :
+            Internal(InvalidValue)
+        {
+        }
 
-        Handle(T Handle) noexcept : Internal(Handle) { }
+        Handle(T Handle) noexcept :
+            Internal(Handle)
+        {
+        }
 
         ~Handle() noexcept(noexcept(Deleter))
         {
             Deleter(Internal);
         }
 
-        Handle(Handle&& Other) noexcept : Internal(InvalidValue)
+        Handle(Handle&& Other) noexcept :
+            Internal(InvalidValue)
         {
             Other.swap(*this);
         }

@@ -2,10 +2,8 @@
 
 #include <filesystem>
 
-namespace L4
-{
-    class MmioFile
-    {
+namespace L4 {
+    class MmioFile {
     protected:
         using MM_HANDLE = void*;
         using MM_PVOID = void*;
@@ -37,7 +35,7 @@ namespace L4
 
         size_t GetSize() const noexcept;
 
-        template<class T = void>
+        template <class T = void>
         const T* Get(size_t ByteOffset = 0) const noexcept
         {
             return reinterpret_cast<const T*>(static_cast<const char*>(GetBaseAddress()) + ByteOffset);
@@ -57,8 +55,7 @@ namespace L4
         MM_SIZE_T ViewSize;
     };
 
-    class MmioFileWritable : public MmioFile
-    {
+    class MmioFileWritable : public MmioFile {
     public:
         MmioFileWritable(const std::filesystem::path& Path);
 
@@ -80,7 +77,7 @@ namespace L4
 
         void Flush() const;
 
-        template<class T = void>
+        template <class T = void>
         T* Get(size_t ByteOffset = 0) const noexcept
         {
             return reinterpret_cast<T*>(static_cast<char*>(GetBaseAddress()) + ByteOffset);

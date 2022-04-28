@@ -1,0 +1,16 @@
+---
+BasedOnStyle: WebKit
+AccessModifierOffset: -4
+AlignConsecutiveBitFields: Consecutive
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBinaryOperators: NonAssignment
+BreakInheritanceList: AfterColon
+BreakConstructorInitializers: AfterColon
+QualifierAlignment: Left
+IncludeBlocks: Regroup
+KeepEmptyLinesAtTheStartOfBlocks: false
+LambdaBodyIndentation: OuterScope
+NamespaceIndentation: All
+SortIncludes: CaseInsensitive
+TabWidth: 4
+...

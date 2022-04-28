@@ -2,26 +2,22 @@
 
 #include "../mmio/MmioFile.h"
 #include "../utils/Align.h"
-
 #include "Freelist.h"
 #include "Header.h"
 #include "StreamHeader.h"
 #include "StreamRunlist.h"
 
-namespace L4
-{
-    template<bool Writable>
-    class ArchiveBase
-    {
+namespace L4 {
+    template <bool Writable>
+    class ArchiveBase {
     public:
-        template<class... ArgTs>
+        template <class... ArgTs>
         ArchiveBase(ArgTs&&... Args) :
             File(std::forward<ArgTs>(Args)...),
             SectorSize(GetHeader().SectorSize),
             StreamCount(GetHeader().StreamCount),
             FreelistOffset(Align(sizeof(Header) + StreamCount * sizeof(StreamHeader), SectorSize))
         {
-
         }
 
         // vvv Low level API
@@ -30,7 +26,7 @@ namespace L4
         {
             return *File.template Get<Header>();
         }
-        
+
         Header& GetHeader() const noexcept requires(Writable)
         {
             return *File.template Get<Header>();

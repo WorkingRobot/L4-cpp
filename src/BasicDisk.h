@@ -1,19 +1,17 @@
 #pragma once
 
-#include <fastspd.h>
-#include "disk/GPT.h"
 #include "disk/exFAT.h"
+#include "disk/GPT.h"
 #include "utils/Align.h"
+#include "utils/IntervalTree.h"
 #include "utils/Random.h"
-#include "tree/IntervalTree.h"
 
 #include <array>
+#include <fastspd.h>
 #include <unordered_map>
 
-namespace L4::Disk
-{
-    class BasicDisk : public FastSpd::VirtualDisk
-    {
+namespace L4::Disk {
+    class BasicDisk : public FastSpd::VirtualDisk {
     public:
         static constexpr uint64_t BlockSize = 1 << 12;
         static constexpr uint64_t DiskSize = 1ll << 28;
@@ -23,7 +21,7 @@ namespace L4::Disk
 
         static constexpr uint64_t TableBlockSize = Align<BlockSize>(sizeof(GPT::Table)) / BlockSize;
 
-        static constexpr GPT::Partition Partition{
+        static constexpr GPT::Partition Partition {
             .BlockAddress = 256,
             .BlockCount = BlockCount - 256 - 256
         };
@@ -40,7 +38,7 @@ namespace L4::Disk
 
     private:
         std::unordered_map<uint64_t, std::array<std::byte, BlockSize>> RamDisk;
-        
+
         GPT::GPT GPTData;
         ExFatSystem Filesystem;
         IntervalTree Tree;
