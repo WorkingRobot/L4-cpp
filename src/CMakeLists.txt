@@ -1,15 +1,12 @@
-﻿cmake_minimum_required (VERSION 3.20)
-
-## Project Definition and Options ##
-
-## Source Files ##
+﻿## Source Files ##
 
 add_file(L4 Main.cpp)
 add_file(L4 RamDisk.cpp)
 add_file(L4 BasicDisk.cpp)
 add_dir(L4 disk)
 add_dir(L4 utils)
-ADD_VERSION_DEFS("utils/Version.cpp")
+push_sources(L4)
+
 
 ## Define L4 executable ##
 
@@ -46,8 +43,8 @@ target_link_libraries(L4 PRIVATE zstd::libzstd_shared)
 endif()
 
 # Ntdll #
-target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll)
 target_link_libraries(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll/ntdll64.lib)
+target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll)
 
 target_link_libraries(L4 PRIVATE fastspd)
 target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/fastspd)
@@ -58,15 +55,4 @@ target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/fastspd)
 set_property(TARGET L4 PROPERTY CXX_STANDARD 23)
 
 # Add .pdb for release builds #
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_BUILD_TYPE MATCHES "Release")
-   target_compile_options(L4 PRIVATE /Zi)
-   set_target_properties(L4 PROPERTIES
-        LINK_FLAGS "/INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF"
-        COMPILE_PDB_NAME L4 
-        COMPILE_PDB_OUTPUT_DIR ${CMAKE_BINARY_DIR}
-   )
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-   #target_compile_options(L4 PRIVATE /experimental:module /interface)
-endif()
+force_enable_pdbs(L4)
