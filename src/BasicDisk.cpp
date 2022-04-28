@@ -1,29 +1,25 @@
 #include "BasicDisk.h"
 
-namespace L4
+namespace L4::Disk
 {
     BasicDisk::BasicDisk(const ExFatDirectory& ExFatTree) :
         VirtualDisk(BlockCount, BlockSize),
+        GPTData(GPT::Create(BlockSize, BlockCount, &Partition, 1)),
         Filesystem(Partition.BlockAddress, Partition.BlockCount, ExFatTree)
     {
-        Data = CreateGPT(&Partition, 1, BlockSize, BlockCount);
-        auto MBRSpan = std::span(Data.ProtectiveMBR.Data, sizeof(Data.ProtectiveMBR.Data));
-        auto TableSpan = std::span(Data.Table.Data, sizeof(Data.Table.Data));
-        auto SecondaryHeaderSpan = std::span(Data.SecondaryHeader.Data, sizeof(Data.SecondaryHeader.Data));
-
         IntervalList Ints;
-        Ints.Add(0, 1, MBRSpan);
-        Ints.Add(1, 1, MBRSpan);
+        Ints.Add(0, 1, GPTData.ProtectiveMBR);
+        Ints.Add(1, 1, GPTData.ProtectiveMBR);
 
         auto PrimaryTableStartOffset = 2;
         auto PrimaryTableSize = TableBlockSize;
-        Ints.Add(PrimaryTableStartOffset, PrimaryTableSize, TableSpan);
+        Ints.Add(PrimaryTableStartOffset, PrimaryTableSize, GPTData.Table);
 
         auto SecondaryTableStartOffset = BasicDisk::BlockCount - 1 - TableBlockSize;
         auto SecondaryTableSize = TableBlockSize;
-        Ints.Add(SecondaryTableStartOffset, SecondaryTableSize, TableSpan);
+        Ints.Add(SecondaryTableStartOffset, SecondaryTableSize, GPTData.Table);
 
-        Ints.Add(BasicDisk::BlockCount - 1, 1, SecondaryHeaderSpan);
+        Ints.Add(BasicDisk::BlockCount - 1, 1, GPTData.SecondaryHeader);
 
         Ints.Merge(256, Filesystem.GetIntervalList());
 
@@ -32,61 +28,9 @@ namespace L4
 
     void BasicDisk::Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
-        //printf("READ %llu %u\n", BlockAddress, BlockCount);
         memset(Buffer, 0, (uint64_t)BlockCount * BlockSize);
-
-        /*std::ranges::for_each(Tree.Data, [&](const Interval& Int)
-        {
-            if (BlockAddress < Int.Start)
-            {
-                return;
-            }
-            if (BlockAddress + BlockCount - 1 > Int.End + 1)
-            {
-                return;
-            }
-            printf("[%llu - %llu]\n", Int.Start, Int.End);
-
-            auto Offset = BlockAddress - Int.Start; // Offset within the interval
-            auto Count = std::min(BlockAddress + BlockCount, Int.End + 1) - BlockAddress; // Blocks to handle for this interval
-            if (Int.Buffer.size() < Offset * BlockSize)
-            {
-                return;
-            }
-            auto ByteCount = std::min(Count * BlockSize, Int.Buffer.size() - Offset * BlockSize); // Bytes available to copy to the buffer
-            auto BufferOffset = std::max(BlockAddress, Int.Start) - BlockAddress; // In blocks
-
-            std::byte* Dst = (std::byte*)Buffer + BufferOffset * BlockSize;
-            std::byte* DstEnd = (std::byte*)Buffer + (uint64_t)BlockCount * BlockSize;
-            std::byte* Src = Int.Buffer.data() + Offset * BlockSize;
-            std::byte* SrcEnd = Int.Buffer.data() + Int.Buffer.size();
-            size_t DstSize = DstEnd - Dst;
-            size_t SrcSize = SrcEnd - Src;
-            if (ByteCount > DstSize)
-            {
-                printf("Bigger than DstSize\n");
-                printf("ByteCount: %zu DstSize: %zu\n", ByteCount, DstSize);
-            }
-            if (ByteCount > SrcSize)
-            {
-                printf("Bigger than SrcSize\n");
-                printf("ByteCount: %zu SrcSize: %zu\n", ByteCount, SrcSize);
-            }
-            ByteCount = std::min<size_t>({ ByteCount, DstSize, SrcSize });
-            if (IsBadReadPtr(Src, ByteCount))
-            {
-                __debugbreak();
-            }
-            if (IsBadWritePtr(Dst, ByteCount))
-            {
-                __debugbreak();
-            }
-            memcpy_s(Dst, ByteCount, Src, ByteCount);
-        });*/
         Tree.Get(BlockAddress, BlockCount, [&](Interval Int)
         {
-            //printf("[%llu - %llu]\n", Int.Start, Int.End);
-
             if (Int.End < BlockAddress)
             {
                 printf("Bad\n");
@@ -122,17 +66,6 @@ namespace L4
             auto Count = Int.End - Int.Start + 1;
             auto ByteCount = std::min(Int.Buffer.size(), Count * BlockSize);
             memcpy((std::byte*)Buffer + Offset * BlockSize, Int.Buffer.data(), ByteCount);
-
-            /*
-            auto Offset = (ptrdiff_t)BlockAddress - (ptrdiff_t)Int.Start; // Offset within the interval
-            auto Count = std::min(BlockAddress + BlockCount, Int.End + 1) - BlockAddress; // Blocks to handle for this interval
-            if (Offset > 0 && Int.Buffer.size() < Offset * BlockSize)
-            {
-                return;
-            }
-            auto ByteCount = std::min(Count * BlockSize, Int.Buffer.size() - Offset * BlockSize); // Bytes available to copy to the buffer
-            auto BufferOffset = std::max(BlockAddress, Int.Start) - BlockAddress; // In blocks
-            memcpy((std::byte*)Buffer + BufferOffset * BlockSize, Int.Buffer.data() + Offset * BlockSize, ByteCount);*/
         });
 
         while (BlockCount)
@@ -144,7 +77,7 @@ namespace L4
             }
             ++BlockAddress;
             BlockCount--;
-            Buffer = (char*)Buffer + BlockSize;
+            Buffer = (std::byte*)Buffer + BlockSize;
         }
     }
 
@@ -157,7 +90,7 @@ namespace L4
             memcpy(Itr.first->second.data(), Buffer, BlockSize);
             ++BlockAddress;
             BlockCount--;
-            Buffer = (char*)Buffer + BlockSize;
+            Buffer = (std::byte*)Buffer + BlockSize;
         }
     }
 

@@ -1,7 +1,5 @@
 #include <string.h>
 #include <conio.h>
-#define NOMINMAX
-// #include <winspd/winspd.h>
 
 #include "BasicDisk.h"
 #include "RamDisk.h"
@@ -53,7 +51,7 @@ namespace L4
                 CreateFile(L"D", FileList, 24)
             }
         };
-        BasicDisk Disk(Directory);
+        Disk::BasicDisk Disk(Directory);
         Disk.Start();
         _getch();
         //FastSpd::VirtualDisk(0, 0);

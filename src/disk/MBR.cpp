@@ -2,38 +2,29 @@
 
 #include "../utils/Random.h"
 
-namespace L4
+namespace L4::Disk::MBR
 {
-    struct CHS
+    using CHS = std::array<std::byte, 3>;
+
+    CHS CreateCHS(uint64_t LBA)
     {
-        uint8_t Data[3];
+        static constexpr uint32_t SectorsPerTrack = 63;
+        static constexpr uint32_t HeadsPerCylinder = 255;
+        uint32_t C = LBA / (HeadsPerCylinder * SectorsPerTrack);
+        uint32_t H = (LBA / SectorsPerTrack) % HeadsPerCylinder;
+        uint32_t S = (LBA % SectorsPerTrack) + 1;
 
-        CHS() = default;
-
-        CHS(uint8_t A, uint8_t B, uint8_t C) :
-            Data{ A, B, C }
+        if (C > 1023)
         {
-
+            C = 1023;
+            H = 254;
+            S = 63;
         }
 
-        CHS(uint64_t LBA)
-        {
-            static constexpr uint32_t SectorsPerTrack = 63;
-            static constexpr uint32_t HeadsPerCylinder = 255;
-            uint32_t C = LBA / (HeadsPerCylinder * SectorsPerTrack);
-            uint32_t H = (LBA / SectorsPerTrack) % HeadsPerCylinder;
-            uint32_t S = (LBA % SectorsPerTrack) + 1;
+        return { std::byte(H), std::byte((S & 0x3F) | ((C >> 2) & 0xC0)), std::byte(C & 0xFF) };
+    }
 
-            if (1023 < C)
-                C = 1023, H = 254, S = 63;
-
-            Data[0] = H;
-            Data[1] = (S & 0x3F) | ((C >> 2) & 0xC0);
-            Data[2] = C & 0xFF;
-        }
-    };
-
-    struct MBRPartitionPrivate
+    struct PartitionPrivate
     {
         uint8_t IsActive;
         CHS FirstCHS;
@@ -42,35 +33,39 @@ namespace L4
         uint32_t FirstSectorLBA;
         uint32_t SectorCount;
     };
-    static_assert(sizeof(MBRPartitionPrivate) == 16, "MBR partition entry must be 16 bytes long");
+    static_assert(sizeof(PartitionPrivate) == 16, "MBR partition entry must be 16 bytes long");
 
 #pragma pack(push, 1)
     struct MBRPrivate
     {
-        char Boot[440];
+        std::array<std::byte, 440> Boot;
         uint32_t DiskSignature;
         uint16_t Reserved;
-        MBRPartitionPrivate Partitions[4];
+        std::array<PartitionPrivate, 4> Partitions;
         uint16_t BootSignature;
     };
 #pragma pack(pop)
-    static_assert(sizeof(MBRPrivate) == sizeof(MBR), "MBR internal representation must be the same size as the public view");
-    static_assert(sizeof(MBR) == 512, "MBR must be 512 bytes");
+    static_assert(sizeof(MBRPrivate) == 512, "MBR internal representation must be 512 bytes");
 
-    MBR CreateMBR(const MBRPartition* Partitions, size_t PartitionCount)
+    MBR Create(const Partition* Partitions, uint8_t PartitionCount)
     {
-        MBRPrivate Data{
-            .DiskSignature = Random<uint32_t>(),
-            .BootSignature = 0xAA55
-        };
-        for (int i = 0; i < PartitionCount; ++i)
+        if (PartitionCount > 4)
         {
-            Data.Partitions[i] = {
-                .FirstCHS = Partitions[i].BlockAddress,
-                .Type = Partitions[i].Type,
-                .LastCHS = uint64_t(Partitions[i].BlockAddress) + Partitions[i].BlockCount,
-                .FirstSectorLBA = Partitions[i].BlockAddress,
-                .SectorCount = Partitions[i].BlockCount
+            PartitionCount = 4;
+        }
+
+        MBRPrivate Data{};
+        Data.DiskSignature = Random<uint32_t>();
+        Data.BootSignature = 0xAA55;
+
+        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx)
+        {
+            Data.Partitions[Idx] = PartitionPrivate{
+                .FirstCHS = CreateCHS(Partitions[Idx].BlockAddress),
+                .Type = Partitions[Idx].Type,
+                .LastCHS = CreateCHS(uint64_t(Partitions[Idx].BlockAddress) + Partitions[Idx].BlockCount),
+                .FirstSectorLBA = Partitions[Idx].BlockAddress,
+                .SectorCount = Partitions[Idx].BlockCount
             };
         }
         return *(MBR*)&Data;

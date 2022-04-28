@@ -6,7 +6,7 @@
 
 #include <utility>
 
-namespace L4
+namespace L4::Disk::GPT
 {
     struct Guid
     {
@@ -16,19 +16,19 @@ namespace L4
         uint32_t D;
     };
 
-    struct GPTPartitionPrivate
+    struct PartitionPrivate
     {
         Guid Type;
         Guid Id;
         uint64_t Start;
         uint64_t End;
         uint64_t Flags;
-        wchar_t Name[36];
+        std::array<char16_t, 36> Name;
     };
-    static_assert(sizeof(GPTPartitionPrivate) == 128, "GPT partition entry must be 16 bytes long");
+    static_assert(sizeof(PartitionPrivate) == 128, "GPT partition entry must be 16 bytes long");
 
 #pragma pack(push, 1)
-    struct GPTHeaderPrivate
+    struct HeaderPrivate
     {
         uint64_t Magic;
         uint32_t Version;
@@ -46,61 +46,62 @@ namespace L4
         uint32_t PartSum;
     };
 #pragma pack(pop)
-    static_assert(sizeof(GPTHeaderPrivate) == sizeof(GPTHeader), "GPT header internal representation must be the same size as the public view");
-    static_assert(sizeof(GPTHeader) == 92, "GPT header must be 92 bytes");
+    static_assert(sizeof(HeaderPrivate) == 92, "GPT header internal representation must be 92 bytes");
 
-    constexpr uint64_t GPTPartitionCount = 128;
-    struct GPTTablePrivate
-    {
-        GPTPartitionPrivate Partitions[GPTPartitionCount];
-    };
+    constexpr uint64_t MaxPartitionCount = 128;
+    using TablePrivate = std::array<PartitionPrivate, MaxPartitionCount>;
     
-    constexpr uint64_t GPTMagic = 0x5452415020494645;
-    constexpr uint64_t GPTVersion1 = 0x10000;
+    constexpr uint64_t Magic = 0x5452415020494645;
+    constexpr uint64_t Version1 = 0x10000;
     constexpr Guid MsDataGuid{ 0xEBD0A0A2, 0x4433B9E5, 0xB668C087, 0xC79926B7 };
     constexpr Guid MsReservedGuid{ 0xE3C9E316, 0x4DB80B5C, 0x2DF97D81, 0xAE1502F0 };
     constexpr Guid LinuxHomeGuid{ 0x933AC7E1, 0x4F132EB4, 0x140E44B8, 0x15F9AEE2 };
     constexpr Guid NullGuid{};
 
-    GPTData CreateGPT(const GPTPartition* Partitions, size_t PartitionCount, size_t BlockSize, size_t DiskBlockCount)
+    GPT Create(uint64_t BlockSize, uint64_t DiskBlockCount, const Partition* Partitions, uint8_t PartitionCount)
     {
-        MBRPartition ProtectiveMBRPartition{
+        if (PartitionCount > 128)
+        {
+            PartitionCount = 128;
+        }
+
+        MBR::Partition ProtectiveMBRPartition{
             .BlockAddress = 1,
-            .BlockCount = (uint32_t)0xFFFFFFFF,//std::min<size_t>(DiskBlockCount - 1, ~0u - 1),
+            .BlockCount = 0xFFFFFFFFu,
             .Type = 0xEE
         };
 
-        GPTTablePrivate Table{};
+        TablePrivate TablePriv;
 
-        for (int i = 0; i < PartitionCount; ++i)
+        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx)
         {
-            Table.Partitions[i] = {
+            TablePriv[Idx] = PartitionPrivate{
                 .Type = MsDataGuid,
-                .Start = Partitions[i].BlockAddress,
-                .End = Partitions[i].BlockAddress + Partitions[i].BlockCount - 1,
-                .Name = L"Basic data partition"
+                .Start = Partitions[Idx].BlockAddress,
+                .End = Partitions[Idx].BlockAddress + Partitions[Idx].BlockCount - 1,
+                .Name = { u"Basic data partition" }
             };
-            RandomGuid((char*)&Table.Partitions[i].Id);
+            RandomGuid((char*)&TablePriv[Idx].Id);
         }
 
-        uint32_t TableChecksum = Crc32Large((const char*)&Table, sizeof(Table));
+        uint32_t TableChecksum = Crc32Large((const char*)&TablePriv, sizeof(Table));
 
-        GPTHeaderPrivate PrimaryHeader{
-            .Magic = GPTMagic,
-            .Version = GPTVersion1,
-            .HeaderLength = sizeof(GPTHeaderPrivate),
+        HeaderPrivate PrimaryHeader{
+            .Magic = Magic,
+            .Version = Version1,
+            .HeaderLength = sizeof(HeaderPrivate),
             .ThisHeader = 1,
             .OtherHeader = DiskBlockCount - 1,
-            .DataStart = 2 + Align(sizeof(GPTTable), BlockSize) / BlockSize,
-            .DataEnd = DiskBlockCount - 1 - Align(sizeof(GPTTable), BlockSize) / BlockSize - 1,
+            .DataStart = 2 + Align(sizeof(Table), BlockSize) / BlockSize,
+            .DataEnd = DiskBlockCount - 1 - Align(sizeof(Table), BlockSize) / BlockSize - 1,
             .FirstEntry = 2,
-            .EntryCount = GPTPartitionCount,
-            .EntryLength = sizeof(GPTPartitionPrivate),
+            .EntryCount = MaxPartitionCount,
+            .EntryLength = sizeof(PartitionPrivate),
             .PartSum = TableChecksum
         };
         RandomGuid((char*)&PrimaryHeader.Guid);
 
-        GPTHeaderPrivate SecondaryHeader = PrimaryHeader;
+        HeaderPrivate SecondaryHeader = PrimaryHeader;
         std::swap(SecondaryHeader.ThisHeader, SecondaryHeader.OtherHeader);
         SecondaryHeader.FirstEntry = SecondaryHeader.DataEnd + 1;
 
@@ -108,10 +109,10 @@ namespace L4
         SecondaryHeader.HeaderSum = Crc32Large((const char*)&SecondaryHeader, sizeof(SecondaryHeader));
 
         return {
-            .ProtectiveMBR = CreateMBR(&ProtectiveMBRPartition, 1),
-            .PrimaryHeader = *(GPTHeader*)&PrimaryHeader,
-            .SecondaryHeader = *(GPTHeader*)&SecondaryHeader,
-            .Table = *(GPTTable*)&Table
+            .ProtectiveMBR = MBR::Create(&ProtectiveMBRPartition, 1),
+            .PrimaryHeader = *(Header*)&PrimaryHeader,
+            .SecondaryHeader = *(Header*)&SecondaryHeader,
+            .Table = *(Table*)&TablePriv
         };
     }
 }

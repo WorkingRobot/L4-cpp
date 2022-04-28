@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "disk/VirtualDisk.h"
 #include <fastspd.h>
 #include "disk/GPT.h"
 #include "disk/exFAT.h"
@@ -11,7 +10,7 @@
 #include <array>
 #include <unordered_map>
 
-namespace L4
+namespace L4::Disk
 {
     class BasicDisk : public FastSpd::VirtualDisk
     {
@@ -22,11 +21,11 @@ namespace L4
         static constexpr uint64_t BlockCount = DiskSize / BlockSize;
         static_assert(DiskSize % BlockSize == 0, "Disk size must be a multiple of block size");
 
-        static constexpr uint64_t TableBlockSize = Align<BlockSize>(sizeof(GPTTable)) / BlockSize;
+        static constexpr uint64_t TableBlockSize = Align<BlockSize>(sizeof(GPT::Table)) / BlockSize;
 
-        static constexpr GPTPartition Partition{
-            .BlockAddress = 256,//2 + TableBlockSize,
-            .BlockCount = BlockCount - 256 - 256 // 268434944
+        static constexpr GPT::Partition Partition{
+            .BlockAddress = 256,
+            .BlockCount = BlockCount - 256 - 256
         };
 
         BasicDisk(const ExFatDirectory& ExFatTree);
@@ -40,8 +39,9 @@ namespace L4
         void Unmap(uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
     private:
-        std::unordered_map<uint64_t, std::array<char, BlockSize>> RamDisk;
-        GPTData Data;
+        std::unordered_map<uint64_t, std::array<std::byte, BlockSize>> RamDisk;
+        
+        GPT::GPT GPTData;
         ExFatSystem Filesystem;
         IntervalTree Tree;
     };

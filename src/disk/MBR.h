@@ -1,20 +1,17 @@
 #pragma once
 
-#include <stdint.h>
+#include <array>
 
-namespace L4
+namespace L4::Disk::MBR
 {
-    struct MBRPartition
+    struct Partition
     {
         uint32_t BlockAddress;
         uint32_t BlockCount;
         uint8_t Type;
     };
 
-    struct MBR
-    {
-        char Data[512];
-    };
+    using MBR = std::array<std::byte, 512>;
 
-    MBR CreateMBR(const MBRPartition* Partitions, size_t PartitionCount);
+    MBR Create(const Partition* Partitions, uint8_t PartitionCount);
 }
