@@ -12,5 +12,6 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: OuterScope
 NamespaceIndentation: All
 SortIncludes: CaseInsensitive
+RequiresClausePosition: WithPreceding
 TabWidth: 4
 ...

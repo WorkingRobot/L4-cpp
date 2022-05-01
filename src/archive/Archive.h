@@ -44,7 +44,7 @@ namespace L4 {
 
         const Freelist& GetFreelist() const noexcept
         {
-            return *File.Get<Freelist>(FreelistOffset);
+            return *File.template Get<Freelist>(FreelistOffset);
         }
 
         Freelist& GetFreelist() const noexcept requires(Writable)
@@ -131,7 +131,7 @@ namespace L4 {
         // ^^^ High level API
 
     private:
-        std::conditional_t<Writable, MmioFileWritable, MmioFile> File;
+        MmioFileBase<Writable> File;
 
         const uint32_t SectorSize;
         const uint32_t StreamCount;

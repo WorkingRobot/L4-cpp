@@ -5,6 +5,8 @@ add_file(L4 RamDisk.cpp)
 add_file(L4 BasicDisk.cpp)
 add_dir(L4 disk)
 add_dir(L4 utils)
+add_dir(L4 archive)
+add_dir(L4 mmio)
 push_sources(L4)
 
 

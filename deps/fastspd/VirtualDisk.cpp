@@ -42,7 +42,7 @@ namespace FastSpd {
 
             PCSTR HwidBufPtr = (PCHAR)HwidBuf;
             for (std::string_view Id(HwidBufPtr); !Id.empty(); HwidBufPtr += Id.size() + 1, Id = HwidBufPtr) {
-                static constexpr auto to_lower { std::ranges::views::transform([](char c) { return std::tolower(c); }) };
+                static constexpr auto to_lower = std::ranges::views::transform([](char c) { return std::tolower(c); });
                 if (std::ranges::equal(Id | to_lower, DeviceName)) {
                     DWORD NameSize;
                     SetupDiGetDeviceRegistryPropertyA(Handle, &Info, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, NULL, NULL, 0, &NameSize);
@@ -255,7 +255,6 @@ namespace FastSpd {
                     throw CreateErrorWin32(Ret);
                 }
 
-                LPOVERLAPPED Overlapped = (LPOVERLAPPED)OverlappedEx;
                 IoTransact& Call = OverlappedEx->Call;
 
                 if (Call.Request.Hint == 0) {

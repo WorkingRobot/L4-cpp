@@ -1,6 +1,6 @@
 #include "Archive.h"
 
 namespace L4 {
-    template Archive;
-    template ArchiveWritable;
+    template class ArchiveBase<false>;
+    template class ArchiveBase<true>;
 }

@@ -33,28 +33,57 @@ namespace L4 {
 
     static constexpr SIZE_T ViewSizeIncrement = 1ull << 37; // 128 gb
 
-    MmioFile::MmioFile(const std::filesystem::path& Path) :
-        MmioFile(Path.c_str())
+    template <bool Writable>
+    MmioFileBase<Writable>::MmioFileBase(const std::filesystem::path& Path) :
+        MmioFileBase(Path.c_str())
     {
     }
 
-    MmioFile::MmioFile(const std::string& Path) :
-        MmioFile(Path.c_str())
+    template <bool Writable>
+    MmioFileBase<Writable>::MmioFileBase(const std::string& Path) :
+        MmioFileBase(Path.c_str())
     {
     }
 
-    MmioFile::MmioFile(const wchar_t* Path) :
-        MmioFile(CreateFileW(Path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+    template <bool Writable>
+    static constexpr DWORD FileDesiredAccess =
+        Writable ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
+
+    template <bool Writable>
+    static constexpr DWORD FileCreationDisposition =
+        Writable ? OPEN_ALWAYS : OPEN_EXISTING;
+
+    template <bool Writable>
+    MmioFileBase<Writable>::MmioFileBase(const wchar_t* Path) :
+        MmioFileBase(CreateFileW(Path, FileDesiredAccess<Writable>, 0, NULL, FileCreationDisposition<Writable>, FILE_ATTRIBUTE_NORMAL, NULL))
     {
     }
 
-    MmioFile::MmioFile(const char* Path) :
-        MmioFile(CreateFileA(Path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+    template <bool Writable>
+    MmioFileBase<Writable>::MmioFileBase(const char* Path) :
+        MmioFileBase(CreateFileA(Path, FileDesiredAccess<Writable>, 0, NULL, FileCreationDisposition<Writable>, FILE_ATTRIBUTE_NORMAL, NULL))
     {
     }
 
-    MmioFile::MmioFile(MM_HANDLE HFile) :
-        MmioFile()
+    template <bool Writable>
+    static constexpr DWORD SectionDesiredAccess =
+        Writable ? SECTION_EXTEND_SIZE | SECTION_MAP_READ | SECTION_MAP_WRITE : SECTION_MAP_READ;
+
+    template <bool Writable>
+    static constexpr DWORD SectionPageProtection =
+        Writable ? PAGE_READONLY : PAGE_READWRITE;
+
+    template <bool Writable>
+    static constexpr ULONG SectionAllocationType =
+        Writable ? MEM_RESERVE : 0;
+
+    template <bool Writable>
+    MmioFileBase<Writable>::MmioFileBase(MM_HANDLE HFile) :
+        BaseAddress(nullptr),
+        HFile(INVALID_HANDLE_VALUE),
+        HSection(INVALID_HANDLE_VALUE),
+        SectionSize(0),
+        ViewSize(0)
     {
         this->HFile = HFile;
 
@@ -67,21 +96,33 @@ namespace L4 {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
 
+            if constexpr (Writable) {
+                // NtCreateSection will return STATUS_MAPPED_FILE_SIZE_ZERO otherwise
+                if (SectionSize == 0) {
+                    SectionSize = 1;
+                }
+            }
+
             // Note: NtCreateSection can return STATUS_MAPPED_FILE_SIZE_ZERO if the file is empty
-            Status = NtCreateSection(&HSection, SECTION_MAP_READ, NULL, (PLARGE_INTEGER)&SectionSize, PAGE_READONLY, SEC_COMMIT, HFile);
+            Status = NtCreateSection(&HSection, SectionDesiredAccess<Writable>, NULL, (PLARGE_INTEGER)&SectionSize, SectionPageProtection<Writable>, SEC_COMMIT, HFile);
             if (Status != STATUS_SUCCESS) {
                 throw CreateErrorNtStatus(Status, __FUNCTION__);
             }
         }
 
-        ViewSize = SectionSize;
-        Status = NtMapViewOfSection(HSection, GetCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READONLY);
+        if constexpr (Writable) {
+            ViewSize = Align<ViewSizeIncrement>(SectionSize);
+        } else {
+            ViewSize = SectionSize;
+        }
+        Status = NtMapViewOfSection(HSection, GetCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, SectionAllocationType<Writable>, SectionPageProtection<Writable>);
         if (Status != STATUS_SUCCESS) {
             throw CreateErrorNtStatus(Status, __FUNCTION__);
         }
     }
 
-    MmioFile::MmioFile(MmioFile&& Other) noexcept :
+    template <bool Writable>
+    MmioFileBase<Writable>::MmioFileBase(MmioFileBase&& Other) noexcept :
         BaseAddress(std::exchange(Other.BaseAddress, nullptr)),
         HFile(std::exchange(Other.HFile, INVALID_HANDLE_VALUE)),
         HSection(std::exchange(Other.HSection, INVALID_HANDLE_VALUE)),
@@ -90,10 +131,13 @@ namespace L4 {
     {
     }
 
-    MmioFile::~MmioFile()
+    template <bool Writable>
+    MmioFileBase<Writable>::~MmioFileBase()
     {
         if (BaseAddress) {
-            Flush();
+            if constexpr (Writable) {
+                Flush();
+            }
             NtUnmapViewOfSection(GetCurrentProcess(), BaseAddress);
             EmptyWorkingSet(GetCurrentProcess());
         }
@@ -105,7 +149,8 @@ namespace L4 {
         }
     }
 
-    std::filesystem::path MmioFile::GetPath() const
+    template <bool Writable>
+    std::filesystem::path MmioFileBase<Writable>::GetPath() const
     {
         char Filename[MAX_PATH] {};
         if (GetMappedFileName(GetCurrentProcess(), BaseAddress, Filename, MAX_PATH)) {
@@ -117,96 +162,26 @@ namespace L4 {
         return "";
     }
 
-    const void* MmioFile::GetBaseAddress() const noexcept
+    template <bool Writable>
+    const void* MmioFileBase<Writable>::GetBaseAddress() const noexcept
     {
         return BaseAddress;
     }
 
-    size_t MmioFile::GetSize() const noexcept
+    template <bool Writable>
+    void* MmioFileBase<Writable>::GetBaseAddress() const noexcept requires(Writable)
+    {
+        return BaseAddress;
+    }
+
+    template <bool Writable>
+    size_t MmioFileBase<Writable>::GetSize() const noexcept
     {
         return SectionSize;
     }
 
-    MmioFile::MmioFile() noexcept :
-        BaseAddress(nullptr),
-        HFile(INVALID_HANDLE_VALUE),
-        HSection(INVALID_HANDLE_VALUE),
-        SectionSize(0),
-        ViewSize(0)
-    {
-    }
-
-    void MmioFile::Flush(size_t Position, size_t Size) const
-    {
-        VirtualUnlock((LPBYTE)BaseAddress + Position, Size);
-    }
-
-    void MmioFile::Flush() const
-    {
-        SIZE_T FlushSize = 0;
-        PVOID FlushAddr = BaseAddress;
-        IO_STATUS_BLOCK Block;
-        NtFlushVirtualMemory(GetCurrentProcess(), &FlushAddr, &FlushSize, &Block);
-    }
-
-    MmioFileWritable::MmioFileWritable(const std::filesystem::path& Path) :
-        MmioFileWritable(Path.c_str())
-    {
-    }
-
-    MmioFileWritable::MmioFileWritable(const std::string& Path) :
-        MmioFileWritable(Path.c_str())
-    {
-    }
-
-    MmioFileWritable::MmioFileWritable(const wchar_t* Path) :
-        MmioFileWritable(CreateFileW(Path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL))
-    {
-    }
-
-    MmioFileWritable::MmioFileWritable(const char* Path) :
-        MmioFileWritable(CreateFileA(Path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL))
-    {
-    }
-
-    MmioFileWritable::MmioFileWritable(MM_HANDLE HFile) :
-        MmioFile()
-    {
-        this->HFile = HFile;
-
-        NTSTATUS Status;
-        {
-            if (HFile == INVALID_HANDLE_VALUE) {
-                throw CreateErrorWin32(GetLastError(), __FUNCTION__);
-            }
-            if (!GetFileSizeEx(HFile, (PLARGE_INTEGER)&SectionSize)) {
-                throw CreateErrorWin32(GetLastError(), __FUNCTION__);
-            }
-
-            // NtCreateSection will return STATUS_MAPPED_FILE_SIZE_ZERO otherwise
-            if (SectionSize == 0) {
-                SectionSize = 1;
-            }
-
-            Status = NtCreateSection(&HSection, SECTION_EXTEND_SIZE | SECTION_MAP_READ | SECTION_MAP_WRITE, NULL, (PLARGE_INTEGER)&SectionSize, PAGE_READWRITE, SEC_COMMIT, HFile);
-            if (Status != STATUS_SUCCESS) {
-                throw CreateErrorNtStatus(Status, __FUNCTION__);
-            }
-        }
-
-        ViewSize = Align<ViewSizeIncrement>(SectionSize);
-        Status = NtMapViewOfSection(HSection, GetCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE);
-        if (Status != STATUS_SUCCESS) {
-            throw CreateErrorNtStatus(Status, __FUNCTION__);
-        }
-    }
-
-    void* MmioFileWritable::GetBaseAddress() const noexcept
-    {
-        return BaseAddress;
-    }
-
-    void MmioFileWritable::Reserve(size_t Size)
+    template <bool Writable>
+    void MmioFileBase<Writable>::Reserve(size_t Size) requires(Writable)
     {
         if (SectionSize < Size) {
             SectionSize = Size;
@@ -234,13 +209,21 @@ namespace L4 {
         }
     }
 
-    void MmioFileWritable::Flush(size_t Position, size_t Size) const
+    template <bool Writable>
+    void MmioFileBase<Writable>::Flush(size_t Position, size_t Size) const requires(Writable)
     {
-        MmioFile::Flush(Position, Size);
+        VirtualUnlock((LPBYTE)BaseAddress + Position, Size);
     }
 
-    void MmioFileWritable::Flush() const
+    template <bool Writable>
+    void MmioFileBase<Writable>::Flush() const requires(Writable)
     {
-        MmioFile::Flush();
+        SIZE_T FlushSize = 0;
+        PVOID FlushAddr = BaseAddress;
+        IO_STATUS_BLOCK Block;
+        NtFlushVirtualMemory(GetCurrentProcess(), &FlushAddr, &FlushSize, &Block);
     }
+
+    template class MmioFileBase<false>;
+    template class MmioFileBase<true>;
 }
