@@ -7,11 +7,11 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  Build:
     strategy:
       matrix:
-        os: [windows-2022]
         build-type: [Debug, Release]
+        os: [windows-2022]
         
     runs-on: ${{matrix.os}}
 
