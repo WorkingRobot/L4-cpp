@@ -40,8 +40,8 @@ namespace L4 {
         FileList.Add(0, 1, std::span("122939293949939323949229", 24));
         ExFatDirectory Directory {
             .Directories = {
-                CreateDirectory(L"Test", { CreateDirectory(L"A", {}, { CreateFile(L"B") }) }, { CreateFile(L"C") }) },
-            .Files = { CreateFile(L"D", FileList, 24) }
+                CreateDirectory(u"Test", { CreateDirectory(u"A", {}, { CreateFile(u"B") }) }, { CreateFile(u"C") }) },
+            .Files = { CreateFile(u"D", FileList, 24) }
         };
         Disk::BasicDisk Disk(Directory);
         Disk.Start();

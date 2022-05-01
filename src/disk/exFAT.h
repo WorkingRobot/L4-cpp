@@ -18,7 +18,7 @@ namespace L4 {
     using ExFatTime = std::chrono::zoned_time<centiseconds>;
 
     struct ExFatEntry {
-        std::wstring_view Name;
+        std::u16string_view Name;
         FileAttributes Attributes;
         ExFatTime Created;
         ExFatTime Modified;
@@ -41,7 +41,7 @@ namespace L4 {
     }
 
     static ExFatDirectory CreateDirectory(
-        const std::wstring_view Name,
+        const std::u16string_view Name,
         const std::initializer_list<ExFatDirectory> Directories = {},
         const std::initializer_list<ExFatFile> Files = {},
         FileAttributes Attributes = AttribDirectory,
@@ -69,7 +69,7 @@ namespace L4 {
     }
 
     static ExFatFile CreateFile(
-        const std::wstring_view Name,
+        const std::u16string_view Name,
         const IntervalList& List = {},
         uint64_t DataLength = 0,
         FileAttributes Attributes = AttribArchive,

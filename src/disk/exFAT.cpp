@@ -142,7 +142,7 @@ namespace L4 {
 
     struct VolumeLabelDirectoryEntry {
         uint8_t CharacterCount;
-        wchar_t VolumeLabel[11];
+        char16_t VolumeLabel[11];
         char Reserved[8];
     };
     static_assert(sizeof(VolumeLabelDirectoryEntry) == 31, "Volume label directory entry must be 31 bytes long");
@@ -193,7 +193,7 @@ namespace L4 {
 
     struct FileNameDirectoryEntry {
         uint8_t GeneralSecondaryFlags;
-        wchar_t FileName[15];
+        char16_t FileName[15];
     };
     static_assert(sizeof(FileNameDirectoryEntry) == 31, "File name directory entry must be 31 bytes long");
 
@@ -324,23 +324,16 @@ namespace L4 {
         return Checksum;
     }
 
-    template <size_t Size>
-    constexpr uint16_t NameChecksum(const wchar_t (&Data)[Size]) noexcept
-    {
-        uint16_t Checksum = 0;
-        for (size_t i = 0; i < Size - 1; ++i) {
-            wchar_t DataUpcase = towupper(Data[i]);
-            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 0) & 0xFF);
-            Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 8) & 0xFF);
-        }
-        return Checksum;
+    template<class T>
+    constexpr T toupper(T Char) {
+        return std::use_facet<std::ctype<T>>(std::locale()).toupper(Char);
     }
 
-    constexpr uint16_t NameChecksum(const std::wstring_view Data) noexcept
+    constexpr uint16_t NameChecksum(const std::u16string_view Data) noexcept
     {
         uint16_t Checksum = 0;
         for (size_t i = 0; i < Data.size(); ++i) {
-            wchar_t DataUpcase = towupper(Data[i]);
+            char16_t DataUpcase = toupper(Data[i]);
             Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 0) & 0xFF);
             Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 8) & 0xFF);
         }
