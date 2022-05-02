@@ -31,9 +31,9 @@ namespace L4::Disk
 
         BasicDisk(const ExFatDirectory& ExFatTree);
 
-        void Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
+        void Read(std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
-        void Write(const void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
+        void Write(const std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
         void Flush(uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 

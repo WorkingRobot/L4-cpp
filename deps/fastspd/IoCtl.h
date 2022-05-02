@@ -3,6 +3,8 @@
 #include <guiddef.h>
 #include <stdint.h>
 
+#include <array>
+
 namespace FastSpd
 {
     struct StorageUnitParams
@@ -10,15 +12,15 @@ namespace FastSpd
         GUID Guid;
         uint64_t BlockCount;
         uint32_t BlockLength;
-        char ProductId[16];
-        char ProductRevisionLevel[4];
+        std::array<char, 16> ProductId;
+        std::array<char, 4> ProductRevisionLevel;
         uint8_t DeviceType;
         uint32_t WriteProtected : 1;
         uint32_t CacheSupported : 1;
         uint32_t UnmapSupported : 1;
         uint32_t EjectDisabled  : 1;
         uint32_t MaxTransferLength;
-        uint64_t Reserved[8];
+        std::array<uint64_t, 8> Reserved;
     };
 
     struct StorageUnitStatus
@@ -51,14 +53,14 @@ namespace FastSpd
         Count,
     };
 
-    template <char Id>
-    struct IoCall;
-
     struct IoCallBase
     {
         alignas(8) uint16_t Size;
         uint16_t Code;
     };
+
+    template <char Id>
+    struct IoCall;
 
     template <>
     struct IoCall<'p'> : public IoCallBase

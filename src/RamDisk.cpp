@@ -7,7 +7,7 @@ namespace L4
     {
     }
 
-    void RamDisk::Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
+    void RamDisk::Read(std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
         // printf("READ %llu %u\n", BlockAddress, BlockCount);
 
@@ -24,11 +24,11 @@ namespace L4
             }
             ++BlockAddress;
             BlockCount--;
-            Buffer = (char*)Buffer + BlockSize;
+            Buffer += BlockSize;
         }
     }
 
-    void RamDisk::Write(const void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
+    void RamDisk::Write(const std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
         // printf("WRITE %llu %u\n", BlockAddress, BlockCount);
 
@@ -38,7 +38,7 @@ namespace L4
             memcpy(Itr.first->second.data(), Buffer, BlockSize);
             ++BlockAddress;
             BlockCount--;
-            Buffer = (char*)Buffer + BlockSize;
+            Buffer += BlockSize;
         }
     }
 

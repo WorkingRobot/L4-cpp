@@ -18,15 +18,15 @@ namespace L4
 
         RamDisk();
 
-        void Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
+        void Read(std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
-        void Write(const void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
+        void Write(const std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
         void Flush(uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
         void Unmap(uint64_t BlockAddress, uint32_t BlockCount) noexcept override;
 
     private:
-        std::unordered_map<uint64_t, std::array<char, BlockSize>> Disk;
+        std::unordered_map<uint64_t, std::array<std::byte, BlockSize>> Disk;
     };
 }

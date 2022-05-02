@@ -1,7 +1,6 @@
 #include "VirtualDisk.h"
 
 #include "Error.h"
-#include "Handle.h"
 #include "IoCtl.h"
 #include "Random.h"
 
@@ -98,7 +97,7 @@ namespace FastSpd
             }
             else
             {
-                throw CreateErrorWin32(GetLastError());
+                throw CreateErrorWin32(Error);
             }
         }
     }
@@ -139,26 +138,35 @@ namespace FastSpd
             }
             else
             {
-                throw CreateErrorWin32(GetLastError());
+                throw CreateErrorWin32(Error);
             }
         }
     }
 
-    static void DispatchTransact(HANDLE DeviceHandle, OverlappedEx& Call)
+    struct OverlappedEx
     {
-        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call.Call, sizeof(Call.Call), &Call.Call, sizeof(Call.Call), NULL, (LPOVERLAPPED)Call.Base.data()))
+        OVERLAPPED Overlapped;
+        IoTransact Call;
+    };
+    static_assert(sizeof(OverlappedEx) == sizeof(OverlappedExPublic));
+    static_assert(sizeof(OVERLAPPED) == sizeof(OverlappedExPublic::Overlapped));
+    static_assert(sizeof(IoTransact) == sizeof(OverlappedExPublic::Call));
+
+    static void DispatchTransact(HANDLE DeviceHandle, OverlappedEx& OvlEx)
+    {
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &OvlEx.Call, sizeof(OvlEx.Call), &OvlEx.Call, sizeof(OvlEx.Call), NULL, &OvlEx.Overlapped))
         {
             DWORD Error = GetLastError();
             if (Error != ERROR_IO_PENDING)
             {
-                throw CreateErrorWin32(GetLastError());
+                throw CreateErrorWin32(Error);
             }
         }
     }
 
-    static DWORD Transact(HANDLE DeviceHandle, HANDLE IocpHandle, OverlappedEx** OverlappedEx)
+    static DWORD Transact(HANDLE DeviceHandle, HANDLE IocpHandle, OverlappedEx** OvlEx)
     {
-        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &(*OverlappedEx)->Call, sizeof(IoTransact), &(*OverlappedEx)->Call, sizeof(IoTransact), NULL, (LPOVERLAPPED)(*OverlappedEx)->Base.data()))
+        if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &(*OvlEx)->Call, sizeof(IoTransact), &(*OvlEx)->Call, sizeof(IoTransact), NULL, &(*OvlEx)->Overlapped))
         {
             DWORD Error = GetLastError();
             if (Error != ERROR_IO_PENDING)
@@ -173,9 +181,9 @@ namespace FastSpd
         DWORD Error;
         do
         {
-            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, (LPOVERLAPPED*)OverlappedEx, INFINITE);
+            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, (LPOVERLAPPED*)OvlEx, INFINITE);
             Error = GetLastError();
-        } while (!Result && !*OverlappedEx && Error != ERROR_ABANDONED_WAIT_0 && Error != ERROR_INVALID_HANDLE);
+        } while (!Result && !*OvlEx && Error != ERROR_ABANDONED_WAIT_0 && Error != ERROR_INVALID_HANDLE);
         if (Result)
         {
             if (CompletionKey != 0)
@@ -194,9 +202,6 @@ namespace FastSpd
         }
     }
 
-    constexpr char ProductId[sizeof(StorageUnitParams::ProductId) + 1] = "L4";
-    constexpr char ProductRevisionLevel[sizeof(StorageUnitParams::ProductRevisionLevel) + 1] = "3.9";
-
     VirtualDisk::VirtualDisk(uint64_t BlockCount, uint32_t BlockSize)
     {
         auto Path = GetDevicePath();
@@ -210,23 +215,22 @@ namespace FastSpd
         }
 
         StorageUnitParams Params {
+            .Guid = UuidCreate(),
             .BlockCount = BlockCount,
             .BlockLength = BlockSize,
+            .ProductId = { "L4" },
+            .ProductRevisionLevel = { "0.1" },
             .DeviceType = 0,
             .WriteProtected = 1,
             .CacheSupported = 1,
             .UnmapSupported = 1,
             .EjectDisabled = 1,
-            .MaxTransferLength = 1 << 21 // 2 MB
+            .MaxTransferLength = MaxTransferLength
         };
-        memcpy(Params.ProductId, ProductId, sizeof(Params.ProductId));
-        memcpy(Params.ProductRevisionLevel, ProductRevisionLevel, sizeof(Params.ProductRevisionLevel));
-        Params.Guid = UuidCreate();
 
         Provision(DeviceHandle, Params, Btl);
 
         Guid = Params.Guid;
-        MaxTransferLength = Params.MaxTransferLength;
     }
 
     VirtualDisk::~VirtualDisk()
@@ -247,7 +251,7 @@ namespace FastSpd
             throw CreateErrorWin32(GetLastError());
         }
 
-        DataBuffer = std::make_unique<char[]>(CallCount * MaxTransferLength);
+        DataBuffer = std::make_unique<std::byte[]>(CallCount * MaxTransferLength);
         for (size_t Idx = 0; Idx < CallCount; ++Idx)
         {
             Threads[Idx] = std::thread(&VirtualDisk::ThreadFunc, this, Idx);
@@ -259,7 +263,7 @@ namespace FastSpd
         OverlappedEx Temp {};
         for (auto& Thread : Threads)
         {
-            PostQueuedCompletionStatus(IocpHandle, 0, 1, (LPOVERLAPPED)Temp.Base.data());
+            PostQueuedCompletionStatus(IocpHandle, 0, 1, &Temp.Overlapped);
         }
         Unprovision(DeviceHandle, Guid);
         std::ranges::for_each(Threads, &std::thread::join);
@@ -274,7 +278,7 @@ namespace FastSpd
     void VirtualDisk::ThreadFunc(size_t Idx)
     {
         IocpRange[Idx] = {};
-        auto& Call = IocpRange[Idx].Call;
+        auto& Call = ((OverlappedEx&)IocpRange[Idx]).Call;
         Call = CreateIoCall<'t'>();
         Call.Btl = Btl;
         Call.DataBuffer = (UINT64)(UINT_PTR)(DataBuffer.get() + Idx * MaxTransferLength);
@@ -283,9 +287,9 @@ namespace FastSpd
 
         try
         {
-            for (OverlappedEx* OverlappedEx = &IocpRange[Idx];;)
+            for (OverlappedEx* OvlEx = (OverlappedEx*)&IocpRange[Idx];;)
             {
-                DWORD Ret = Transact(DeviceHandle, IocpHandle, &OverlappedEx);
+                DWORD Ret = Transact(DeviceHandle, IocpHandle, &OvlEx);
                 if (Ret == ERROR_ABANDONED_WAIT_0)
                 {
                     return;
@@ -295,7 +299,7 @@ namespace FastSpd
                     throw CreateErrorWin32(Ret);
                 }
 
-                IoTransact& Call = OverlappedEx->Call;
+                IoTransact& Call = OvlEx->Call;
 
                 if (Call.Request.Hint == 0)
                 {
@@ -307,11 +311,11 @@ namespace FastSpd
                 switch (Call.Request.Kind)
                 {
                 case TransactKind::Read:
-                    Read(((void*)Call.DataBuffer), Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
+                    Read((std::byte*)Call.DataBuffer, Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
                     Call.Response.Status = {};
                     break;
                 case TransactKind::Write:
-                    Write(((void*)Call.DataBuffer), Call.Request.Op.Write.BlockAddress, Call.Request.Op.Write.BlockCount);
+                    Write((const std::byte*)Call.DataBuffer, Call.Request.Op.Write.BlockAddress, Call.Request.Op.Write.BlockCount);
                     Call.Response.Status = {};
                     break;
                 case TransactKind::Flush:
@@ -319,7 +323,7 @@ namespace FastSpd
                     Call.Response.Status = {};
                     break;
                 case TransactKind::Unmap:
-                    std::for_each_n((UnmapDescriptor*)Call.DataBuffer, Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor) {
+                    std::for_each_n((const UnmapDescriptor*)Call.DataBuffer, Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor) {
                         Unmap(Descriptor.BlockAddress, Descriptor.BlockCount);
                     });
                     Call.Response.Status = {};

@@ -24,7 +24,7 @@ namespace L4::Disk
         Tree = IntervalTree(std::move(Ints));
     }
 
-    void BasicDisk::Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
+    void BasicDisk::Read(std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
         memset(Buffer, 0, (uint64_t)BlockCount * BlockSize);
         Tree.Get(BlockAddress, BlockCount, [&](Interval Int) {
@@ -74,11 +74,11 @@ namespace L4::Disk
             }
             ++BlockAddress;
             BlockCount--;
-            Buffer = (std::byte*)Buffer + BlockSize;
+            Buffer += BlockSize;
         }
     }
 
-    void BasicDisk::Write(const void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
+    void BasicDisk::Write(const std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept
     {
         printf("WRITE %llu %u\n", BlockAddress, BlockCount);
         while (BlockCount)
@@ -87,7 +87,7 @@ namespace L4::Disk
             memcpy(Itr.first->second.data(), Buffer, BlockSize);
             ++BlockAddress;
             BlockCount--;
-            Buffer = (std::byte*)Buffer + BlockSize;
+            Buffer += BlockSize;
         }
     }
 

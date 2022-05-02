@@ -1,26 +1,26 @@
 #pragma once
 
-#include "IoCtl.h"
+#include "Handle.h"
 
 #include <guiddef.h>
 
 #include <array>
-#include <atomic>
-#include <future>
+#include <thread>
 #include <vector>
 
 namespace FastSpd
 {
-    struct OverlappedEx
+    struct OverlappedExPublic
     {
-        std::array<char, 32> Base;
-        IoTransact Call;
+        std::array<std::byte, 32> Overlapped;
+        std::array<std::byte, 72> Call;
     };
 
     class VirtualDisk
     {
-        static constexpr size_t ThreadCount = 16;
+        static constexpr size_t ThreadCount = 8;
         static constexpr size_t CallCount = ThreadCount * 2;
+        static constexpr size_t MaxTransferLength = 1 << 21; // 2 MB
 
     public:
         VirtualDisk(uint64_t BlockCount, uint32_t BlockSize);
@@ -33,9 +33,9 @@ namespace FastSpd
 
         void List();
 
-        virtual void Read(void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept = 0;
+        virtual void Read(std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept = 0;
 
-        virtual void Write(const void* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept = 0;
+        virtual void Write(const std::byte* Buffer, uint64_t BlockAddress, uint32_t BlockCount) noexcept = 0;
 
         virtual void Flush(uint64_t BlockAddress, uint32_t BlockCount) noexcept = 0;
 
@@ -47,10 +47,9 @@ namespace FastSpd
         void* DeviceHandle;
         uint32_t Btl;
         GUID Guid;
-        uint32_t MaxTransferLength;
         void* IocpHandle;
-        std::unique_ptr<char[]> DataBuffer;
-        std::array<OverlappedEx, CallCount> IocpRange;
+        std::unique_ptr<std::byte[]> DataBuffer;
+        std::array<OverlappedExPublic, CallCount> IocpRange;
         std::array<std::thread, CallCount> Threads;
     };
 }
