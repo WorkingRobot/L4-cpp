@@ -1,77 +1,51 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <span>
 #include <string>
 
 namespace L4
 {
     namespace Detail
     {
-
-        // https://stackoverflow.com/a/28801005
-        // clang-format off
-        template <uint32_t c, int k = 8>
-        struct f : f<(c >> 1) ^ (0xEDB88320 & (-(c & 1))), k - 1> { };
-        template <uint32_t c>
-        struct f<c, 0> { enum { value = c }; };
-        // clang-format on
-
-#define A(c, x) B(c, x) B(c, x + 128)
-#define B(c, x) C(c, x) C(c, x + 64)
-#define C(c, x) D(c, x) D(c, x + 32)
-#define D(c, x) E(c, x) E(c, x + 16)
-#define E(c, x) F(c, x) F(c, x + 8)
-#define F(c, x) G(c, x) G(c, x + 4)
-#define G(c, x) H(c, x) H(c, x + 2)
-#define H(c, x) I(c, x) I(c, x + 1)
-#define I(c, x) c<x>::value,
-
-        static constexpr uint32_t crc_table[] = { A(f, 0) };
-
-#undef A
-#undef B
-#undef C
-#undef D
-#undef E
-#undef F
-#undef G
-#undef H
-#undef I
-
-        static constexpr uint32_t crc32_impl(const uint8_t* p, size_t len, uint32_t crc)
+        template <uint32_t Polynomial>
+        static consteval auto CreateCrcTable()
         {
-            return len ? crc32_impl(p + 1, len - 1, (crc >> 8) ^ crc_table[(uint8_t)(crc & 0xFF) ^ *p])
-                       : crc;
-        }
-
-        static constexpr uint32_t crc32_large(const uint8_t* p, size_t len, uint32_t crc)
-        {
-            while (len--)
+            std::array<uint32_t, 256> Table {};
+            for (int Idx = 0; Idx < 256; ++Idx)
             {
-                crc = (crc >> 8) ^ crc_table[(uint8_t)(crc & 0xFF) ^ *(p++)];
+                uint32_t Crc = Idx;
+                for (int K = 0; K < 8; ++K)
+                {
+                    Crc = (Polynomial & (-(Crc & 1))) ^ (Crc >> 1);
+                }
+                Table[Idx] = Crc;
             }
-            return crc;
+            return Table;
         }
+
+        static constexpr auto CrcTable = CreateCrcTable<0xEDB88320>();
     }
 
-    static constexpr __forceinline uint32_t Crc32Large(const char* str, size_t size)
+    static constexpr __forceinline uint32_t Crc32(std::span<const std::byte> Buffer)
     {
-        return ~Detail::crc32_large((uint8_t*)str, size, ~0);
+        uint32_t Crc = ~0u;
+        for (const auto Byte : Buffer)
+        {
+            Crc = Detail::CrcTable[uint8_t(Crc & 0xFF) ^ uint8_t(Byte)] ^ (Crc >> 8);
+        }
+        return Crc ^ ~0u;
     }
 
-    static constexpr __forceinline uint32_t Crc32(const char* str, size_t size)
+    template <class T, size_t Extent>
+    static constexpr __forceinline uint32_t Crc32(std::span<T, Extent> Buffer)
     {
-        return ~Detail::crc32_impl((uint8_t*)str, size, ~0);
+        return Crc32(std::as_bytes(Buffer));
     }
 
-    static __forceinline uint32_t Crc32(const std::string& str)
+    static constexpr __forceinline uint32_t Crc32(const std::string_view String)
     {
-        return Crc32(str.c_str(), str.size());
-    }
-
-    template <size_t size>
-    static constexpr __forceinline uint32_t Crc32(const char (&str)[size])
-    {
-        return Crc32(str, size - 1);
+        return Crc32(std::span(String.data(), String.size()));
     }
 }

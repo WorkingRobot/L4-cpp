@@ -76,7 +76,7 @@ namespace L4::Disk::GPT
             };
         }
 
-        uint32_t TableChecksum = Crc32Large((const char*)&TablePriv, sizeof(Table));
+        uint32_t TableChecksum = Crc32(std::span(&TablePriv, 1));
 
         HeaderPrivate PrimaryHeader {
             .Magic = Magic,
@@ -97,8 +97,8 @@ namespace L4::Disk::GPT
         std::swap(SecondaryHeader.ThisHeader, SecondaryHeader.OtherHeader);
         SecondaryHeader.FirstEntry = SecondaryHeader.DataEnd + 1;
 
-        PrimaryHeader.HeaderSum = Crc32Large((const char*)&PrimaryHeader, sizeof(PrimaryHeader));
-        SecondaryHeader.HeaderSum = Crc32Large((const char*)&SecondaryHeader, sizeof(SecondaryHeader));
+        PrimaryHeader.HeaderSum = Crc32(std::span(&PrimaryHeader, 1));
+        SecondaryHeader.HeaderSum = Crc32(std::span(&SecondaryHeader, 1));
 
         return {
             .ProtectiveMBR = MBR::Create(&ProtectiveMBRPartition, 1),
