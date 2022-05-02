@@ -1,6 +1,7 @@
 #include "VirtualDisk.h"
 
 #include "Error.h"
+#include "Handle.h"
 #include "IoCtl.h"
 #include "Random.h"
 
