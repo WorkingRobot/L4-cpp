@@ -1,12 +1,14 @@
 #pragma once
 
+#include "Guid.h"
+
 #include <random>
 
 namespace L4
 {
     std::mt19937& GetRandGenerator();
 
-    void RandomGuid(char Guid[16]);
+    Guid RandomGuid();
 
     template <class T>
     static T Random(T Min = std::numeric_limits<T>::min(), T Max = std::numeric_limits<T>::max())

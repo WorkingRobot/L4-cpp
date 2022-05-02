@@ -10,11 +10,8 @@ namespace L4
         return RandGenerator;
     }
 
-    void RandomGuid(char Guid[16])
+    Guid RandomGuid()
     {
-        *(uint32_t*)(Guid + 0) = RandGenerator();
-        *(uint32_t*)(Guid + 4) = RandGenerator();
-        *(uint32_t*)(Guid + 8) = RandGenerator();
-        *(uint32_t*)(Guid + 12) = RandGenerator();
+        return { RandGenerator(), RandGenerator(), RandGenerator(), RandGenerator() };
     }
 }

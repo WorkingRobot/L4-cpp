@@ -8,14 +8,6 @@
 
 namespace L4::Disk::GPT
 {
-    struct Guid
-    {
-        uint32_t A;
-        uint32_t B;
-        uint32_t C;
-        uint32_t D;
-    };
-
     struct PartitionPrivate
     {
         Guid Type;
@@ -77,11 +69,11 @@ namespace L4::Disk::GPT
         {
             TablePriv[Idx] = PartitionPrivate {
                 .Type = MsDataGuid,
+                .Id = RandomGuid(),
                 .Start = Partitions[Idx].BlockAddress,
                 .End = Partitions[Idx].BlockAddress + Partitions[Idx].BlockCount - 1,
                 .Name = { u"Basic data partition" }
             };
-            RandomGuid((char*)&TablePriv[Idx].Id);
         }
 
         uint32_t TableChecksum = Crc32Large((const char*)&TablePriv, sizeof(Table));
@@ -94,12 +86,12 @@ namespace L4::Disk::GPT
             .OtherHeader = DiskBlockCount - 1,
             .DataStart = 2 + Align(sizeof(Table), BlockSize) / BlockSize,
             .DataEnd = DiskBlockCount - 1 - Align(sizeof(Table), BlockSize) / BlockSize - 1,
+            .Guid = RandomGuid(),
             .FirstEntry = 2,
             .EntryCount = MaxPartitionCount,
             .EntryLength = sizeof(PartitionPrivate),
             .PartSum = TableChecksum
         };
-        RandomGuid((char*)&PrimaryHeader.Guid);
 
         HeaderPrivate SecondaryHeader = PrimaryHeader;
         std::swap(SecondaryHeader.ThisHeader, SecondaryHeader.OtherHeader);

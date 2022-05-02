@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Guid.h"
-
 #include <type_traits>
 
 namespace L4

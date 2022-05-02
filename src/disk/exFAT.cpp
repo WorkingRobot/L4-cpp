@@ -21,14 +21,6 @@ namespace L4
     static constexpr uint32_t SectorsPerCluster = 1 << SectorsPerClusterBits;
     static constexpr uint32_t ClusterSize = SectorSize * SectorsPerCluster;
 
-    struct Guid
-    {
-        uint32_t A;
-        uint32_t B;
-        uint32_t C;
-        uint32_t D;
-    };
-
 #pragma pack(push, 1)
     struct BootSector
     {

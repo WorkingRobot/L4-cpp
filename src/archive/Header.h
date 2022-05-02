@@ -1,7 +1,8 @@
 #pragma once
 
+#include "../utils/Guid.h"
+
 #include "Consts.h"
-#include "Guid.h"
 
 #include <type_traits>
 
