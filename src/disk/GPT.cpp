@@ -6,15 +6,18 @@
 
 #include <utility>
 
-namespace L4::Disk::GPT {
-    struct Guid {
+namespace L4::Disk::GPT
+{
+    struct Guid
+    {
         uint32_t A;
         uint32_t B;
         uint32_t C;
         uint32_t D;
     };
 
-    struct PartitionPrivate {
+    struct PartitionPrivate
+    {
         Guid Type;
         Guid Id;
         uint64_t Start;
@@ -25,7 +28,8 @@ namespace L4::Disk::GPT {
     static_assert(sizeof(PartitionPrivate) == 128, "GPT partition entry must be 16 bytes long");
 
 #pragma pack(push, 1)
-    struct HeaderPrivate {
+    struct HeaderPrivate
+    {
         uint64_t Magic;
         uint32_t Version;
         uint32_t HeaderLength;
@@ -56,7 +60,8 @@ namespace L4::Disk::GPT {
 
     GPT Create(uint64_t BlockSize, uint64_t DiskBlockCount, const Partition* Partitions, uint8_t PartitionCount)
     {
-        if (PartitionCount > 128) {
+        if (PartitionCount > 128)
+        {
             PartitionCount = 128;
         }
 
@@ -68,7 +73,8 @@ namespace L4::Disk::GPT {
 
         TablePrivate TablePriv {};
 
-        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx) {
+        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx)
+        {
             TablePriv[Idx] = PartitionPrivate {
                 .Type = MsDataGuid,
                 .Start = Partitions[Idx].BlockAddress,

@@ -2,9 +2,11 @@
 
 #include "Archive.h"
 
-namespace L4 {
+namespace L4
+{
     template <class T = std::byte, class ArchiveT = const Archive>
-    class StreamDataConstIterator {
+    class StreamDataConstIterator
+    {
     public:
         using iterator_category = std::random_access_iterator_tag;
         using value_type = T;
@@ -26,11 +28,14 @@ namespace L4 {
             auto RunItr = std::lower_bound(Runlist.Runs, Runlist.Runs + Runlist.RunCount, StreamSectorIdx, [](const StreamRun& Interval, uint32_t Idx) {
                 return Interval.StreamSectorOffset + Interval.SectorCount <= Idx;
             });
-            if (RunItr != Runlist.Runs + Runlist.RunCount) {
+            if (RunItr != Runlist.Runs + Runlist.RunCount)
+            {
                 StreamRunIdx = RunItr - Runlist.Runs;
                 RunSectorIdx = StreamSectorIdx - RunItr->StreamSectorOffset;
                 FileSectorIdx = RunItr->SectorOffset + RunSectorIdx;
-            } else {
+            }
+            else
+            {
                 StreamRunIdx = -1;
                 RunSectorIdx = -1;
                 FileSectorIdx = -1;
@@ -127,7 +132,8 @@ namespace L4 {
             SectorOffset += Count;
 
             // Within sector
-            if (SectorOffset < Archive->GetSectorSize()) {
+            if (SectorOffset < Archive->GetSectorSize())
+            {
                 return true;
             }
 
@@ -135,7 +141,8 @@ namespace L4 {
             StreamSectorIdx += SectorOffset / Archive->GetSectorSize();
             SectorOffset = SectorOffset % Archive->GetSectorSize();
             auto& Runlist = Archive->GetStreamRunlist(StreamIdx);
-            if (auto& Run = Runlist.Runs[StreamRunIdx]; Run.StreamSectorOffset + Run.SectorOffset < StreamSectorIdx) {
+            if (auto& Run = Runlist.Runs[StreamRunIdx]; Run.StreamSectorOffset + Run.SectorOffset < StreamSectorIdx)
+            {
                 RunSectorIdx = StreamSectorIdx - Run.StreamSectorOffset;
                 FileSectorIdx = Run.SectorOffset + RunSectorIdx;
                 return true;
@@ -145,7 +152,8 @@ namespace L4 {
             auto RunItr = std::find_if(Runlist.Runs + StreamRunIdx, Runlist.Runs + Runlist.RunCount, [Idx = StreamSectorIdx](const StreamRun& Interval) {
                 return Interval.StreamSectorOffset + Interval.SectorCount > Idx;
             });
-            if (RunItr != Runlist.Runs + Runlist.RunCount) {
+            if (RunItr != Runlist.Runs + Runlist.RunCount)
+            {
                 StreamRunIdx = RunItr - Runlist.Runs;
                 RunSectorIdx = StreamSectorIdx - RunItr->StreamSectorOffset;
                 FileSectorIdx = RunItr->SectorOffset + RunSectorIdx;
@@ -160,13 +168,15 @@ namespace L4 {
             Count *= sizeof(T);
 
             // Within sector
-            if (Count <= SectorOffset) {
+            if (Count <= SectorOffset)
+            {
                 SectorOffset -= Count;
                 return true;
             }
 
             size_t AbsoluteOffset = (size_t)StreamSectorIdx * Archive->GetSectorSize() + SectorOffset;
-            if (AbsoluteOffset < Count) {
+            if (AbsoluteOffset < Count)
+            {
                 return false;
             }
             AbsoluteOffset -= Count;
@@ -175,7 +185,8 @@ namespace L4 {
             StreamSectorIdx = AbsoluteOffset / Archive->GetSectorSize();
             SectorOffset = AbsoluteOffset % Archive->GetSectorSize();
             auto& Runlist = Archive->GetStreamRunlist(StreamIdx);
-            if (auto& Run = Runlist.Runs[StreamRunIdx]; StreamSectorIdx >= Run.StreamSectorOffset) {
+            if (auto& Run = Runlist.Runs[StreamRunIdx]; StreamSectorIdx >= Run.StreamSectorOffset)
+            {
                 RunSectorIdx = StreamSectorIdx - Run.StreamSectorOffset;
                 FileSectorIdx = Run.SectorOffset + RunSectorIdx;
                 return true;

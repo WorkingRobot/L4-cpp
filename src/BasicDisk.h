@@ -6,12 +6,15 @@
 #include "utils/IntervalTree.h"
 #include "utils/Random.h"
 
-#include <array>
 #include <fastspd.h>
+
+#include <array>
 #include <unordered_map>
 
-namespace L4::Disk {
-    class BasicDisk : public FastSpd::VirtualDisk {
+namespace L4::Disk
+{
+    class BasicDisk : public FastSpd::VirtualDisk
+    {
     public:
         static constexpr uint64_t BlockSize = 1 << 12;
         static constexpr uint64_t DiskSize = 1ll << 28;

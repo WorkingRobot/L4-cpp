@@ -1,17 +1,56 @@
 ---
 BasedOnStyle: WebKit
+ColumnLimit: 0
+TabWidth: 4
 AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignOperands: Align
 AlignConsecutiveBitFields: Consecutive
 AllowShortFunctionsOnASingleLine: None
-BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBinaryOperators: None
 BreakInheritanceList: AfterColon
 BreakConstructorInitializers: AfterColon
+BraceWrapping:
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     true
+  BeforeElse:      true
+  BeforeLambdaBody: false
+  BeforeWhile:     false
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakBeforeBraces: Custom
 QualifierAlignment: Left
 IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^"\.\..*'
+    Priority:        1
+    CaseSensitive:   false
+  - Regex:           '^".*'
+    Priority:        2
+    CaseSensitive:   false
+  - Regex:           '^<.*\.(h|hpp)>'
+    Priority:        3
+    CaseSensitive:   false
+  - Regex:           '^<.*'
+    Priority:        4
+    CaseSensitive:   false
+  - Regex:           '.*'
+    Priority:        5
+    CaseSensitive:   false
 KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: OuterScope
 NamespaceIndentation: All
 SortIncludes: CaseInsensitive
 RequiresClausePosition: WithPreceding
-TabWidth: 4
 ...

@@ -2,8 +2,10 @@
 
 #include "StreamRun.h"
 
-namespace L4 {
-    struct StreamRunlist {
+namespace L4
+{
+    struct StreamRunlist
+    {
         uint32_t RunCount;
         uint32_t Reserved;
         size_t Size;

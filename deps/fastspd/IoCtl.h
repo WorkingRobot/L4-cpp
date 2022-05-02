@@ -3,8 +3,10 @@
 #include <guiddef.h>
 #include <stdint.h>
 
-namespace FastSpd {
-    struct StorageUnitParams {
+namespace FastSpd
+{
+    struct StorageUnitParams
+    {
         GUID Guid;
         uint64_t BlockCount;
         uint32_t BlockLength;
@@ -19,7 +21,8 @@ namespace FastSpd {
         uint64_t Reserved[8];
     };
 
-    struct StorageUnitStatus {
+    struct StorageUnitStatus
+    {
         uint8_t ScsiStatus;
         uint8_t SenseKey;
         uint8_t ASC;
@@ -31,13 +34,15 @@ namespace FastSpd {
         uint32_t InformationValid : 1;
     };
 
-    struct UnmapDescriptor {
+    struct UnmapDescriptor
+    {
         uint64_t BlockAddress;
         uint32_t BlockCount;
         uint32_t Reserved;
     };
 
-    enum class TransactKind : uint8_t {
+    enum class TransactKind : uint8_t
+    {
         Reserved = 0,
         Read,
         Write,
@@ -49,14 +54,17 @@ namespace FastSpd {
     template <char Id>
     struct IoCall;
 
-    struct IoCallBase {
+    struct IoCallBase
+    {
         alignas(8) uint16_t Size;
         uint16_t Code;
     };
 
     template <>
-    struct IoCall<'p'> : public IoCallBase {
-        union {
+    struct IoCall<'p'> : public IoCallBase
+    {
+        union
+        {
             struct
             {
                 StorageUnitParams StorageUnitParams;
@@ -69,8 +77,10 @@ namespace FastSpd {
     };
 
     template <>
-    struct IoCall<'u'> : public IoCallBase {
-        union {
+    struct IoCall<'u'> : public IoCallBase
+    {
+        union
+        {
             struct
             {
                 GUID Guid;
@@ -82,8 +92,10 @@ namespace FastSpd {
     };
 
     template <>
-    struct IoCall<'l'> : public IoCallBase {
-        union {
+    struct IoCall<'l'> : public IoCallBase
+    {
+        union
+        {
             struct
             {
             } Params;
@@ -94,17 +106,20 @@ namespace FastSpd {
     };
 
     template <>
-    struct IoCall<'t'> : public IoCallBase {
+    struct IoCall<'t'> : public IoCallBase
+    {
         uint32_t Btl;
         uint32_t IsRequestValid  : 1;
         uint32_t IsResponseValid : 1;
         uint64_t DataBuffer;
-        union {
+        union
+        {
             struct
             {
                 uint64_t Hint;
                 TransactKind Kind;
-                union {
+                union
+                {
                     struct
                     {
                         uint64_t BlockAddress;
@@ -140,8 +155,10 @@ namespace FastSpd {
     };
 
     template <>
-    struct IoCall<'i'> : public IoCallBase {
-        union {
+    struct IoCall<'i'> : public IoCallBase
+    {
+        union
+        {
             struct
             {
                 uint32_t Btl;

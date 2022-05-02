@@ -3,17 +3,18 @@
 #include <array>
 #include <string>
 
-namespace L4 {
-    namespace Detail {
+namespace L4
+{
+    namespace Detail
+    {
 
         // https://stackoverflow.com/a/28801005
+        // clang-format off
         template <uint32_t c, int k = 8>
-        struct f : f<(c >> 1) ^ (0xEDB88320 & (-(c & 1))), k - 1> {
-        };
+        struct f : f<(c >> 1) ^ (0xEDB88320 & (-(c & 1))), k - 1> { };
         template <uint32_t c>
-        struct f<c, 0> {
-            enum { value = c };
-        };
+        struct f<c, 0> { enum { value = c }; };
+        // clang-format on
 
 #define A(c, x) B(c, x) B(c, x + 128)
 #define B(c, x) C(c, x) C(c, x + 64)
@@ -39,14 +40,14 @@ namespace L4 {
 
         static constexpr uint32_t crc32_impl(const uint8_t* p, size_t len, uint32_t crc)
         {
-            return len
-                ? crc32_impl(p + 1, len - 1, (crc >> 8) ^ crc_table[(uint8_t)(crc & 0xFF) ^ *p])
-                : crc;
+            return len ? crc32_impl(p + 1, len - 1, (crc >> 8) ^ crc_table[(uint8_t)(crc & 0xFF) ^ *p])
+                       : crc;
         }
 
         static constexpr uint32_t crc32_large(const uint8_t* p, size_t len, uint32_t crc)
         {
-            while (len--) {
+            while (len--)
+            {
                 crc = (crc >> 8) ^ crc_table[(uint8_t)(crc & 0xFF) ^ *(p++)];
             }
             return crc;

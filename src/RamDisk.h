@@ -1,11 +1,14 @@
 #pragma once
 
-#include <array>
 #include <fastspd.h>
+
+#include <array>
 #include <unordered_map>
 
-namespace L4 {
-    class RamDisk : public FastSpd::VirtualDisk {
+namespace L4
+{
+    class RamDisk : public FastSpd::VirtualDisk
+    {
     public:
         static constexpr uint64_t BlockSize = 1 << 12;
         static constexpr uint64_t DiskSize = 1ll << 38;

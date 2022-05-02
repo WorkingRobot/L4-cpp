@@ -1,9 +1,11 @@
 #pragma once
 
 #include <ntdll.h>
+
 #include <system_error>
 
-namespace L4 {
+namespace L4
+{
     template <class T = std::system_error, class... ArgTs>
     static T CreateErrorWin32(DWORD Error, ArgTs&&... Args)
     {

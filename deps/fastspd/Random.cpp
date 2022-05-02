@@ -2,7 +2,8 @@
 
 #include <random>
 
-namespace FastSpd {
+namespace FastSpd
+{
     // Split into different compilation unit so there aren't multiple random devices (one static for all)
     static std::mt19937 RandGenerator { std::random_device {}() };
 

@@ -6,21 +6,27 @@
 #include <ntdll.h>
 #include <Psapi.h>
 
-namespace L4 {
+namespace L4
+{
     // Formats GetMappedFileName into something more readable
     static bool ResolveDevicePath(std::string& Filename)
     {
         char DriveLetters[512];
-        if (GetLogicalDriveStrings(sizeof(DriveLetters) - 1, DriveLetters)) {
+        if (GetLogicalDriveStrings(sizeof(DriveLetters) - 1, DriveLetters))
+        {
             char DriveName[MAX_PATH];
             char Drive[3] = " :";
-            for (auto DriveLetter = DriveLetters; *DriveLetter; DriveLetter += strlen(DriveLetter) + 1) {
+            for (auto DriveLetter = DriveLetters; *DriveLetter; DriveLetter += strlen(DriveLetter) + 1)
+            {
                 Drive[0] = *DriveLetter;
-                if (QueryDosDevice(Drive, DriveName, MAX_PATH)) {
+                if (QueryDosDevice(Drive, DriveName, MAX_PATH))
+                {
                     size_t DriveNameLen = strlen(DriveName);
 
-                    if (DriveNameLen < MAX_PATH) {
-                        if (Filename.starts_with({ DriveName, DriveNameLen }) && Filename[DriveNameLen] == '\\') {
+                    if (DriveNameLen < MAX_PATH)
+                    {
+                        if (Filename.starts_with({ DriveName, DriveNameLen }) && Filename[DriveNameLen] == '\\')
+                        {
                             Filename.replace(0, DriveNameLen, Drive);
                             return true;
                         }
@@ -89,34 +95,43 @@ namespace L4 {
 
         NTSTATUS Status;
         {
-            if (HFile == INVALID_HANDLE_VALUE) {
+            if (HFile == INVALID_HANDLE_VALUE)
+            {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
-            if (!GetFileSizeEx(HFile, (PLARGE_INTEGER)&SectionSize)) {
+            if (!GetFileSizeEx(HFile, (PLARGE_INTEGER)&SectionSize))
+            {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
 
-            if constexpr (Writable) {
+            if constexpr (Writable)
+            {
                 // NtCreateSection will return STATUS_MAPPED_FILE_SIZE_ZERO otherwise
-                if (SectionSize == 0) {
+                if (SectionSize == 0)
+                {
                     SectionSize = 1;
                 }
             }
 
             // Note: NtCreateSection can return STATUS_MAPPED_FILE_SIZE_ZERO if the file is empty
             Status = NtCreateSection(&HSection, SectionDesiredAccess<Writable>, NULL, (PLARGE_INTEGER)&SectionSize, SectionPageProtection<Writable>, SEC_COMMIT, HFile);
-            if (Status != STATUS_SUCCESS) {
+            if (Status != STATUS_SUCCESS)
+            {
                 throw CreateErrorNtStatus(Status, __FUNCTION__);
             }
         }
 
-        if constexpr (Writable) {
+        if constexpr (Writable)
+        {
             ViewSize = Align<ViewSizeIncrement>(SectionSize);
-        } else {
+        }
+        else
+        {
             ViewSize = SectionSize;
         }
         Status = NtMapViewOfSection(HSection, GetCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, SectionAllocationType<Writable>, SectionPageProtection<Writable>);
-        if (Status != STATUS_SUCCESS) {
+        if (Status != STATUS_SUCCESS)
+        {
             throw CreateErrorNtStatus(Status, __FUNCTION__);
         }
     }
@@ -134,17 +149,21 @@ namespace L4 {
     template <bool Writable>
     MmioFileBase<Writable>::~MmioFileBase()
     {
-        if (BaseAddress) {
-            if constexpr (Writable) {
+        if (BaseAddress)
+        {
+            if constexpr (Writable)
+            {
                 Flush();
             }
             NtUnmapViewOfSection(GetCurrentProcess(), BaseAddress);
             EmptyWorkingSet(GetCurrentProcess());
         }
-        if (HSection != INVALID_HANDLE_VALUE) {
+        if (HSection != INVALID_HANDLE_VALUE)
+        {
             NtClose(HSection);
         }
-        if (HFile != INVALID_HANDLE_VALUE) {
+        if (HFile != INVALID_HANDLE_VALUE)
+        {
             NtClose(HFile);
         }
     }
@@ -153,9 +172,11 @@ namespace L4 {
     std::filesystem::path MmioFileBase<Writable>::GetPath() const
     {
         char Filename[MAX_PATH] {};
-        if (GetMappedFileName(GetCurrentProcess(), BaseAddress, Filename, MAX_PATH)) {
+        if (GetMappedFileName(GetCurrentProcess(), BaseAddress, Filename, MAX_PATH))
+        {
             std::string FilenameString = Filename;
-            if (ResolveDevicePath(FilenameString)) {
+            if (ResolveDevicePath(FilenameString))
+            {
                 return FilenameString;
             }
         }
@@ -183,14 +204,17 @@ namespace L4 {
     template <bool Writable>
     void MmioFileBase<Writable>::Reserve(size_t Size) requires(Writable)
     {
-        if (SectionSize < Size) {
+        if (SectionSize < Size)
+        {
             SectionSize = Size;
             NTSTATUS Status = NtExtendSection(HSection, (PLARGE_INTEGER)&SectionSize);
-            if (Status != STATUS_SUCCESS) {
+            if (Status != STATUS_SUCCESS)
+            {
                 throw CreateErrorNtStatus(Status, __FUNCTION__);
             }
 
-            if (Size > ViewSize) {
+            if (Size > ViewSize)
+            {
                 ViewSize = Align<ViewSizeIncrement>(Size);
 
                 // By not unmapping, we prevent code that is running in other threads from encountering an access error
@@ -202,7 +226,8 @@ namespace L4 {
 
                 BaseAddress = NULL;
                 Status = NtMapViewOfSection(HSection, GetCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE);
-                if (Status != STATUS_SUCCESS) {
+                if (Status != STATUS_SUCCESS)
+                {
                     throw CreateErrorNtStatus(Status, __FUNCTION__);
                 }
             }

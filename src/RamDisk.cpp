@@ -1,6 +1,7 @@
 #include "RamDisk.h"
 
-namespace L4 {
+namespace L4
+{
     RamDisk::RamDisk() :
         VirtualDisk(BlockCount, BlockSize)
     {
@@ -10,11 +11,15 @@ namespace L4 {
     {
         // printf("READ %llu %u\n", BlockAddress, BlockCount);
 
-        while (BlockCount) {
+        while (BlockCount)
+        {
             auto Itr = Disk.find(BlockAddress);
-            if (Itr != Disk.end()) {
+            if (Itr != Disk.end())
+            {
                 memcpy(Buffer, Itr->second.data(), BlockSize);
-            } else {
+            }
+            else
+            {
                 memset(Buffer, 0, BlockSize);
             }
             ++BlockAddress;
@@ -27,7 +32,8 @@ namespace L4 {
     {
         // printf("WRITE %llu %u\n", BlockAddress, BlockCount);
 
-        while (BlockCount) {
+        while (BlockCount)
+        {
             auto Itr = Disk.try_emplace(BlockAddress);
             memcpy(Itr.first->second.data(), Buffer, BlockSize);
             ++BlockAddress;
@@ -45,12 +51,14 @@ namespace L4 {
     {
         printf("UNMAP %llu %u\n", BlockAddress, BlockCount);
 
-        if (BlockCount > 0x1000000) {
+        if (BlockCount > 0x1000000)
+        {
             printf("Skipping unmap\n");
             return;
         }
 
-        while (BlockCount) {
+        while (BlockCount)
+        {
             Disk.erase(BlockAddress);
             ++BlockAddress;
             BlockCount--;

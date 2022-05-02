@@ -4,9 +4,11 @@
 
 #include <span>
 
-namespace L4 {
+namespace L4
+{
     template <bool Writable>
-    class StreamViewBase {
+    class StreamViewBase
+    {
         using ArchiveT = std::conditional_t<Writable, ArchiveWritable, const Archive>;
 
     public:
@@ -40,7 +42,8 @@ namespace L4 {
         uint32_t GetCapacityInSectors() const noexcept
         {
             auto& Runlist = GetRunlist();
-            if (Runlist.RunCount == 0) {
+            if (Runlist.RunCount == 0)
+            {
                 return 0;
             }
             auto& LastRun = Runlist.Runs[Runlist.RunCount - 1];
@@ -60,7 +63,8 @@ namespace L4 {
             uint32_t RequestedCapacity = Align(NewCapacity, Archive->GetSectorSize()) / Archive->GetSectorSize();
             uint32_t CurrentCapacity = GetCapacityInSectors();
 
-            if (CurrentCapacity >= RequestedCapacity) {
+            if (CurrentCapacity >= RequestedCapacity)
+            {
                 return;
             }
 
@@ -70,10 +74,12 @@ namespace L4 {
             auto& Runlist = GetRunlist();
 
             // Extend current run and extend archive
-            if (Runlist.RunCount != 0) {
+            if (Runlist.RunCount != 0)
+            {
                 auto& LastRun = Runlist.Runs[Runlist.RunCount - 1];
                 // If the last run for this stream touches the end of the archive, we can extend as far as we want
-                if (LastRun.SectorOffset + LastRun.SectorCount == Freelist.TotalSectorCount) {
+                if (LastRun.SectorOffset + LastRun.SectorCount == Freelist.TotalSectorCount)
+                {
                     Freelist.TotalSectorCount += MoreSectorsNeeded;
                     Archive->ReserveSectors(Freelist.TotalSectorCount);
                     LastRun.SectorCount += MoreSectorsNeeded;
@@ -82,11 +88,13 @@ namespace L4 {
             }
 
             // Utilize freelist
-            while (Freelist.EntryCount != 0) {
+            while (Freelist.EntryCount != 0)
+            {
                 std::pop_heap(Freelist.Entries, Freelist.Entries + Freelist.EntryCount, MinHeapEntries);
                 auto& LastEntry = Freelist.Entries[Freelist.EntryCount - 1];
                 auto& NewRun = Runlist.Runs[Runlist.RunCount++];
-                if (LastEntry.SectorCount > MoreSectorsNeeded) {
+                if (LastEntry.SectorCount > MoreSectorsNeeded)
+                {
                     NewRun = {
                         .StreamSectorOffset = CurrentCapacity,
                         .SectorOffset = LastEntry.SectorOffset,
@@ -98,7 +106,9 @@ namespace L4 {
 
                     std::push_heap(Freelist.Entries, Freelist.Entries + Freelist.EntryCount, MinHeapEntries);
                     return;
-                } else {
+                }
+                else
+                {
                     NewRun = {
                         .StreamSectorOffset = CurrentCapacity,
                         .SectorOffset = LastEntry.SectorOffset,
@@ -126,9 +136,12 @@ namespace L4 {
         void Resize(size_t NewSize) requires(Writable)
         {
             auto& Runlist = GetRunlist();
-            if (NewSize <= Runlist.Size) {
+            if (NewSize <= Runlist.Size)
+            {
                 Runlist.Size = NewSize;
-            } else {
+            }
+            else
+            {
                 Reserve(NewSize);
                 Runlist.Size = NewSize;
             }
@@ -143,9 +156,11 @@ namespace L4 {
             uint32_t TargetCapacity = Align(Runlist.Size * GetElementSize(), Archive->GetSectorSize()) / Archive->GetSectorSize();
 
             uint32_t SectorsToFree = CurrentCapacity - TargetCapacity;
-            while (SectorsToFree != 0) {
+            while (SectorsToFree != 0)
+            {
                 auto& Run = Runlist.Runs[Runlist.RunCount - 1];
-                if (Run.SectorCount > SectorsToFree) {
+                if (Run.SectorCount > SectorsToFree)
+                {
                     Freelist.Entries[Freelist.EntryCount++] = {
                         .SectorCount = SectorsToFree,
                         .SectorOffset = Run.SectorOffset + Run.SectorCount - SectorsToFree
@@ -155,7 +170,9 @@ namespace L4 {
 
                     std::push_heap(Freelist.Entries, Freelist.Entries + Freelist.EntryCount, MinHeapEntries);
                     return;
-                } else {
+                }
+                else
+                {
                     Freelist.Entries[Freelist.EntryCount++] = {
                         .SectorCount = Run.SectorCount,
                         .SectorOffset = Run.SectorOffset

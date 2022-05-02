@@ -4,8 +4,10 @@
 #define NOMINMAX
 #include <Windows.h>
 
-namespace L4 {
-    class HandleWrapper {
+namespace L4
+{
+    class HandleWrapper
+    {
     public:
         HandleWrapper(HANDLE&& Handle) :
             Handle(Handle)

@@ -5,10 +5,12 @@
 #include "../utils/Random.h"
 
 #include <assert.h>
-#include <memory>
 #include <stdint.h>
 
-namespace L4 {
+#include <memory>
+
+namespace L4
+{
     static constexpr uint32_t SectorBits = 12;
     static constexpr uint32_t SectorsPerClusterBits = 9;
 
@@ -19,7 +21,8 @@ namespace L4 {
     static constexpr uint32_t SectorsPerCluster = 1 << SectorsPerClusterBits;
     static constexpr uint32_t ClusterSize = SectorSize * SectorsPerCluster;
 
-    struct Guid {
+    struct Guid
+    {
         uint32_t A;
         uint32_t B;
         uint32_t C;
@@ -27,7 +30,8 @@ namespace L4 {
     };
 
 #pragma pack(push, 1)
-    struct BootSector {
+    struct BootSector
+    {
         char JumpBoot[3];
         uint64_t FileSystemName;
         char MustBeZero[53];
@@ -53,18 +57,21 @@ namespace L4 {
     };
     static_assert(sizeof(BootSector) == SectorSize, "Boot sector must be 1 sector long");
 
-    struct ExtendedBootSector {
+    struct ExtendedBootSector
+    {
         char ExtendedBootCode[SectorSize - 4];
         uint32_t ExtendedBootSignature;
     };
     static_assert(sizeof(ExtendedBootSector) == SectorSize, "Extended boot sector must be 1 sector long");
 
-    struct NullOEMParameter {
+    struct NullOEMParameter
+    {
         char Reserved[32];
     };
     static_assert(sizeof(NullOEMParameter) == 32, "Null OEM parameter data must be 32 bytes long");
 
-    struct FlashOEMParameter {
+    struct FlashOEMParameter
+    {
         uint32_t EraseBlockSize;
         uint32_t PageSize;
         uint32_t SpareSectors;
@@ -76,9 +83,11 @@ namespace L4 {
     };
     static_assert(sizeof(FlashOEMParameter) == 32, "Flash OEM parameter data must be 32 bytes long");
 
-    struct OEMParameter {
+    struct OEMParameter
+    {
         Guid ParameterGuid;
-        union {
+        union
+        {
             char CustomDefined[32];
             NullOEMParameter Null;
             FlashOEMParameter Flash;
@@ -86,13 +95,15 @@ namespace L4 {
     };
     static_assert(sizeof(OEMParameter) == 48, "OEM parameter must be 48 bytes long");
 
-    struct OEMParameterSector {
+    struct OEMParameterSector
+    {
         OEMParameter Parameters[10];
         char Reserved[SectorSize - 480];
     };
     static_assert(sizeof(OEMParameterSector) == SectorSize, "OEM parameter boot sector must be 1 sector long");
 
-    struct BootRegion {
+    struct BootRegion
+    {
         BootSector BootSector;
         ExtendedBootSector ExtendedBootSectors[8];
         OEMParameterSector OEMParameters;
@@ -101,11 +112,13 @@ namespace L4 {
     };
     static_assert(sizeof(BootRegion) == 12 * SectorSize, "Boot region must be 12 sectors long");
 
-    struct PrimaryDirectoryEntry {
+    struct PrimaryDirectoryEntry
+    {
         uint8_t SecondaryCount;
         uint16_t SetChecksum;
         uint16_t GeneralPrimaryFlags;
-        union {
+        union
+        {
             char CustomDefined[14];
         };
         uint32_t FirstCluster;
@@ -113,9 +126,11 @@ namespace L4 {
     };
     static_assert(sizeof(PrimaryDirectoryEntry) == 31, "Primary directory entry must be 31 bytes long");
 
-    struct SecondaryDirectoryEntry {
+    struct SecondaryDirectoryEntry
+    {
         uint8_t GeneralSecondaryFlags;
-        union {
+        union
+        {
             char CustomDefined[18];
         };
         uint32_t FirstCluster;
@@ -123,7 +138,8 @@ namespace L4 {
     };
     static_assert(sizeof(SecondaryDirectoryEntry) == 31, "Secondary directory entry must be 31 bytes long");
 
-    struct AllocationBitmapDirectoryEntry {
+    struct AllocationBitmapDirectoryEntry
+    {
         uint8_t BitmapFlags;
         char Reserved[18];
         uint32_t FirstCluster;
@@ -131,7 +147,8 @@ namespace L4 {
     };
     static_assert(sizeof(AllocationBitmapDirectoryEntry) == 31, "Allocation bitmap directory entry must be 31 bytes long");
 
-    struct UpcaseTableDirectoryEntry {
+    struct UpcaseTableDirectoryEntry
+    {
         char Reserved1[3];
         uint32_t TableChecksum;
         char Reserved2[12];
@@ -140,14 +157,16 @@ namespace L4 {
     };
     static_assert(sizeof(UpcaseTableDirectoryEntry) == 31, "Up-case table directory entry must be 31 bytes long");
 
-    struct VolumeLabelDirectoryEntry {
+    struct VolumeLabelDirectoryEntry
+    {
         uint8_t CharacterCount;
         char16_t VolumeLabel[11];
         char Reserved[8];
     };
     static_assert(sizeof(VolumeLabelDirectoryEntry) == 31, "Volume label directory entry must be 31 bytes long");
 
-    struct FileDirectoryEntry {
+    struct FileDirectoryEntry
+    {
         uint8_t SecondaryCount;
         uint16_t SetChecksum;
         uint16_t FileAttributes;
@@ -164,7 +183,8 @@ namespace L4 {
     };
     static_assert(sizeof(FileDirectoryEntry) == 31, "File directory entry must be 31 bytes long");
 
-    struct VolumeGuidDirectoryEntry {
+    struct VolumeGuidDirectoryEntry
+    {
         uint8_t SecondaryCount;
         uint16_t SetChecksum;
         uint16_t GeneralPrimaryFlags;
@@ -173,12 +193,14 @@ namespace L4 {
     };
     static_assert(sizeof(VolumeGuidDirectoryEntry) == 31, "Volume GUID directory entry must be 31 bytes long");
 
-    struct TexFatPaddingDirectoryEntry {
+    struct TexFatPaddingDirectoryEntry
+    {
         char Reserved[31]; // No idea
     };
     static_assert(sizeof(TexFatPaddingDirectoryEntry) == 31, "TexFAT padding directory entry must be 31 bytes long");
 
-    struct StreamExtensionDirectoryEntry {
+    struct StreamExtensionDirectoryEntry
+    {
         uint8_t GeneralSecondaryFlags;
         char Reserved1[1];
         uint8_t NameLength;
@@ -191,20 +213,23 @@ namespace L4 {
     };
     static_assert(sizeof(StreamExtensionDirectoryEntry) == 31, "Stream extension directory entry must be 31 bytes long");
 
-    struct FileNameDirectoryEntry {
+    struct FileNameDirectoryEntry
+    {
         uint8_t GeneralSecondaryFlags;
         char16_t FileName[15];
     };
     static_assert(sizeof(FileNameDirectoryEntry) == 31, "File name directory entry must be 31 bytes long");
 
-    struct VendorExtensionDirectoryEntry {
+    struct VendorExtensionDirectoryEntry
+    {
         uint8_t GeneralSecondaryFlags;
         Guid VendorGuid;
         char VendorDefined[14];
     };
     static_assert(sizeof(VendorExtensionDirectoryEntry) == 31, "Vendor extension directory entry must be 31 bytes long");
 
-    struct VendorAllocationDirectoryEntry {
+    struct VendorAllocationDirectoryEntry
+    {
         uint8_t GeneralSecondaryFlags;
         Guid VendorGuid;
         char VendorDefined[2];
@@ -213,88 +238,104 @@ namespace L4 {
     };
     static_assert(sizeof(VendorAllocationDirectoryEntry) == 31, "Vendor allocation directory entry must be 31 bytes long");
 
-    struct EndOfDirectoryEntry {
+    struct EndOfDirectoryEntry
+    {
         char Reserved[31];
     };
     static_assert(sizeof(EndOfDirectoryEntry) == 31, "End of directory entry must be 31 bytes long");
 
     template <class T>
-    struct DirectoryEntryTraits {
+    struct DirectoryEntryTraits
+    {
     };
 
     template <>
-    struct DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCategory = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<SecondaryDirectoryEntry> {
+    struct DirectoryEntryTraits<SecondaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCategory = 1;
     };
 
     template <>
-    struct DirectoryEntryTraits<AllocationBitmapDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<AllocationBitmapDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 1;
         static constexpr uint8_t TypeImportance = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<UpcaseTableDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<UpcaseTableDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 2;
         static constexpr uint8_t TypeImportance = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<VolumeLabelDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<VolumeLabelDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 3;
         static constexpr uint8_t TypeImportance = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<FileDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<FileDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 5;
         static constexpr uint8_t TypeImportance = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<VolumeGuidDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<VolumeGuidDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 0;
         static constexpr uint8_t TypeImportance = 1;
     };
 
     template <>
-    struct DirectoryEntryTraits<TexFatPaddingDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry> {
+    struct DirectoryEntryTraits<TexFatPaddingDirectoryEntry> : public DirectoryEntryTraits<PrimaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 1;
         static constexpr uint8_t TypeImportance = 1;
     };
 
     template <>
-    struct DirectoryEntryTraits<StreamExtensionDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry> {
+    struct DirectoryEntryTraits<StreamExtensionDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 0;
         static constexpr uint8_t TypeImportance = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<FileNameDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry> {
+    struct DirectoryEntryTraits<FileNameDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 1;
         static constexpr uint8_t TypeImportance = 0;
     };
 
     template <>
-    struct DirectoryEntryTraits<VendorExtensionDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry> {
+    struct DirectoryEntryTraits<VendorExtensionDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 0;
         static constexpr uint8_t TypeImportance = 1;
     };
 
     template <>
-    struct DirectoryEntryTraits<VendorAllocationDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry> {
+    struct DirectoryEntryTraits<VendorAllocationDirectoryEntry> : public DirectoryEntryTraits<SecondaryDirectoryEntry>
+    {
         static constexpr uint8_t TypeCode = 1;
         static constexpr uint8_t TypeImportance = 1;
     };
 
-    struct DirectoryEntry {
+    struct DirectoryEntry
+    {
         uint8_t EntryType;
-        union {
+        union
+        {
             EndOfDirectoryEntry EndOfDirectory;
             PrimaryDirectoryEntry Primary;
             SecondaryDirectoryEntry Secondary;
@@ -318,21 +359,24 @@ namespace L4 {
     constexpr uint32_t Checksum(const uint8_t (&Data)[Size]) noexcept
     {
         uint32_t Checksum = 0;
-        for (size_t i = 0; i < Size; ++i) {
+        for (size_t i = 0; i < Size; ++i)
+        {
             Checksum = ((Checksum << 31) | (Checksum >> 1)) + Data[i];
         }
         return Checksum;
     }
 
-    template<class T>
-    constexpr T toupper(T Char) {
+    template <class T>
+    constexpr T toupper(T Char)
+    {
         return std::use_facet<std::ctype<T>>(std::locale()).toupper(Char);
     }
 
     constexpr uint16_t NameChecksum(const std::u16string_view Data) noexcept
     {
         uint16_t Checksum = 0;
-        for (size_t i = 0; i < Data.size(); ++i) {
+        for (size_t i = 0; i < Data.size(); ++i)
+        {
             char16_t DataUpcase = toupper(Data[i]);
             Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 0) & 0xFF);
             Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((DataUpcase >> 8) & 0xFF);
@@ -344,8 +388,10 @@ namespace L4 {
     {
         size_t Size = (1llu + Entry->Primary.SecondaryCount) * sizeof(DirectoryEntry);
         uint16_t Checksum = 0;
-        for (size_t i = 0; i < Size; ++i) {
-            if (i == 2 || i == 3) {
+        for (size_t i = 0; i < Size; ++i)
+        {
+            if (i == 2 || i == 3)
+            {
                 continue;
             }
             Checksum = ((Checksum << 15) | (Checksum >> 1)) + ((uint8_t*)Entry)[i];
@@ -358,9 +404,12 @@ namespace L4 {
     {
         auto ValuePtr = (const uint8_t*)&Value;
 
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            if constexpr (SkipFields) {
-                if (i == 106 || i == 107 || i == 112) {
+        for (size_t i = 0; i < sizeof(T); ++i)
+        {
+            if constexpr (SkipFields)
+            {
+                if (i == 106 || i == 107 || i == 112)
+                {
                     continue;
                 }
             }
@@ -388,7 +437,7 @@ namespace L4 {
     void Validate(const BootSector& BootSector)
     {
         return;
-//#define AssertRange(Variable, Minimum, Maximum) assert((Minimum) <= (Variable) && (Variable) <= (Maximum))
+// #define AssertRange(Variable, Minimum, Maximum) assert((Minimum) <= (Variable) && (Variable) <= (Maximum))
 #define AssertRange(Variable, Minimum, Maximum) AssertRange_((Variable), (decltype(Variable))(Minimum), (decltype(Variable))(Maximum))
 #define AssertEquals(Variable, Value) assert((Variable) == (Value))
 
@@ -417,7 +466,8 @@ namespace L4 {
     }
 
     extern const uint8_t ExFatUpcaseTable[5836];
-    class ExFatSystem::InternalData {
+    class ExFatSystem::InternalData
+    {
     public:
         InternalData(uint64_t PartitionSectorOffset, uint64_t PartitionSectorCount, const ExFatDirectory& Tree) :
             BootRegion {}
@@ -464,7 +514,8 @@ namespace L4 {
 
                 BootRegion.BootSector.BootSignature = 0xAA55;
 
-                for (auto& ExtendedBootSector : BootRegion.ExtendedBootSectors) {
+                for (auto& ExtendedBootSector : BootRegion.ExtendedBootSectors)
+                {
                     ExtendedBootSector.ExtendedBootSignature = 0xAA550000;
                 }
 
@@ -520,9 +571,11 @@ namespace L4 {
             auto DatePoint = std::chrono::floor<std::chrono::days>(TimePoint);
             auto Ymd = std::chrono::year_month_day(DatePoint);
             auto Hms = std::chrono::hh_mm_ss(TimePoint - DatePoint);
-            union {
+            union
+            {
                 uint32_t TimestampStruct;
-                struct {
+                struct
+                {
                     uint32_t DoubleSeconds : 5;
                     uint32_t Minute        : 6;
                     uint32_t Hour          : 5;
@@ -561,7 +614,8 @@ namespace L4 {
                 .ValidDataLength = DataLength,
                 .FirstCluster = FirstCluster,
                 .DataLength = DataLength });
-            for (auto Idx = 0; Idx < Entry.Name.size(); Idx += 15) {
+            for (auto Idx = 0; Idx < Entry.Name.size(); Idx += 15)
+            {
                 FileNameDirectoryEntry NameEntry {};
                 Entry.Name.copy(NameEntry.FileName, 15, Idx);
                 *OutputItr++ = CreateDirectoryEntry(NameEntry);
@@ -577,10 +631,12 @@ namespace L4 {
         uint32_t GetEntryCountDirectory(const ExFatDirectory& Directory)
         {
             uint32_t Count = 0;
-            for (auto& Dir : Directory.Directories) {
+            for (auto& Dir : Directory.Directories)
+            {
                 Count += GetEntryCountGeneric(Dir);
             }
-            for (auto& File : Directory.Files) {
+            for (auto& File : Directory.Files)
+            {
                 Count += GetEntryCountGeneric(File);
             }
             return Count;
@@ -589,9 +645,11 @@ namespace L4 {
         template <class Itr>
         void EmplaceDirectoryTree(Itr OutputItr, const ExFatDirectory& Tree)
         {
-            for (auto& Directory : Tree.Directories) {
+            for (auto& Directory : Tree.Directories)
+            {
                 auto EntryCount = GetEntryCountDirectory(Directory);
-                if (EntryCount) {
+                if (EntryCount)
+                {
                     auto DirectoryData = SubDirectories.emplace_back(std::make_unique<DirectoryEntry[]>(EntryCount)).get();
 
                     EmplaceDirectoryTree(DirectoryData, Directory);
@@ -599,11 +657,14 @@ namespace L4 {
                     auto DirectoryDataSpan = std::span(DirectoryData, EntryCount);
                     auto ClusterIdx = AllocateClusters(DirectoryDataSpan);
                     EmplaceExFatEntry(OutputItr, Directory, 0x03, Align(DirectoryDataSpan.size_bytes(), ClusterSize), ClusterIdx);
-                } else {
+                }
+                else
+                {
                     EmplaceExFatEntry(OutputItr, Directory, 0x01, 0, 0);
                 }
             }
-            for (auto& File : Tree.Files) {
+            for (auto& File : Tree.Files)
+            {
                 auto ClusterIdx = File.DataLength ? AllocateClusters(File.DataLength, File.List) : 0;
                 EmplaceExFatEntry(OutputItr, File, File.DataLength ? 0x03 : 0x01, File.DataLength, ClusterIdx);
             }
@@ -619,7 +680,8 @@ namespace L4 {
         {
             auto Ret = NextCluster;
             auto ClusterCount = Align<ClusterSize>(DataLength) / ClusterSize;
-            for (; ClusterCount > 1; --ClusterCount, NextCluster++) {
+            for (; ClusterCount > 1; --ClusterCount, NextCluster++)
+            {
                 AllocateBitmapCluster(NextCluster);
                 Fat[NextCluster] = NextCluster + 1;
             }
@@ -658,7 +720,8 @@ namespace L4 {
             using DecayT = std::decay_t<T>;
             static_assert(sizeof(T) == 31);
             using Traits = DirectoryEntryTraits<DecayT>;
-            union {
+            union
+            {
                 DecayT Entry;
                 EndOfDirectoryEntry Data;
             };

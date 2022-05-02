@@ -2,19 +2,23 @@
 
 #include "IoCtl.h"
 
+#include <guiddef.h>
+
 #include <array>
 #include <atomic>
 #include <future>
-#include <guiddef.h>
 #include <vector>
 
-namespace FastSpd {
-    struct OverlappedEx {
+namespace FastSpd
+{
+    struct OverlappedEx
+    {
         std::array<char, 32> Base;
         IoTransact Call;
     };
 
-    class VirtualDisk {
+    class VirtualDisk
+    {
         static constexpr size_t ThreadCount = 16;
         static constexpr size_t CallCount = ThreadCount * 2;
 

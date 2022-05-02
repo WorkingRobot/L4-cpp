@@ -4,8 +4,10 @@
 
 #include <type_traits>
 
-namespace L4 {
-    struct StreamHeader {
+namespace L4
+{
+    struct StreamHeader
+    {
         Guid Guid;
         uint32_t Version;
         uint32_t ElementSize;

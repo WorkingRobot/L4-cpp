@@ -2,8 +2,10 @@
 
 #include <array>
 
-namespace L4::Disk::MBR {
-    struct Partition {
+namespace L4::Disk::MBR
+{
+    struct Partition
+    {
         uint32_t BlockAddress;
         uint32_t BlockCount;
         uint8_t Type;

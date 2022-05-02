@@ -2,9 +2,11 @@
 
 #include <filesystem>
 
-namespace L4 {
+namespace L4
+{
     template <bool Writable>
-    class MmioFileBase {
+    class MmioFileBase
+    {
         using MM_HANDLE = void*;
         using MM_PVOID = void*;
         using MM_LARGE_INTEGER = long long;

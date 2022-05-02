@@ -2,14 +2,17 @@
 
 #include "../mmio/MmioFile.h"
 #include "../utils/Align.h"
+
 #include "Freelist.h"
 #include "Header.h"
 #include "StreamHeader.h"
 #include "StreamRunlist.h"
 
-namespace L4 {
+namespace L4
+{
     template <bool Writable>
-    class ArchiveBase {
+    class ArchiveBase
+    {
     public:
         template <class... ArgTs>
         ArchiveBase(ArgTs&&... Args) :

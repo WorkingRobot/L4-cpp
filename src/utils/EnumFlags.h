@@ -2,9 +2,11 @@
 
 #include <type_traits>
 
-namespace L4 {
+namespace L4
+{
     template <typename Enum>
-    struct IsEnumFlag : std::bool_constant<false> {
+    struct IsEnumFlag : std::bool_constant<false>
+    {
     };
 
     template <typename Enum>

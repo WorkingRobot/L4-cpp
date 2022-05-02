@@ -5,8 +5,10 @@
 
 #include <type_traits>
 
-namespace L4 {
-    struct Header {
+namespace L4
+{
+    struct Header
+    {
         uint32_t Magic;
         ArchiveVersion Version;
         uint32_t SectorSize;
@@ -30,7 +32,8 @@ namespace L4 {
         // strnlen_s version of std::char_traits<char8_t>::length()
         size_t Count = 0;
         const char8_t* Buf = Buffer;
-        while (Count < Size && *Buf) {
+        while (Count < Size && *Buf)
+        {
             ++Count;
             ++Buf;
         }
@@ -41,7 +44,8 @@ namespace L4 {
     template <size_t Size>
     void SetSV(char8_t (&Buffer)[Size], const std::u8string_view Src)
     {
-        if (Src.size() > Size) {
+        if (Src.size() > Size)
+        {
             throw std::length_error("Input string is too large");
         }
         auto CopyCount = Src.copy(Buffer, Src.size());

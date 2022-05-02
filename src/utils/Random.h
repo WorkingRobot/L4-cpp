@@ -2,7 +2,8 @@
 
 #include <random>
 
-namespace L4 {
+namespace L4
+{
     std::mt19937& GetRandGenerator();
 
     void RandomGuid(char Guid[16]);

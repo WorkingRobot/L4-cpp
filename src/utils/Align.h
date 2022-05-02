@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 
-namespace L4 {
+namespace L4
+{
     template <uint64_t Alignment, class N>
     static constexpr N Align(N Value)
     {

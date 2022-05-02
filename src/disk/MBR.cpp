@@ -2,7 +2,8 @@
 
 #include "../utils/Random.h"
 
-namespace L4::Disk::MBR {
+namespace L4::Disk::MBR
+{
     using CHS = std::array<std::byte, 3>;
 
     CHS CreateCHS(uint64_t LBA)
@@ -13,7 +14,8 @@ namespace L4::Disk::MBR {
         uint32_t H = (LBA / SectorsPerTrack) % HeadsPerCylinder;
         uint32_t S = (LBA % SectorsPerTrack) + 1;
 
-        if (C > 1023) {
+        if (C > 1023)
+        {
             C = 1023;
             H = 254;
             S = 63;
@@ -22,7 +24,8 @@ namespace L4::Disk::MBR {
         return { std::byte(H), std::byte((S & 0x3F) | ((C >> 2) & 0xC0)), std::byte(C & 0xFF) };
     }
 
-    struct PartitionPrivate {
+    struct PartitionPrivate
+    {
         uint8_t IsActive;
         CHS FirstCHS;
         uint8_t Type;
@@ -33,7 +36,8 @@ namespace L4::Disk::MBR {
     static_assert(sizeof(PartitionPrivate) == 16, "MBR partition entry must be 16 bytes long");
 
 #pragma pack(push, 1)
-    struct MBRPrivate {
+    struct MBRPrivate
+    {
         std::array<std::byte, 440> Boot;
         uint32_t DiskSignature;
         uint16_t Reserved;
@@ -45,7 +49,8 @@ namespace L4::Disk::MBR {
 
     MBR Create(const Partition* Partitions, uint8_t PartitionCount)
     {
-        if (PartitionCount > 4) {
+        if (PartitionCount > 4)
+        {
             PartitionCount = 4;
         }
 
@@ -53,7 +58,8 @@ namespace L4::Disk::MBR {
         Data.DiskSignature = Random<uint32_t>();
         Data.BootSignature = 0xAA55;
 
-        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx) {
+        for (uint8_t Idx = 0; Idx < PartitionCount; ++Idx)
+        {
             Data.Partitions[Idx] = PartitionPrivate {
                 .FirstCHS = CreateCHS(Partitions[Idx].BlockAddress),
                 .Type = Partitions[Idx].Type,

@@ -6,14 +6,15 @@
 
 #include <conio.h>
 #include <string.h>
-//#include "web/Http.h"
+// #include "web/Http.h"
 
 #include <numeric>
 
 static constexpr bool PrintAlloc = false;
 void* operator new(std::size_t sz) // no inline, required by [replacement.functions]/3
 {
-    if constexpr (PrintAlloc) {
+    if constexpr (PrintAlloc)
+    {
         std::printf("global op new called, size = %zu\n", sz);
     }
     if (sz == 0)
@@ -26,13 +27,15 @@ void* operator new(std::size_t sz) // no inline, required by [replacement.functi
 }
 void operator delete(void* ptr) noexcept
 {
-    if constexpr (PrintAlloc) {
+    if constexpr (PrintAlloc)
+    {
         std::puts("global op delete called");
     }
     std::free(ptr);
 }
 
-namespace L4 {
+namespace L4
+{
     void Main()
     {
         ExFatTime Now = std::chrono::zoned_time { std::chrono::time_point_cast<centiseconds>(std::chrono::system_clock::now()) };

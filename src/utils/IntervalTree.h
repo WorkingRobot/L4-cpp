@@ -5,15 +5,18 @@
 #include <span>
 #include <vector>
 
-namespace L4 {
+namespace L4
+{
     // [Start, End]
-    struct Interval {
+    struct Interval
+    {
         uint64_t Start;
         uint64_t End;
         std::span<const std::byte> Buffer;
     };
 
-    class IntervalList {
+    class IntervalList
+    {
     public:
         void Add(uint64_t Offset, uint64_t Size, std::span<const std::byte> Buffer)
         {
@@ -40,7 +43,8 @@ namespace L4 {
         std::vector<Interval> Intervals;
     };
 
-    class IntervalTree {
+    class IntervalTree
+    {
     public:
         IntervalTree() = default;
 

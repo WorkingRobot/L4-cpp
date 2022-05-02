@@ -1,8 +1,10 @@
 #pragma once
 
-namespace FastSpd {
-    template <auto Deleter, class T, auto InvalidValue>
-    class Handle {
+namespace FastSpd
+{
+    template <auto Deleter, class T, auto InvalidValue = ~0llu>
+    class Handle
+    {
     public:
         Handle() noexcept :
             Internal(InvalidValue)
