@@ -66,9 +66,9 @@ namespace L4::Disk
         };
         static_assert(sizeof(Partition) == 16);
 
-        constexpr MBR(std::span<const L4::Disk::Partition> Partitions, uint32_t DiskSignature = -1) :
+        constexpr MBR(std::span<const L4::Disk::Partition> Partitions) :
             Boot(),
-            DiskSignature(DiskSignature),
+            DiskSignature(),
             Reserved(),
             Partitions(),
             BootSignature(0xAA55)
@@ -81,7 +81,7 @@ namespace L4::Disk
             std::ranges::copy(Partitions, this->Partitions.begin());
         }
 
-        constexpr std::span<const std::byte, 512> AsBytes() const
+        std::span<const std::byte, 512> AsBytes() const noexcept
         {
             return std::as_bytes(std::span<const MBR, 1>(this, 1));
         }

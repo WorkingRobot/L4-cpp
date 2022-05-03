@@ -3,6 +3,7 @@
 #include "../utils/Align.h"
 #include "../utils/Crc32.h"
 #include "../utils/Guid.h"
+#include "../utils/Random.h"
 
 #include "MBR.h"
 
@@ -28,7 +29,7 @@ namespace L4::Disk
             uint32_t EntryLength;
             uint32_t PartSum;
 
-            constexpr std::span<const std::byte, 92> AsBytes() const
+            std::span<const std::byte, 92> AsBytes() const noexcept
             {
                 return std::as_bytes(std::span<const Header, 1>(this, 1));
             }
@@ -42,9 +43,9 @@ namespace L4::Disk
 
         struct Partition
         {
-            constexpr Partition(const L4::Disk::Partition& Part) :
+            Partition(const L4::Disk::Partition& Part) :
                 Type(MsDataGuid),
-                Id(NullGuid),
+                Id(RandomGuid()),
                 Start(Part.BlockAddress),
                 End(Part.BlockAddress + Part.BlockCount - 1),
                 Flags(),
@@ -65,12 +66,16 @@ namespace L4::Disk
 
         static constexpr uint64_t Magic = 0x5452415020494645;
         static constexpr uint64_t Version1 = 0x10000;
+        static constexpr MBR BaseMBR = MBR(std::initializer_list<L4::Disk::Partition> { { .BlockAddress = 1, .BlockCount = 0xFFFFFFFFu, .Type = 0xEE } });
 
         GPT(std::span<const L4::Disk::Partition> Partitions, uint64_t BlockSize, uint64_t DiskBlockCount) :
+            ProtectiveMBR(BaseMBR),
             PrimaryHeader(),
             SecondaryHeader(),
             Table()
         {
+            ProtectiveMBR.DiskSignature = Random<uint32_t>();
+
             if (Partitions.size() > Table.size())
             {
                 Partitions = Partitions.first(Table.size());
@@ -86,7 +91,7 @@ namespace L4::Disk
                 .OtherHeader = DiskBlockCount - 1,
                 .DataStart = 2 + Align(sizeof(Table), BlockSize) / BlockSize,
                 .DataEnd = DiskBlockCount - 1 - Align(sizeof(Table), BlockSize) / BlockSize - 1,
-                .Guid = NullGuid,
+                .Guid = RandomGuid(),
                 .FirstEntry = 2,
                 .EntryCount = uint32_t(Table.size()),
                 .EntryLength = sizeof(Partition),
@@ -101,7 +106,7 @@ namespace L4::Disk
             SecondaryHeader.HeaderSum = Crc32(std::span(&SecondaryHeader, 1));
         }
 
-        static constexpr MBR ProtectiveMBR = MBR(std::initializer_list<L4::Disk::Partition> { { .BlockAddress = 1, .BlockCount = 0xFFFFFFFFu, .Type = 0xEE } });
+        MBR ProtectiveMBR;
         Header PrimaryHeader;
         Header SecondaryHeader;
         std::array<Partition, 128> Table;

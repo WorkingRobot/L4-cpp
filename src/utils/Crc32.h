@@ -35,10 +35,11 @@ namespace L4
         {
             Crc = Detail::CrcTable[uint8_t(Crc & 0xFF) ^ uint8_t(Byte)] ^ (Crc >> 8);
         }
-        return Crc ^ ~0u;
+        return ~Crc;
     }
 
     template <class T, size_t Extent>
+    requires(!std::is_same_v<T, const std::byte>)
     static constexpr __forceinline uint32_t Crc32(std::span<T, Extent> Buffer)
     {
         return Crc32(std::as_bytes(Buffer));

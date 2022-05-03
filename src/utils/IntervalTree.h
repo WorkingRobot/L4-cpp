@@ -24,6 +24,7 @@ namespace L4
         }
 
         template <class T, size_t Extent>
+        requires(!std::is_same_v<T, const std::byte>)
         void Add(uint64_t Offset, uint64_t Size, std::span<T, Extent> Buffer)
         {
             Add(Offset, Size, std::as_bytes(Buffer));
