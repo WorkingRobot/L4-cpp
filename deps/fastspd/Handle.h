@@ -2,15 +2,16 @@
 
 namespace FastSpd
 {
-    template <auto Deleter, class T, auto InvalidValue = ~0llu>
+    template <auto Deleter, class T>
     class Handle
     {
     public:
         Handle() noexcept :
-            Internal(InvalidValue)
+            Internal()
         {
         }
 
+        // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
         Handle(T Handle) noexcept :
             Internal(Handle)
         {
@@ -22,7 +23,7 @@ namespace FastSpd
         }
 
         Handle(Handle&& Other) noexcept :
-            Internal(InvalidValue)
+            Internal()
         {
             Other.swap(*this);
         }
@@ -36,24 +37,20 @@ namespace FastSpd
         Handle(const Handle&) = delete;
         Handle& operator=(const Handle&) = delete;
 
-        T get() const noexcept
+        [[nodiscard]] T get() const noexcept
         {
             return Internal;
         }
 
+        // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
         operator T() const noexcept
         {
             return Internal;
         }
 
-        explicit operator bool() const noexcept
-        {
-            return Internal != T(InvalidValue);
-        }
-
         T release() noexcept
         {
-            T Ret = InvalidValue;
+            T Ret();
             std::swap(Ret, Internal);
             return Ret;
         }

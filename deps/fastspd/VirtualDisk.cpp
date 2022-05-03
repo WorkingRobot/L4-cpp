@@ -12,15 +12,15 @@
 #include <setupapi.h>
 #include <winioctl.h>
 #include <ntddscsi.h>
-#define _NTSCSI_USER_MODE_
+#define _NTSCSI_USER_MODE_ // NOLINT(bugprone-reserved-identifier, cert-dcl37-c, cert-dcl51-cpp)
 #include <scsi.h>
 // clang-format on
 
 #include <ranges>
-#include <string>
 
 namespace FastSpd
 {
+    // NOLINTBEGIN(modernize-use-nullptr)
     static std::string GetDevicePath()
     {
         static constexpr std::string_view DeviceName = "root\\winspd";
@@ -30,7 +30,7 @@ namespace FastSpd
 
         DiHandle Handle = SetupDiGetClassDevsA(NULL, NULL, NULL, DIGCF_ALLCLASSES | DIGCF_PRESENT);
 
-        if (!Handle)
+        if (Handle.get() == INVALID_HANDLE_VALUE)
         {
             throw CreateErrorWin32(GetLastError());
         }
@@ -38,23 +38,23 @@ namespace FastSpd
         SP_DEVINFO_DATA Info { .cbSize = sizeof(Info) };
         for (DWORD Idx = 0; SetupDiEnumDeviceInfo(Handle, Idx, &Info); ++Idx)
         {
-            BYTE HwidBuf[256] {};
-            if (!SetupDiGetDeviceRegistryPropertyA(Handle, &Info, SPDRP_HARDWAREID, NULL, HwidBuf, sizeof(HwidBuf) - 2, NULL))
+            std::array<BYTE, 256> HwidBuf {};
+            if (!SetupDiGetDeviceRegistryPropertyA(Handle, &Info, SPDRP_HARDWAREID, NULL, HwidBuf.data(), HwidBuf.size() - 2, NULL))
             {
                 continue;
             }
 
-            PCSTR HwidBufPtr = (PCHAR)HwidBuf;
+            PCSTR HwidBufPtr = reinterpret_cast<PCHAR>(HwidBuf.data());
             for (std::string_view Id(HwidBufPtr); !Id.empty(); HwidBufPtr += Id.size() + 1, Id = HwidBufPtr)
             {
                 static constexpr auto to_lower = std::ranges::views::transform([](char c) { return std::tolower(c); });
                 if (std::ranges::equal(Id | to_lower, DeviceName))
                 {
-                    DWORD NameSize;
+                    DWORD NameSize = 0;
                     SetupDiGetDeviceRegistryPropertyA(Handle, &Info, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, NULL, NULL, 0, &NameSize);
                     std::string Ret(GLOBALROOT.size() + NameSize, '\0');
                     GLOBALROOT.copy(Ret.data(), GLOBALROOT.size());
-                    if (!SetupDiGetDeviceRegistryPropertyA(Handle, &Info, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, NULL, (PBYTE)Ret.data() + GLOBALROOT.size(), NameSize, NULL))
+                    if (!SetupDiGetDeviceRegistryPropertyA(Handle, &Info, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, NULL, reinterpret_cast<PBYTE>(Ret.data()) + GLOBALROOT.size(), NameSize, NULL))
                     {
                         throw CreateErrorWin32(GetLastError());
                     }
@@ -90,7 +90,7 @@ namespace FastSpd
             DWORD Error = GetLastError();
             if (Error == ERROR_IO_PENDING)
             {
-                DWORD BytesTransferred;
+                DWORD BytesTransferred = 0;
                 if (!GetOverlappedResult(DeviceHandle, &Overlapped, &BytesTransferred, TRUE))
                 {
                     throw CreateErrorWin32(GetLastError());
@@ -108,16 +108,16 @@ namespace FastSpd
         union
         {
             IoList Call = CreateIoCall<'l'>();
-            UINT32 Bitmap[256];
+            std::array<UINT32, 256> Bitmap;
         };
 
-        DWORD BytesTransferred;
+        DWORD BytesTransferred = 0;
         if (!DeviceIoControl(DeviceHandle, IOCTL_MINIPORT_PROCESS_SERVICE_IRP, &Call, sizeof(Call), &Bitmap, sizeof(Bitmap), &BytesTransferred, NULL))
         {
             throw CreateErrorWin32(GetLastError());
         }
 
-        for (ULONG Idx = 0; Idx < BytesTransferred / 4; ++Idx)
+        for (ULONG Idx = 0; Idx < BytesTransferred / sizeof(UINT32); ++Idx)
         {
             UINT32 Btl = Bitmap[Idx];
             printf("%d %d %d\n", (((Btl) >> 16) & 0xff), (((Btl) >> 8) & 0xff), ((Btl)&0xff));
@@ -131,7 +131,7 @@ namespace FastSpd
             DWORD Error = GetLastError();
             if (Error == ERROR_IO_PENDING)
             {
-                DWORD BytesTransferred;
+                DWORD BytesTransferred = 0;
                 if (!GetOverlappedResult(DeviceHandle, Overlapped, &BytesTransferred, TRUE))
                 {
                     throw CreateErrorWin32(GetLastError());
@@ -176,15 +176,16 @@ namespace FastSpd
             }
         }
 
-        DWORD BytesTransferred;
-        ULONG_PTR CompletionKey;
-        BOOL Result;
-        DWORD Error;
+        DWORD BytesTransferred = 0;
+        ULONG_PTR CompletionKey = 0;
+        BOOL Result = FALSE;
+        DWORD Error = 0;
         do
         {
-            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, (LPOVERLAPPED*)OvlEx, INFINITE);
+            Result = GetQueuedCompletionStatus(IocpHandle, &BytesTransferred, &CompletionKey, reinterpret_cast<LPOVERLAPPED*>(OvlEx), INFINITE);
             Error = GetLastError();
         } while (!Result && !*OvlEx && Error != ERROR_ABANDONED_WAIT_0 && Error != ERROR_INVALID_HANDLE);
+
         if (Result)
         {
             if (CompletionKey != 0)
@@ -193,17 +194,19 @@ namespace FastSpd
             }
             return ERROR_SUCCESS;
         }
-        else
+
+        if (Error == ERROR_INVALID_HANDLE)
         {
-            if (Error == ERROR_INVALID_HANDLE)
-            {
-                return ERROR_ABANDONED_WAIT_0;
-            }
-            return Error;
+            return ERROR_ABANDONED_WAIT_0;
         }
+        return Error;
     }
 
-    VirtualDisk::VirtualDisk(uint64_t BlockCount, uint32_t BlockSize)
+    VirtualDisk::VirtualDisk(uint64_t BlockCount, uint32_t BlockSize) :
+        Btl(),
+        Guid(),
+        IocpHandle(),
+        IocpRange()
     {
         auto Path = GetDevicePath();
 
@@ -234,6 +237,7 @@ namespace FastSpd
         Guid = Params.Guid;
     }
 
+    // NOLINTNEXTLINE(bugprone-exception-escape)
     VirtualDisk::~VirtualDisk()
     {
         Stop();
@@ -252,7 +256,7 @@ namespace FastSpd
             throw CreateErrorWin32(GetLastError());
         }
 
-        DataBuffer = std::make_unique<std::byte[]>(CallCount * MaxTransferLength);
+        DataBuffer = std::make_unique<std::array<std::array<std::byte, MaxTransferLength>, CallCount>>();
         for (size_t Idx = 0; Idx < CallCount; ++Idx)
         {
             Threads[Idx] = std::thread(&VirtualDisk::ThreadFunc, this, Idx);
@@ -278,17 +282,17 @@ namespace FastSpd
 
     void VirtualDisk::ThreadFunc(size_t Idx)
     {
-        IocpRange[Idx] = {};
-        auto& Call = ((OverlappedEx&)IocpRange[Idx]).Call;
-        Call = CreateIoCall<'t'>();
-        Call.Btl = Btl;
-        Call.DataBuffer = (UINT64)(UINT_PTR)(DataBuffer.get() + Idx * MaxTransferLength);
-        Call.IsRequestValid = true;
-        Call.IsResponseValid = false;
+        auto& ThisOvlEx = reinterpret_cast<OverlappedEx&>(IocpRange[Idx]);
+        auto& ThisCall = ThisOvlEx.Call;
+        ThisCall = CreateIoCall<'t'>();
+        ThisCall.Btl = Btl;
+        ThisCall.DataBuffer = DataBuffer->at(Idx).data();
+        ThisCall.IsRequestValid = true;
+        ThisCall.IsResponseValid = false;
 
         try
         {
-            for (OverlappedEx* OvlEx = (OverlappedEx*)&IocpRange[Idx];;)
+            for (auto* OvlEx = &ThisOvlEx;;)
             {
                 DWORD Ret = Transact(DeviceHandle, IocpHandle, &OvlEx);
                 if (Ret == ERROR_ABANDONED_WAIT_0)
@@ -312,11 +316,11 @@ namespace FastSpd
                 switch (Call.Request.Kind)
                 {
                 case TransactKind::Read:
-                    Read((std::byte*)Call.DataBuffer, Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
+                    Read(Call.DataBuffer, Call.Request.Op.Read.BlockAddress, Call.Request.Op.Read.BlockCount);
                     Call.Response.Status = {};
                     break;
                 case TransactKind::Write:
-                    Write((const std::byte*)Call.DataBuffer, Call.Request.Op.Write.BlockAddress, Call.Request.Op.Write.BlockCount);
+                    Write(Call.DataBuffer, Call.Request.Op.Write.BlockAddress, Call.Request.Op.Write.BlockCount);
                     Call.Response.Status = {};
                     break;
                 case TransactKind::Flush:
@@ -324,7 +328,7 @@ namespace FastSpd
                     Call.Response.Status = {};
                     break;
                 case TransactKind::Unmap:
-                    std::for_each_n((const UnmapDescriptor*)Call.DataBuffer, Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor) {
+                    std::for_each_n(reinterpret_cast<const UnmapDescriptor*>(Call.DataBuffer), Call.Request.Op.Unmap.Count, [this](const UnmapDescriptor& Descriptor) {
                         Unmap(Descriptor.BlockAddress, Descriptor.BlockCount);
                     });
                     Call.Response.Status = {};
@@ -339,13 +343,14 @@ namespace FastSpd
                 }
             }
         }
-        catch (std::system_error e)
+        catch (const std::system_error& e)
         {
             printf("%x %s\n", e.code().value(), e.what());
         }
-        catch (std::exception e)
+        catch (const std::exception& e)
         {
             printf("%s\n", e.what());
         }
     }
+    // NOLINTEND(modernize-use-nullptr)
 }

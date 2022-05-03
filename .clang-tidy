@@ -1,0 +1,31 @@
+Checks: '*,
+-llvmlibc-restrict-system-libc-headers,
+-llvmlibc-callee-namespace,
+-llvm-include-order,
+-llvm-header-guard,
+-llvm-namespace-comment,
+-google-readability-namespace-comments,
+-modernize-use-trailing-return-type,
+-cppcoreguidelines-pro-type-reinterpret-cast,
+-altera-struct-pack-align,
+-readability-magic-numbers,
+-cppcoreguidelines-avoid-magic-numbers,
+-cppcoreguidelines-pro-type-union-access,
+-llvmlibc-implementation-in-namespace,
+-cppcoreguidelines-pro-bounds-pointer-arithmetic,
+-readability-implicit-bool-conversion,
+-modernize-raw-string-literal,
+-readability-uppercase-literal-suffix,
+-fuchsia-default-arguments-calls,
+-altera-unroll-loops,
+-cppcoreguidelines-pro-bounds-constant-array-index,
+-altera-id-dependent-backward-branch,
+-bugprone-easily-swappable-parameters,
+-readability-duplicate-include,
+-readability-identifier-length,
+-modernize-use-default-member-init
+'
+CheckOptions:
+  - key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
+    value: true
+FormatStyle: file

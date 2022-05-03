@@ -1,6 +1,7 @@
 #pragma once
 
 // clang-format off
+// NOLINTBEGIN
 #if __cplusplus
 extern "C" {
 #endif
@@ -94,3 +95,4 @@ ULONG NTAPI RtlNtStatusToDosError(
 #ifdef __cplusplus
 }
 #endif
+// NOLINTEND

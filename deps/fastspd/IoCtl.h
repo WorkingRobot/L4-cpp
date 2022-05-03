@@ -1,7 +1,6 @@
 #pragma once
 
 #include <guiddef.h>
-#include <stdint.h>
 
 #include <array>
 
@@ -113,7 +112,7 @@ namespace FastSpd
         uint32_t Btl;
         uint32_t IsRequestValid  : 1;
         uint32_t IsResponseValid : 1;
-        uint64_t DataBuffer;
+        std::byte* DataBuffer;
         union
         {
             struct

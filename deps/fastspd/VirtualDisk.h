@@ -4,7 +4,6 @@
 
 #include <array>
 #include <thread>
-#include <vector>
 
 namespace FastSpd
 {
@@ -23,6 +22,13 @@ namespace FastSpd
     public:
         VirtualDisk(uint64_t BlockCount, uint32_t BlockSize);
 
+        VirtualDisk(const VirtualDisk&) = delete;
+        VirtualDisk(VirtualDisk&&) noexcept = delete;
+
+        VirtualDisk& operator=(const VirtualDisk&) = delete;
+        VirtualDisk& operator=(VirtualDisk&&) noexcept = delete;
+
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         virtual ~VirtualDisk();
 
         void Start();
@@ -46,7 +52,7 @@ namespace FastSpd
         uint32_t Btl;
         GUID Guid;
         void* IocpHandle;
-        std::unique_ptr<std::byte[]> DataBuffer;
+        std::unique_ptr<std::array<std::array<std::byte, MaxTransferLength>, CallCount>> DataBuffer;
         std::array<OverlappedExPublic, CallCount> IocpRange;
         std::array<std::thread, CallCount> Threads;
     };
