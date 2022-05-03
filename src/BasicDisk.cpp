@@ -3,21 +3,23 @@
 namespace L4::Disk
 {
     BasicDisk::BasicDisk(const ExFatDirectory& ExFatTree) :
-        VirtualDisk(BlockCount, BlockSize), GPTData(GPT::Create(BlockSize, BlockCount, &Partition, 1)), Filesystem(Partition.BlockAddress, Partition.BlockCount, ExFatTree)
+        VirtualDisk(BlockCount, BlockSize),
+        GPTData(std::initializer_list<L4::Disk::Partition> { Partition }, BlockSize, BlockCount),
+        Filesystem(Partition.BlockAddress, Partition.BlockCount, ExFatTree)
     {
         IntervalList Ints;
-        Ints.Add(0, 1, GPTData.ProtectiveMBR);
-        Ints.Add(1, 1, GPTData.ProtectiveMBR);
+        Ints.Add(0, 1, GPTData.ProtectiveMBR.AsBytes());
+        Ints.Add(1, 1, GPTData.ProtectiveMBR.AsBytes());
 
         auto PrimaryTableStartOffset = 2;
         auto PrimaryTableSize = TableBlockSize;
-        Ints.Add(PrimaryTableStartOffset, PrimaryTableSize, GPTData.Table);
+        Ints.Add(PrimaryTableStartOffset, PrimaryTableSize, std::span(GPTData.Table));
 
         auto SecondaryTableStartOffset = BasicDisk::BlockCount - 1 - TableBlockSize;
         auto SecondaryTableSize = TableBlockSize;
-        Ints.Add(SecondaryTableStartOffset, SecondaryTableSize, GPTData.Table);
+        Ints.Add(SecondaryTableStartOffset, SecondaryTableSize, std::span(GPTData.Table));
 
-        Ints.Add(BasicDisk::BlockCount - 1, 1, GPTData.SecondaryHeader);
+        Ints.Add(BasicDisk::BlockCount - 1, 1, GPTData.SecondaryHeader.AsBytes());
 
         Ints.Merge(256, Filesystem.GetIntervalList());
 
@@ -61,7 +63,7 @@ namespace L4::Disk
 
             auto Offset = Int.Start - BlockAddress;
             auto Count = Int.End - Int.Start + 1;
-            auto ByteCount = std::min(Int.Buffer.size(), Count * BlockSize);
+            auto ByteCount = std::min<size_t>(Int.Buffer.size(), Count * BlockSize);
             memcpy((std::byte*)Buffer + Offset * BlockSize, Int.Buffer.data(), ByteCount);
         });
 

@@ -5,7 +5,6 @@
 #include "RamDisk.h"
 
 #include <conio.h>
-#include <string.h>
 // #include "web/Http.h"
 
 #include <numeric>

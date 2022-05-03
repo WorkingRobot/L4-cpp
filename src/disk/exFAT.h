@@ -16,7 +16,7 @@ namespace L4
         AttribArchive = 1 << 5
     };
 
-    using centiseconds = std::chrono::duration<long long, std::centi>;
+    using centiseconds = std::chrono::duration<std::chrono::milliseconds::rep, std::centi>;
     using ExFatTime = std::chrono::zoned_time<centiseconds>;
 
     struct ExFatEntry

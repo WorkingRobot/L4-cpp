@@ -24,7 +24,7 @@ namespace L4::Disk
 
         static constexpr uint64_t TableBlockSize = Align<BlockSize>(sizeof(GPT::Table)) / BlockSize;
 
-        static constexpr GPT::Partition Partition {
+        static constexpr Partition Partition {
             .BlockAddress = 256,
             .BlockCount = BlockCount - 256 - 256
         };
@@ -42,7 +42,7 @@ namespace L4::Disk
     private:
         std::unordered_map<uint64_t, std::array<std::byte, BlockSize>> RamDisk;
 
-        GPT::GPT GPTData;
+        GPT GPTData;
         ExFatSystem Filesystem;
         IntervalTree Tree;
     };

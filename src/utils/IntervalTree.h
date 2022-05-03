@@ -32,7 +32,7 @@ namespace L4
         void Merge(uint64_t Offset, const IntervalList& List)
         {
             Intervals.reserve(Intervals.size() + List.Intervals.size());
-            std::transform(List.Intervals.begin(), List.Intervals.end(), std::back_inserter(Intervals), [Offset](const auto& Int) {
+            std::transform(List.Intervals.begin(), List.Intervals.end(), std::back_inserter(Intervals), [Offset](const Interval& Int) {
                 return Interval { Int.Start + Offset, Int.End + Offset, Int.Buffer };
             });
         }
