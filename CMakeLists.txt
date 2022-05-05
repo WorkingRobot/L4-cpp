@@ -126,7 +126,7 @@ function(PUSH_SOURCES PROJECT)
 endfunction()
 
 function(FORCE_ENABLE_PDBS PROJECT)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_BUILD_TYPE MATCHES "Release")
+    if(MSVC AND CMAKE_BUILD_TYPE MATCHES "Release")
         target_compile_options(${PROJECT} PRIVATE /Zi)
         set_target_properties(${PROJECT} PROPERTIES
             LINK_FLAGS "/DEBUG /OPT:REF /OPT:ICF"

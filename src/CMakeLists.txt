@@ -1,6 +1,7 @@
 ﻿## Source Files ##
 
-add_file(L4 Main.cpp)
+# add_file(L4 Main.cpp)
+add_file(L4 GtkMain.cpp)
 add_file(L4 RamDisk.cpp)
 add_file(L4 BasicDisk.cpp)
 add_dir(L4 disk)
@@ -21,16 +22,17 @@ find_package(PkgConfig REQUIRED)
 
 # GUI #
 
+#find_library(GTK_LIB gtk-4 REQUIRED)
+#get_filename_component(LIB_PATH ${GTK_LIB} DIRECTORY)
+#target_link_directories(L4 PRIVATE ${LIB_PATH})
+
+pkg_check_modules(GTKMM REQUIRED gtkmm-4.0)
+target_link_directories(L4 PRIVATE ${GTKMM_LIBRARY_DIRS})
+target_link_libraries(L4 PRIVATE ${GTKMM_LIBRARIES})
+target_include_directories(L4 PRIVATE ${GTKMM_INCLUDE_DIRS})
+target_compile_options(L4 PRIVATE -Wno-ignored-attributes)
+
 if (FALSE)
-find_library(GTK_LIB gtk-4 REQUIRED)
-get_filename_component(LIB_PATH ${GTK_LIB} DIRECTORY)
-target_link_directories(L4 PRIVATE ${LIB_PATH})
-
-pkg_check_modules(GTK REQUIRED gtkmm-4.0)
-target_link_libraries(L4 ${GTK_LIBRARIES})
-target_include_directories(L4 PUBLIC ${GTK_INCLUDE_DIRS})
-target_compile_options(L4 PUBLIC ${GTK_CFLAGS_OTHER})
-
 # Json #
 find_package(RapidJSON CONFIG REQUIRED)
 target_include_directories(L4 PRIVATE ${RAPIDJSON_INCLUDE_DIRS})

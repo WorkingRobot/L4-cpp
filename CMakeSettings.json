@@ -1,14 +1,14 @@
 ﻿{
     "configurations": [
         {
-            "name": "x64-Debug",
+            "name": "x64-Clang-Release",
             "generator": "Ninja",
-            "configurationType": "Debug",
-            "inheritEnvironments": [ "msvc_x64_x64" ],
+            "configurationType": "Release",
             "buildRoot": "${projectDir}\\out\\build\\${name}",
             "installRoot": "${projectDir}\\out\\install\\${name}",
             "cmakeCommandArgs": "",
-            "ctestCommandArgs": ""
+            "ctestCommandArgs": "",
+            "inheritEnvironments": [ "clang_cl_x64_x64" ]
         },
         {
             "name": "x64-Release",
