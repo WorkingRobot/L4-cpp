@@ -36,27 +36,6 @@ namespace L4
             }
         }
 
-        static consteval std::string_view LogLevelToEscColorCode(LogLevel Level)
-        {
-            switch (Level)
-            {
-            case LogLevel::Critical:
-                return "\33[31m"; // Dark Red
-            case LogLevel::Error:
-                return "\33[31;1m"; // Bold/Bright Red
-            case LogLevel::Warning:
-                return "\33[33;1m"; // Bold/Bright Yellow
-            case LogLevel::Info:
-                return "\33[37;1m"; // Bold/Bright White
-            case LogLevel::Debug:
-                return "\33[36;1m"; // Bold/Bright Aqua
-            default:
-                return "\33[32;1m"; // Bold/Bright Green
-            }
-        }
-
-        static constexpr std::string_view ResetEscColorCode = "\33[0m";
-
         static constexpr std::string_view FixFilename(const std::string_view Filename)
         {
             constexpr std::string_view Pattern = "src\\";
@@ -87,54 +66,104 @@ namespace L4
             std::string_view Function = "";
         };
 
-        template<LogLevel Level>
-        static consteval auto CreateFormatter()
+        template <size_t ArgCount, class FuncT>
+        static auto inline FormatMessage(std::string_view Message, FuncT Evaluator)
         {
-            return [=](std::string_view Message, const SourceLocation Location, const std::format_args Args) {
-                return std::format("{}: {} ({} @ {})", LogLevelToString(Level), std::vformat(Message, Args), Location.File, Location.Line);
-            };
-        }
-
-        template <LogLevel Level>
-        static consteval auto CreateFormatterNoArgs()
-        {
-            return [=](std::string_view Message, const SourceLocation Location) {
-                return std::format("{}: {} ({} @ {})", LogLevelToString(Level), Message, Location.File, Location.Line);
-            };
-        }
-
-        template <LogLevel Level, class... ArgTs>
-        static auto FormatMessage(std::string_view Message, const SourceLocation Location, ArgTs&&... Args)
-        {
-            if constexpr (sizeof...(ArgTs) == 0)
+            if constexpr (ArgCount == 0)
             {
-                return CreateFormatterNoArgs<Level>()(Message, Location);
+                return Message;
             }
-            return CreateFormatter<Level>()(Message, Location, std::make_format_args(std::forward<ArgTs>(Args)...));
+            return std::vformat(Message, Evaluator());
         }
 
-        template <class... ArgTs>
+        template <LogLevel Level, size_t ArgCount, class FuncT>
+        static auto inline FormatMessage(std::string_view Message, const SourceLocation Location, FuncT Evaluator)
+        {
+            return std::format("{}: {} ({}({},{}) @ {})\n", LogLevelToString(Level), FormatMessage<ArgCount>(Message, Evaluator), Location.File, Location.Line, Location.Column, Location.Function);
+        }
+
+        template <class ArgsT>
+        struct FormatStringFor
+        {
+
+        };
+
+        template <class ContextT, class... ArgTs>
+        struct FormatStringFor<std::_Format_arg_store<ContextT, ArgTs...>>
+        {
+            using Type = std::_Fmt_string<std::type_identity_t<ArgTs>...>;
+            static constexpr size_t ArgCount = sizeof...(ArgTs);
+        };
+
+        template <class ArgsT>
+        using FormatStringForT = typename FormatStringFor<ArgsT>::Type;
+
+        template <class ArgsT>
         struct MessageCtx
         {
             template <class T>
             requires std::convertible_to<const T&, std::string_view>
             consteval MessageCtx(const T& Message, const SourceLocation Location = SourceLocation::Current()) :
-                Message(std::_Fmt_string<ArgTs...>(Message)._Str),
+                Message(FormatStringForT<ArgsT>(Message)._Str),
                 Location(Location)
             {
 
             }
 
+            template <LogLevel Level, class FuncT>
+            requires(std::is_same_v<ArgsT, std::invoke_result_t<FuncT>>)
+            [[nodiscard]] inline std::string Format(FuncT Evaluator) const
+            {
+                return FormatMessage<Level, FormatStringFor<ArgsT>::ArgCount>(Message, Location, Evaluator);
+            }
+
             const std::string_view Message;
             const Detail::SourceLocation Location;
         };
+
+        [[noreturn]] void Abort(const std::string& Message);
+
+        void LogRaw(LogLevel Level, const std::string& Message);
     }
 
+    void LogSetup();
 
-
-    template <LogLevel Level, class... ArgTs>
-    void Log(Detail::MessageCtx<std::type_identity_t<ArgTs>...> Message, ArgTs&&... Args)
+    template <LogLevel Level, class FuncT>
+    inline void Log(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
     {
-        printf("%s\n", Detail::FormatMessage<Level>(Message.Message, Message.Location, std::forward<ArgTs>(Args)...).c_str());
+        if constexpr (Level != LogLevel::Critical)
+        {
+            Detail::LogRaw(Level, Message.template Format<Level>(Evaluator));
+        }
+        else
+        {
+            Detail::Abort(Message.template Format<Level>(Evaluator));
+        }
+    }
+
+    template <LogLevel Level, class FuncT>
+    inline void Ensure(bool Condition, Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    {
+        if (!Condition)
+            [[unlikely]]
+        {
+            Log<Level>(Message, Evaluator);
+        }
+    }
+
+    template <class FuncT>
+    inline void Abort(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    {
+        Log<LogLevel::Critical>(Message, Evaluator);
+    }
+
+    template <LogLevel Level, class FuncT>
+    inline void Verify(bool Condition, Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    {
+        if (!Condition)
+            [[unlikely]]
+        {
+            Log<LogLevel::Critical>(Message, Evaluator);
+        }
     }
 }

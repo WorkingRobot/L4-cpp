@@ -18,7 +18,8 @@ namespace L4
 {
     void Main()
     {
-        Log<LogLevel::Warning>("hello {:s}", "s");
+        LogSetup();
+        Ensure<LogLevel::Warning>(false, "hello {:s}", [] { return std::make_format_args("world"); });
     }
 }
 
@@ -27,7 +28,7 @@ int main(int argc, char* argv[])
     L4::Main();
     return 0;
     auto app = Gtk::Application::create("org.gtkmm.examples.base");
-    
+
     return app->make_window_and_run<MyWindow>(argc, argv);
 
     return 0;
