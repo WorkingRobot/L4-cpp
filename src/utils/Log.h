@@ -73,7 +73,10 @@ namespace L4
             {
                 return Message;
             }
-            return std::vformat(Message, Evaluator());
+            else
+            {
+                return std::vformat(Message, Evaluator());
+            }
         }
 
         template <LogLevel Level, size_t ArgCount, class FuncT>
@@ -97,6 +100,8 @@ namespace L4
 
         template <class ArgsT>
         using FormatStringForT = typename FormatStringFor<ArgsT>::Type;
+
+        static constexpr auto EmptyEvaluator = []() { return std::make_format_args(); };
 
         template <class ArgsT>
         struct MessageCtx
@@ -128,8 +133,8 @@ namespace L4
 
     void LogSetup();
 
-    template <LogLevel Level, class FuncT>
-    inline void Log(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    template <LogLevel Level, class FuncT = decltype(Detail::EmptyEvaluator)>
+    inline void Log(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)
     {
         if constexpr (Level != LogLevel::Critical)
         {
@@ -141,8 +146,8 @@ namespace L4
         }
     }
 
-    template <LogLevel Level, class FuncT>
-    inline void Ensure(bool Condition, Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    template <LogLevel Level, class FuncT = decltype(Detail::EmptyEvaluator)>
+    inline void Ensure(bool Condition, Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)
     {
         if (!Condition)
             [[unlikely]]
@@ -151,14 +156,14 @@ namespace L4
         }
     }
 
-    template <class FuncT>
-    inline void Abort(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    template <class FuncT = decltype(Detail::EmptyEvaluator)>
+    inline void Abort(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)
     {
         Log<LogLevel::Critical>(Message, Evaluator);
     }
 
-    template <LogLevel Level, class FuncT>
-    inline void Verify(bool Condition, Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator)
+    template <LogLevel Level, class FuncT = decltype(Detail::EmptyEvaluator)>
+    inline void Verify(bool Condition, Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)
     {
         if (!Condition)
             [[unlikely]]

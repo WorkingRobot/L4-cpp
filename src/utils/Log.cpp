@@ -150,8 +150,71 @@ namespace L4
         GetLogger().Log(Level, Message);
     }
 
+    static constexpr std::string_view GetExceptionNameFromCode(DWORD ExceptionCode)
+    {
+        switch (ExceptionCode)
+        {
+            // clang-format off
+#define CASE(Name) case Name: return #Name
+            // clang-format on
+
+            CASE(EXCEPTION_ACCESS_VIOLATION);
+            CASE(EXCEPTION_ARRAY_BOUNDS_EXCEEDED);
+            CASE(EXCEPTION_DATATYPE_MISALIGNMENT);
+            CASE(EXCEPTION_FLT_DENORMAL_OPERAND);
+            CASE(EXCEPTION_FLT_DIVIDE_BY_ZERO);
+            CASE(EXCEPTION_FLT_INVALID_OPERATION);
+            CASE(EXCEPTION_ILLEGAL_INSTRUCTION);
+            CASE(EXCEPTION_INT_DIVIDE_BY_ZERO);
+            CASE(EXCEPTION_PRIV_INSTRUCTION);
+            CASE(EXCEPTION_STACK_OVERFLOW);
+
+#undef CASE
+        }
+    }
+
+    LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
+    {
+        std::string Ret;
+        Ret.reserve(256);
+        auto Itr = std::back_inserter(Ret);
+        Itr = std::format_to(Itr, "SEH Exception: ");
+        if (auto Code = GetExceptionNameFromCode(ExceptionInfo->ExceptionRecord->ExceptionCode); !Code.empty())
+        {
+            Itr = std::format_to(Itr, "{:s}", Code);
+        }
+        else
+        {
+            Itr = std::format_to(Itr, "{:#08x}", ExceptionInfo->ExceptionRecord->ExceptionCode);
+        }
+        if (ExceptionInfo->ExceptionRecord->NumberParameters)
+        {
+            *Itr++ = ' ';
+            *Itr++ = '[';
+            for (DWORD Idx = 0; Idx < ExceptionInfo->ExceptionRecord->NumberParameters; ++Idx)
+            {
+                if (Idx)
+                {
+                    *Itr++ = ',';
+                    *Itr++ = ' ';
+                }
+                Itr = std::format_to(Itr, "{:x}", ExceptionInfo->ExceptionRecord->ExceptionInformation[Idx]);
+            }
+            *Itr++ = ']';
+        }
+
+        *Itr++ = '\n';
+
+        Detail::LogRaw(LogLevel::Critical, Ret);
+        Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
+
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
     void LogSetup()
     {
+        SetUnhandledExceptionFilter(ExceptionHandler);
+
         GetLogger().Setup();
     }
 }
