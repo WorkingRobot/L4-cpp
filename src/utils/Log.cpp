@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include "formatters/Path.h"
+#include "StackTrace.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -141,6 +142,7 @@ namespace L4
     void Detail::Abort(const std::string& Message)
     {
         LogRaw(LogLevel::Critical, Message);
+        LogRaw(LogLevel::Critical, GetStackTrace());
     }
 
     void Detail::LogRaw(LogLevel Level, const std::string& Message)

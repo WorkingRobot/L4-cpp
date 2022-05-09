@@ -19,7 +19,7 @@ namespace L4
     void Main()
     {
         LogSetup();
-        Ensure<LogLevel::Warning>(false, "hello {:s}", [] { return std::make_format_args("world"); });
+        Ensure<LogLevel::Critical>(false, "hello {:s}", [] { return std::make_format_args("world"); });
     }
 }
 
