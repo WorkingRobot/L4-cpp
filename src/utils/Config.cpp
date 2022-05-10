@@ -10,7 +10,7 @@ namespace L4::Config
         return Path;
     }
 
-    inline std::filesystem::path GetExePathInternal() noexcept
+    static inline std::filesystem::path GetExePathInternal() noexcept
     {
         char* Path;
         if (_get_pgmptr(&Path) == 0)

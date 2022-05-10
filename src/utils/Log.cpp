@@ -1,8 +1,8 @@
 #include "Log.h"
 
 #include "Config.h"
+#include "Debug.h"
 #include "formatters/Path.h"
-#include "StackTrace.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -141,8 +141,23 @@ namespace L4
 
     void Detail::Abort(const std::string& Message)
     {
-        LogRaw(LogLevel::Critical, Message);
-        LogRaw(LogLevel::Critical, GetStackTrace());
+        if (IsDebuggerPresent())
+        {
+            LogRaw(LogLevel::Critical, Message);
+            LogRaw(LogLevel::Critical, GetStackTrace());
+        }
+        else
+        {
+            auto DumpPath = Config::GetFolder() / std::format("{:%Y-%m-%d_%H-%M-%S}.dmp", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            bool DumpWritten = WriteMiniDump(DumpPath, NULL);
+
+            LogRaw(LogLevel::Critical, Message);
+            LogRaw(LogLevel::Critical, GetStackTrace());
+            LogRaw(LogLevel::Critical, DumpWritten ? std::format("\nDump written to {:s}\n", DumpPath)
+                                                   : std::format("\nCould not write dump to {:s}\n", DumpPath));
+
+            ExitProcess(0);
+        }
     }
 
     void Detail::LogRaw(LogLevel Level, const std::string& Message)
@@ -170,43 +185,62 @@ namespace L4
             CASE(EXCEPTION_STACK_OVERFLOW);
 
 #undef CASE
+        default:
+            return "";
         }
     }
 
-    LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
+    static inline std::string PrettifySEHException(PEXCEPTION_RECORD Record)
     {
         std::string Ret;
         Ret.reserve(256);
         auto Itr = std::back_inserter(Ret);
         Itr = std::format_to(Itr, "SEH Exception: ");
-        if (auto Code = GetExceptionNameFromCode(ExceptionInfo->ExceptionRecord->ExceptionCode); !Code.empty())
+        if (auto Code = GetExceptionNameFromCode(Record->ExceptionCode); !Code.empty())
         {
             Itr = std::format_to(Itr, "{:s}", Code);
         }
         else
         {
-            Itr = std::format_to(Itr, "{:#08x}", ExceptionInfo->ExceptionRecord->ExceptionCode);
+            Itr = std::format_to(Itr, "{:#08x}", Record->ExceptionCode);
         }
-        if (ExceptionInfo->ExceptionRecord->NumberParameters)
+        if (Record->NumberParameters)
         {
             *Itr++ = ' ';
             *Itr++ = '[';
-            for (DWORD Idx = 0; Idx < ExceptionInfo->ExceptionRecord->NumberParameters; ++Idx)
+            for (DWORD Idx = 0; Idx < Record->NumberParameters; ++Idx)
             {
                 if (Idx)
                 {
                     *Itr++ = ',';
                     *Itr++ = ' ';
                 }
-                Itr = std::format_to(Itr, "{:x}", ExceptionInfo->ExceptionRecord->ExceptionInformation[Idx]);
+                Itr = std::format_to(Itr, "{:x}", Record->ExceptionInformation[Idx]);
             }
             *Itr++ = ']';
         }
-
         *Itr++ = '\n';
 
-        Detail::LogRaw(LogLevel::Critical, Ret);
-        Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
+        return Ret;
+    }
+
+    static LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
+    {
+        if (IsDebuggerPresent())
+        {
+            Detail::LogRaw(LogLevel::Critical, PrettifySEHException(ExceptionInfo->ExceptionRecord));
+            Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
+        }
+        else
+        {
+            auto DumpPath = Config::GetFolder() / std::format("{:%Y-%m-%d_%H-%M-%S}.dmp", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            bool DumpWritten = WriteMiniDump(DumpPath, ExceptionInfo);
+
+            Detail::LogRaw(LogLevel::Critical, PrettifySEHException(ExceptionInfo->ExceptionRecord));
+            Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
+            Detail::LogRaw(LogLevel::Critical, DumpWritten ? std::format("\nDump written to {:s}\n", DumpPath)
+                                                           : std::format("\nCould not write dump to {:s}\n", DumpPath));
+        }
 
         return EXCEPTION_CONTINUE_SEARCH;
     }

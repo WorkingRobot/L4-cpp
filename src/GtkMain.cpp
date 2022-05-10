@@ -14,7 +14,6 @@ MyWindow::MyWindow()
 
 #include "utils/formatters/Stopwatch.h"
 #include "utils/Log.h"
-#include "utils/StackTrace.h"
 #include "utils/Stopwatch.h"
 
 namespace L4
@@ -25,14 +24,6 @@ namespace L4
         // *(int*)0xdeadbeef = 5;
         // __builtin_trap();
         // asm("hlt");
-        Stopwatch Timer;
-        Timer.Restart();
-        for (int i = 0; i < 50000; ++i)
-        {
-            GetStackTrace();
-        }
-        Timer.Stop();
-        Log<LogLevel::Info>("Took {:.2f}ms", [&]() { return std::make_format_args(Timer); });
         Ensure<LogLevel::Critical>(false, "hello {:s}", [] { return std::make_format_args("world"); });
     }
 }

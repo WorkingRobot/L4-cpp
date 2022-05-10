@@ -1,4 +1,4 @@
-#include "StackTrace.h"
+#include "Debug.h"
 
 // clang-format off
 #define WIN32_LEAN_AND_MEAN
@@ -11,7 +11,6 @@
 
 #include <array>
 #include <format>
-#include <span>
 
 namespace L4
 {
@@ -126,9 +125,27 @@ namespace L4
         DWORD64 LineAddress;
     };
 
+    static void InitializeSymbols()
+    {
+        struct SymInitializer
+        {
+            SymInitializer()
+            {
+                SymInitialize(GetCurrentProcess(), NULL, TRUE);
+            }
+
+            ~SymInitializer()
+            {
+                SymCleanup(GetCurrentProcess());
+            }
+        };
+
+        static SymInitializer Initializer;
+    }
+
     std::string GetStackTrace(void* ContextRecord)
     {
-        SymInitialize(GetCurrentProcess(), NULL, TRUE);
+        InitializeSymbols();
 
         FrameDataBuffer DataBuffer;
         STACKFRAME64 StackFrame {};
@@ -145,9 +162,9 @@ namespace L4
         return Ret;
     }
 
-    std::string GetStackTrace(std::span<PVOID> Frames)
+    std::string GetStackTrace(std::span<void*> Frames)
     {
-        SymInitialize(GetCurrentProcess(), NULL, TRUE);
+        InitializeSymbols();
 
         FrameDataBuffer DataBuffer;
 
@@ -168,5 +185,24 @@ namespace L4
         std::array<PVOID, 128> FramePtr {};
         auto FrameCount = RtlCaptureStackBackTrace(0, FramePtr.size(), FramePtr.data(), NULL);
         return GetStackTrace(std::span(FramePtr).first(FrameCount));
+    }
+
+    bool WriteMiniDump(const std::filesystem::path& Path, void* ExceptionPointers)
+    {
+        auto FileHandle = CreateFile2(Path.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS, NULL);
+        if (FileHandle == INVALID_HANDLE_VALUE)
+        {
+            return false;
+        }
+        MINIDUMP_EXCEPTION_INFORMATION ExceptionInformation {
+            .ThreadId = GetCurrentThreadId(),
+            .ExceptionPointers = PEXCEPTION_POINTERS(ExceptionPointers),
+            .ClientPointers = FALSE
+        };
+        bool IsDumpSuccessful = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), FileHandle,
+                                                  MINIDUMP_TYPE(MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithUnloadedModules | MiniDumpWithProcessThreadData | MiniDumpWithThreadInfo | MiniDumpWithTokenInformation),
+                                                  &ExceptionInformation, NULL, NULL);
+        CloseHandle(FileHandle);
+        return IsDumpSuccessful;
     }
 }
