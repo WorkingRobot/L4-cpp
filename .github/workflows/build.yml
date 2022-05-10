@@ -10,7 +10,7 @@ jobs:
   Build:
     strategy:
       matrix:
-        build-type: [Debug, Release]
+        build-type: [debug, release]
         os: [windows-2022]
         
     runs-on: ${{matrix.os}}
