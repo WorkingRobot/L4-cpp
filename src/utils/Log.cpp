@@ -213,6 +213,8 @@ namespace L4
 
     void LogSetup()
     {
+        ULONG StackBytes = 0x10000;
+        SetThreadStackGuarantee(&StackBytes);
         SetUnhandledExceptionFilter(ExceptionHandler);
 
         GetLogger().Setup();
