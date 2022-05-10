@@ -1,0 +1,7 @@
+{
+    "name": "L4",
+    "version-string": "latest",
+    "dependencies": [
+        "gtkmm"
+    ]
+}

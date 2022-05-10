@@ -19,11 +19,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build-type}}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build-type}}
+    - name: Run Vcpkg
+      uses: lukka/run-vcpkg@v10
+      with:
+        vcpkgGitCommitId: 'acca474962d8bc714ba555ec0c21b0dabee4e79d'
+        vcpkgJsonGlob: 'vcpkg.json'
+    
+    - name: Run CMake
+      uses: lukka/run-cmake@v10
+      with:
+        configurePreset: 'ninja-multi-vcpkg'
+        buildPreset: 'ninja-multi-vcpkg-${{matrix.build-type}}'
     
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
