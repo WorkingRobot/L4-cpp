@@ -140,6 +140,7 @@ endfunction()
 ## Add projects ##
 
 add_subdirectory(src)
+add_subdirectory(sources/riot)
 add_subdirectory(deps/fastspd)
 
 
