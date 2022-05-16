@@ -26,11 +26,9 @@
 #include <span>
 
 extern "C" {
-
     L4_API void* InitializeSource(uint32_t Version);
 
     L4_API void UninitializeSource(void* Source);
-
 }
 
 namespace L4::Interface
@@ -47,7 +45,11 @@ namespace L4::Interface
     enum class Error : uint16_t
     {
         Success,
-        UnsupportedArchive
+        UnsupportedArchive,
+        UnsupportedOperation,
+        StreamElementSizeMismatch,
+        StreamVersionMismatch,
+        RecursiveDirectoryTree
     };
 
     struct Guid
@@ -56,6 +58,8 @@ namespace L4::Interface
         uint32_t B;
         uint32_t C;
         uint32_t D;
+
+        auto operator<=>(const Guid&) const = default;
     };
 
     struct ArchiveTreeNode
@@ -71,8 +75,10 @@ namespace L4::Interface
     enum class FileReadStrategy : uint8_t
     {
         Unknown,
+        Direct,
         Callback,
-        Intervals
+        IntervalDirect,
+        IntervalCallback
     };
 
     struct ArchivePosition
@@ -82,32 +88,29 @@ namespace L4::Interface
     };
 
     // [Start, End]
+    template<class T>
     struct FileInterval
     {
         uint64_t Start;
         uint64_t End;
-        ArchivePosition Position;
+        T Data;
     };
 
     struct ArchiveTreeFile : public ArchiveTreeNode
     {
-        union
-        {
-            struct
-            {
-            
-            } Unknown;
-            struct
-            {
-                void* Context;
-            } Callback;
-            struct
-            {
-                std::span<FileInterval> Intervals;
-            } Intervals;
-        } ReadStrategyData;
-        FileReadStrategy ReadStrategy;
         uint64_t FileSize;
+        FileReadStrategy ReadStrategy;
+        union ReadStrategyData_
+        {
+            std::monostate Unknown;
+            ArchivePosition Direct;
+            void* Callback;
+            std::span<FileInterval<ArchivePosition>> IntervalDirect;
+            std::span<FileInterval<void*>> IntervalCallback;
+
+            ReadStrategyData_() :
+                Unknown() {};
+        } ReadStrategyData;
     };
 
     struct ArchiveTreeDirectory : public ArchiveTreeNode
@@ -123,10 +126,18 @@ namespace L4::Interface
         std::string_view Timezone;
     };
 
-    class L4_CLASS_API StreamFI_1
+    class L4_CLASS_API StreamFI
     {
     public:
-        virtual ~StreamFI_1() = default;
+        StreamFI() = default;
+        virtual ~StreamFI() = default;
+
+        StreamFI(const StreamFI&) = delete;
+        StreamFI(StreamFI&&) = delete;
+        StreamFI& operator=(const StreamFI&) = delete;
+        StreamFI& operator=(StreamFI&&) = delete;
+
+        virtual uint32_t GetId() const = 0;
 
         virtual Guid GetGuid() const = 0;
 
@@ -141,16 +152,18 @@ namespace L4::Interface
         virtual size_t GetSize() const = 0;
 
         virtual size_t ReadBytes(size_t Offset, char* Dst, size_t ByteCount) const = 0;
-
-        virtual size_t Read(size_t Offset, void* Dst, size_t Count) const = 0;
     };
 
-    class L4_CLASS_API ArchiveFI_1
+    class L4_CLASS_API ArchiveFI
     {
     public:
-        using StreamFI = StreamFI_1;
+        ArchiveFI() = default;
+        virtual ~ArchiveFI() = default;
 
-        virtual ~ArchiveFI_1() = default;
+        ArchiveFI(const ArchiveFI&) = delete;
+        ArchiveFI(ArchiveFI&&) = delete;
+        ArchiveFI& operator=(const ArchiveFI&) = delete;
+        ArchiveFI& operator=(ArchiveFI&&) = delete;
 
         virtual uint32_t GetSectorSize() const = 0;
 
@@ -174,37 +187,42 @@ namespace L4::Interface
 
         virtual Error OpenStream(StreamFI** Stream, uint32_t StreamIdx) const = 0;
 
-        virtual Error CloseStream(StreamFI* Stream) const = 0;
+        virtual Error OpenStream(StreamFI** Stream, const Guid& Guid) const = 0;
     };
 
-    class L4_CLASS_API Archive_1
+    class L4_CLASS_API Archive
     {
     public:
-        using ArchiveFI = ArchiveFI_1;
+        Archive() = default;
+        virtual ~Archive() = default;
 
-        virtual ~Archive_1() = default;
+        Archive(const Archive&) = delete;
+        Archive(Archive&&) = delete;
+        Archive& operator=(const Archive&) = delete;
+        Archive& operator=(Archive&&) = delete;
 
         virtual const ArchiveTree& GetTree() const = 0;
 
         virtual Error ReadFile(void* Context, uint64_t Offset, char* Data, uint64_t DataSize) const = 0;
     };
 
-    class L4_CLASS_API Source_1
+    class L4_CLASS_API Source
     {
     public:
         static const SourceVersion Version = SourceVersion::Initial;
-        using Archive = Archive_1;
-        using ArchiveFI = ArchiveFI_1;
 
-        virtual ~Source_1() = default;
+        Source() = default;
+        virtual ~Source() = default;
+
+        Source(const Source&) = delete;
+        Source(Source&&) = delete;
+        Source& operator=(const Source&) = delete;
+        Source& operator=(Source&&) = delete;
 
         virtual Guid GetGuid() const = 0;
 
-        virtual Error OpenArchive(Archive** Archive, ArchiveFI* Interface) = 0;
-
-        virtual Error CloseArchive(Archive* Archive) = 0;
+        virtual Error OpenArchive(Archive** Archive, const ArchiveFI* Interface) = 0;
     };
 
-    using Source = Source_1;
     static_assert(Source::Version == SourceVersion::Latest);
 }
