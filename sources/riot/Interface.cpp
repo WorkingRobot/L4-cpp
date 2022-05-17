@@ -1,5 +1,6 @@
 #define L4_EXPORT
 #include <SourceInterface.h>
+#include "Stream.h"
 #include "Structs.h"
 #include <memory>
 #include <vector>
@@ -531,6 +532,19 @@ public:
         try
         {
             *Archive = new ArchiveRiot(*Interface);
+        }
+        catch (const Error& Error)
+        {
+            return Error;
+        }
+        return Error::Success;
+    }
+
+    Error OpenUpdater(Updater** Updater, const UpdaterFI* Interface) final
+    {
+        try
+        {
+            *Updater = new UpdaterRiot(*Interface);
         }
         catch (const Error& Error)
         {

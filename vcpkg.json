@@ -2,6 +2,9 @@
     "name": "l4",
     "version-string": "latest",
     "dependencies": [
-        "gtkmm"
+        "gtkmm",
+        "rapidjson",
+        "cpr",
+        "zstd"
     ]
 }

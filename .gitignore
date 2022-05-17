@@ -1,6 +1,4 @@
-out/
-bin/
-build/
+builds/
 .vs/
 .vscode/
 .clang-format-*

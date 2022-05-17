@@ -45,11 +45,15 @@ namespace L4::Interface
     enum class Error : uint16_t
     {
         Success,
+
         UnsupportedArchive,
         UnsupportedOperation,
         StreamElementSizeMismatch,
         StreamVersionMismatch,
-        RecursiveDirectoryTree
+        RecursiveDirectoryTree,
+
+        Unauthenticated,
+        InvalidAuthentication
     };
 
     struct Guid
@@ -126,6 +130,26 @@ namespace L4::Interface
         std::string_view Timezone;
     };
 
+    class L4_CLASS_API UpstreamApp
+    {
+    public:
+        UpstreamApp() = default;
+        virtual ~UpstreamApp() = default;
+
+        UpstreamApp(const UpstreamApp&) = delete;
+        UpstreamApp(UpstreamApp&&) = delete;
+        UpstreamApp& operator=(const UpstreamApp&) = delete;
+        UpstreamApp& operator=(UpstreamApp&&) = delete;
+
+        virtual Guid GetGuid() const = 0;
+
+        virtual size_t GetName(char8_t* Name, size_t NameSize) const = 0;
+
+        virtual size_t GetVersion(char8_t* Version, size_t VersionSize) const = 0;
+
+        virtual uint32_t GetVersionNumeric() const = 0;
+    };
+
     class L4_CLASS_API StreamFI
     {
     public:
@@ -171,9 +195,9 @@ namespace L4::Interface
 
         virtual size_t GetAppName(char8_t* Name, size_t NameSize) const = 0;
 
-        virtual size_t GetSourceVersion(char8_t* Name, size_t NameSize) const = 0;
+        virtual size_t GetSourceVersion(char8_t* Version, size_t VersionSize) const = 0;
 
-        virtual size_t GetAppVersion(char8_t* Name, size_t NameSize) const = 0;
+        virtual size_t GetAppVersion(char8_t* Version, size_t VersionSize) const = 0;
 
         virtual uint32_t GetSourceVersionNumeric() const = 0;
 
@@ -201,9 +225,43 @@ namespace L4::Interface
         Archive& operator=(const Archive&) = delete;
         Archive& operator=(Archive&&) = delete;
 
+        virtual bool IsUpToDate(const UpstreamApp* App) const = 0;
+
         virtual const ArchiveTree& GetTree() const = 0;
 
         virtual Error ReadFile(void* Context, uint64_t Offset, char* Data, uint64_t DataSize) const = 0;
+    };
+
+    class L4_CLASS_API UpstreamFI
+    {
+    public:
+        UpstreamFI() = default;
+        virtual ~UpstreamFI() = default;
+
+        UpstreamFI(const UpstreamFI&) = delete;
+        UpstreamFI(UpstreamFI&&) = delete;
+        UpstreamFI& operator=(const UpstreamFI&) = delete;
+        UpstreamFI& operator=(UpstreamFI&&) = delete;
+
+        
+    };
+
+    class L4_CLASS_API Upstream
+    {
+    public:
+        Upstream() = default;
+        virtual ~Upstream() = default;
+
+        Upstream(const Upstream&) = delete;
+        Upstream(Upstream&&) = delete;
+        Upstream& operator=(const Upstream&) = delete;
+        Upstream& operator=(Upstream&&) = delete;
+
+        virtual Error Authenticate() = 0;
+
+        virtual Error GetAvailableApps(std::span<UpstreamApp*>* Apps) = 0;
+
+        virtual Error OpenUpdater(Updater** Updater, const UpdaterFI* Interface) = 0;
     };
 
     class L4_CLASS_API Source
@@ -221,7 +279,17 @@ namespace L4::Interface
 
         virtual Guid GetGuid() const = 0;
 
+        virtual size_t GetName(char8_t* Name, size_t NameSize) const = 0;
+
+        virtual size_t GetVersion(char8_t* Version, size_t VersionSize) const = 0;
+
+        virtual uint32_t GetVersionNumeric() const = 0;
+
         virtual Error OpenArchive(Archive** Archive, const ArchiveFI* Interface) = 0;
+
+        virtual Error OpenArchiveWritable(ArchiveWritable** Archive, const ArchiveWritableFI* Interface) = 0;
+
+        virtual Error OpenUpstream(Upstream** Upstream, const UpstreamFI* Interface) = 0;
     };
 
     static_assert(Source::Version == SourceVersion::Latest);
