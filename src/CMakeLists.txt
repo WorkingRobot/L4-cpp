@@ -1,7 +1,6 @@
 ## Source Files ##
 
-# add_file(L4 Main.cpp)
-add_file(L4 GtkMain.cpp)
+add_file(L4 Main.cpp)
 add_file(L4 RamDisk.cpp)
 add_file(L4 BasicDisk.cpp)
 add_dir(L4 disk)
@@ -20,6 +19,7 @@ add_executable(L4 ${L4_SOURCES})
 
 find_package(PkgConfig REQUIRED)
 
+if (FALSE)
 # GUI #
 
 #find_library(GTK_LIB gtk-4 REQUIRED)
@@ -31,16 +31,9 @@ target_link_directories(L4 PRIVATE ${GTKMM_LIBRARY_DIRS})
 target_link_libraries(L4 PRIVATE ${GTKMM_LIBRARIES})
 target_include_directories(L4 PRIVATE ${GTKMM_INCLUDE_DIRS})
 target_compile_options(L4 PRIVATE -Wno-ignored-attributes)
+endif()
 
 if (FALSE)
-# Json #
-find_package(RapidJSON CONFIG REQUIRED)
-target_include_directories(L4 PRIVATE ${RAPIDJSON_INCLUDE_DIRS})
-
-# Http #
-find_package(cpr CONFIG REQUIRED)
-target_link_libraries(L4 PRIVATE cpr::cpr)
-
 # Zstd #
 find_package(zstd CONFIG REQUIRED)
 target_link_libraries(L4 PRIVATE zstd::libzstd_shared)
@@ -53,6 +46,10 @@ target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll)
 # WinSpd Wrapper #
 target_link_libraries(L4 PRIVATE fastspd)
 target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/fastspd)
+
+# Web #
+target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/L4web)
+target_link_libraries(L4 PRIVATE L4web)
 
 # Discord Rich Presence #
 target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/L4discord)

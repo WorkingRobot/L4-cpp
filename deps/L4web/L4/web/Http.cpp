@@ -1,6 +1,6 @@
 #include "Http.h"
 
-namespace L4::Http
+namespace L4::Web::Http
 {
     namespace Detail
     {
