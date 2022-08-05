@@ -1,4 +1,4 @@
-Checks: '*,
+Checks: '-*,
 -llvmlibc-restrict-system-libc-headers,
 -llvmlibc-callee-namespace,
 -llvm-include-order,
@@ -23,7 +23,15 @@ Checks: '*,
 -bugprone-easily-swappable-parameters,
 -readability-duplicate-include,
 -readability-identifier-length,
--modernize-use-default-member-init
+-modernize-use-default-member-init,
+-google-build-using-namespace,
+-google-explicit-constructor,
+-hicpp-explicit-conversions,
+-fuchsia-overloaded-operator,
+-misc-unused-parameters,
+-hicpp-exception-baseclass,
+-cppcoreguidelines-macro-usage,
+-clang-diagnostic-c++17-extensions
 '
 CheckOptions:
   - key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
