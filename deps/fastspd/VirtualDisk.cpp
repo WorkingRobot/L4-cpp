@@ -16,6 +16,8 @@
 #include <scsi.h>
 // clang-format on
 
+#include <cctype>
+#include <algorithm>
 #include <ranges>
 
 namespace FastSpd
