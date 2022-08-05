@@ -141,6 +141,7 @@ endfunction()
 
 add_subdirectory(deps/L4web)
 add_subdirectory(deps/L4discord)
+add_subdirectory(deps/L4source)
 add_subdirectory(deps/fastspd)
 add_subdirectory(sources/riot)
 add_subdirectory(src)
