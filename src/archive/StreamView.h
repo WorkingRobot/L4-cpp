@@ -192,6 +192,104 @@ namespace L4
             }
         }
 
+        void Read(std::span<std::byte> Dst, size_t Offset) const
+        {
+            auto& Runlist = GetRunlist();
+
+            if (Offset + Dst.size() > Runlist.Size)
+            {
+                throw std::out_of_range("Read will go out of bounds");
+            }
+
+            // Sector offset within the stream
+            uint32_t StreamSectorIdx = Offset / Archive->GetSectorSize();
+            // Byte offset within the current sector
+            uint32_t SectorOffset = Offset % Archive->GetSectorSize();
+            auto RunItr = std::lower_bound(Runlist.Runs, Runlist.Runs + Runlist.RunCount, StreamSectorIdx, [](const StreamRun& Interval, uint32_t Idx) {
+                return Interval.StreamSectorOffset + Interval.SectorCount <= Idx;
+            });
+            if (RunItr == Runlist.Runs + Runlist.RunCount)
+            {
+                throw std::out_of_range("Starting read from out of bounds");
+            }
+
+            // Index of the current sector within the current run
+            uint32_t RunSectorIdx = StreamSectorIdx - RunItr->StreamSectorOffset;
+
+            while (true)
+            {
+                uint32_t ReadAmt = std::min<uint32_t>((RunItr->SectorCount - RunSectorIdx) * Archive->GetSectorSize() - SectorOffset, Dst.size());
+
+                auto SrcPtr = reinterpret_cast<const std::byte*>(Archive->GetSector(RunItr->SectorOffset + RunSectorIdx)) + SectorOffset;
+                std::copy_n(SrcPtr, ReadAmt, Dst.begin());
+
+                Dst = Dst.subspan(ReadAmt);
+                if (Dst.empty())
+                {
+                    return;
+                }
+
+                // Because we either finish a read to Dst or we read to the end of a whole run,
+                // we can assume that we will begin at the start of a new run for all subsequent iterations
+                SectorOffset = 0;
+                RunSectorIdx = 0;
+                ++RunItr;
+                if (RunItr == Runlist.Runs + Runlist.RunCount)
+                {
+                    throw std::out_of_range("Continuing read from out of bounds");
+                }
+            }
+        }
+
+        void Write(std::span<const std::byte> Src, size_t Offset) requires(Writable)
+        {
+            auto& Runlist = GetRunlist();
+
+            if (Offset + Src.size() > Runlist.Size)
+            {
+                throw std::out_of_range("Write will go out of bounds");
+            }
+
+            // Sector offset within the stream
+            uint32_t StreamSectorIdx = Offset / Archive->GetSectorSize();
+            // Byte offset within the current sector
+            uint32_t SectorOffset = Offset % Archive->GetSectorSize();
+            auto RunItr = std::lower_bound(Runlist.Runs, Runlist.Runs + Runlist.RunCount, StreamSectorIdx, [](const StreamRun& Interval, uint32_t Idx) {
+                return Interval.StreamSectorOffset + Interval.SectorCount <= Idx;
+            });
+            if (RunItr == Runlist.Runs + Runlist.RunCount)
+            {
+                throw std::out_of_range("Starting write from out of bounds");
+            }
+
+            // Index of the current sector within the current run
+            uint32_t RunSectorIdx = StreamSectorIdx - RunItr->StreamSectorOffset;
+
+            while (true)
+            {
+                uint32_t ReadAmt = std::min<uint32_t>((RunItr->SectorCount - RunSectorIdx) * Archive->GetSectorSize() - SectorOffset, Src.size());
+
+                auto DstPtr = reinterpret_cast<std::byte*>(Archive->GetSector(RunItr->SectorOffset + RunSectorIdx)) + SectorOffset;
+                std::copy_n(Src.begin(), ReadAmt, DstPtr);
+
+                Src = Src.subspan(ReadAmt);
+                if (Src.empty())
+                {
+                    return;
+                }
+
+                // Because we either finish a write from Src or we write to the end of a whole run,
+                // we can assume that we will begin at the start of a new run for all subsequent iterations
+                SectorOffset = 0;
+                RunSectorIdx = 0;
+                ++RunItr;
+                if (RunItr == Runlist.Runs + Runlist.RunCount)
+                {
+                    throw std::out_of_range("Continuing write from out of bounds");
+                }
+            }
+        }
+
         // ^^^ Low level API
 
         // vvv High level API
@@ -230,4 +328,5 @@ namespace L4
 
     using StreamView = StreamViewBase<false>;
     using StreamViewWritable = StreamViewBase<true>;
+
 }
