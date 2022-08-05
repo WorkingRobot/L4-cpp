@@ -1,12 +1,13 @@
 ## Source Files ##
 
-add_file(L4 Main.cpp)
+add_file(L4 MainDiscord.cpp)
 add_file(L4 RamDisk.cpp)
 add_file(L4 BasicDisk.cpp)
 add_dir(L4 disk)
 add_dir(L4 utils)
 add_dir(L4 archive)
 add_dir(L4 mmio)
+add_dir(L4 source)
 push_sources(L4)
 
 
@@ -54,6 +55,9 @@ target_link_libraries(L4 PRIVATE L4web)
 # Discord Rich Presence #
 target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/L4discord)
 target_link_libraries(L4 PRIVATE L4discord)
+
+# Source Interface #
+target_link_libraries(L4 PRIVATE L4source)
 
 
 ## Properties ##
