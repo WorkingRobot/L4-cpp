@@ -20,8 +20,9 @@ namespace L4
         Guid AppGuid;
         char8_t SourceName[40];
         char8_t AppName[40];
-        char8_t SourceVersion[60];
-        char8_t AppVersion[60];
+        char8_t SourceVersion[40];
+        char8_t AppVersion[40];
+        char8_t Environment[40];
     };
 
     static_assert(sizeof(Header) == 256);

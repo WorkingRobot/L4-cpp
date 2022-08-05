@@ -131,6 +131,11 @@ namespace L4
             return GetSV(GetHeader().AppName);
         }
 
+        std::u8string_view GetEnvironment() const noexcept
+        {
+            return GetSV(GetHeader().Environment);
+        }
+
         // ^^^ High level API
 
     private:

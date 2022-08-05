@@ -11,6 +11,7 @@ namespace L4
     {
         Unknown,
         Initial,
+        Environment,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1

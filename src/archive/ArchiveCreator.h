@@ -33,6 +33,11 @@ namespace L4
         Guid Guid;
     };
 
+    struct EnvironmentInfo
+    {
+        std::u8string_view Environment;
+    };
+
     struct SingleStreamInfo
     {
         Guid Guid;
@@ -90,6 +95,12 @@ namespace L4
                 SetSV(Header.AppVersion, AppInfo.Version);
                 Header.AppVersionNumeric = AppInfo.VersionNumeric;
                 Header.AppGuid = AppInfo.Guid;
+            }
+
+            void Set(const EnvironmentInfo& EnvironmentInfo)
+            {
+                auto& Header = *File.Get<L4::Header>();
+                SetSV(Header.Environment, EnvironmentInfo.Environment);
             }
 
             void Set(const StreamInfo& StreamInfo)
