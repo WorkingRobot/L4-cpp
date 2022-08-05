@@ -32,4 +32,49 @@ namespace L4::Config
         static const auto Path = GetExePath().parent_path();
         return Path;
     }
+
+    const char* GetProjectName() noexcept
+    {
+        return CONFIG_PROJECT_NAME;
+    }
+
+    uint8_t GetVersionMajor() noexcept
+    {
+        return CONFIG_VERSION_MAJOR;
+    }
+
+    uint8_t GetVersionMinor() noexcept
+    {
+        return CONFIG_VERSION_MINOR;
+    }
+
+    uint8_t GetVersionPatch() noexcept
+    {
+        return CONFIG_VERSION_PATCH;
+    }
+
+    uint32_t GetVersionNumeric() noexcept
+    {
+        return uint32_t(GetVersionMajor()) << 24 | uint32_t(GetVersionMinor()) << 16 | uint32_t(GetVersionPatch());
+    }
+
+    const char* GetVersionHash() noexcept
+    {
+        return CONFIG_VERSION_HASH;
+    }
+
+    const char* GetVersionBranch() noexcept
+    {
+        return CONFIG_VERSION_BRANCH;
+    }
+
+    const char* GetVersion() noexcept
+    {
+        return CONFIG_VERSION;
+    }
+
+    const char* GetVersionLong() noexcept
+    {
+        return CONFIG_VERSION_LONG;
+    }
 }

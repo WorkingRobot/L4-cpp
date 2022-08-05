@@ -139,9 +139,11 @@ endfunction()
 
 ## Add projects ##
 
-add_subdirectory(src)
-add_subdirectory(sources/riot)
+add_subdirectory(deps/L4web)
+add_subdirectory(deps/L4discord)
 add_subdirectory(deps/fastspd)
+add_subdirectory(sources/riot)
+add_subdirectory(src)
 
 
 ## Define extra targets ##

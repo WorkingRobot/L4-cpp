@@ -63,3 +63,5 @@ set_property(TARGET L4 PROPERTY CXX_STANDARD 23)
 
 # Add .pdb for release builds #
 force_enable_pdbs(L4)
+
+add_version_defs(utils/Config.cpp)
