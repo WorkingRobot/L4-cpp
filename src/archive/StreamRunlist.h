@@ -8,7 +8,7 @@ namespace L4
     {
         uint32_t RunCount;
         uint32_t Reserved;
-        size_t Size;
+        uint64_t Size;
         StreamRun Runs[255];
     };
 

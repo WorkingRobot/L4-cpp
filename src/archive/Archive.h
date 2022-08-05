@@ -21,6 +21,10 @@ namespace L4
             StreamCount(GetHeader().StreamCount),
             FreelistOffset(Align(sizeof(Header) + StreamCount * sizeof(StreamHeader), SectorSize))
         {
+            if (GetHeader().Version != ArchiveVersion::Latest)
+            {
+                throw std::invalid_argument("Archive version is invalid");
+            }
         }
 
         // vvv Low level API

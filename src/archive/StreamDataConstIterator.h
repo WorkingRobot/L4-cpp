@@ -21,7 +21,6 @@ namespace L4
         {
             Offset *= sizeof(T);
 
-            auto& Header = Archive.GetStreamHeader(StreamIdx);
             auto& Runlist = Archive.GetStreamRunlist(StreamIdx);
             StreamSectorIdx = Offset / Archive.GetSectorSize();
             SectorOffset = Offset % Archive.GetSectorSize();

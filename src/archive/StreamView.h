@@ -50,6 +50,11 @@ namespace L4
             return LastRun.StreamSectorOffset + LastRun.SectorCount;
         }
 
+        size_t GetCapacity() const noexcept
+        {
+            return GetCapacityInSectors() * Archive->GetSectorSize();
+        }
+
     private:
         static constexpr auto MinHeapEntries = [](const auto& A, const auto& B) {
             return std::greater<> {}(A.SectorCount, B.SectorCount);
