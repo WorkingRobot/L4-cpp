@@ -54,6 +54,11 @@ target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll)
 target_link_libraries(L4 PRIVATE fastspd)
 target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/fastspd)
 
+# Discord Rich Presence #
+target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/L4discord)
+target_link_libraries(L4 PRIVATE L4discord)
+
+
 ## Properties ##
 
 # C++20 #
