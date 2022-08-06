@@ -1,6 +1,6 @@
 ## Source Files ##
 
-add_file(L4 MainDiscord.cpp)
+add_file(L4 MainSource.cpp)
 add_file(L4 RamDisk.cpp)
 add_file(L4 BasicDisk.cpp)
 add_dir(L4 disk)

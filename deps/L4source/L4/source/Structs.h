@@ -127,8 +127,6 @@ namespace L4::Source
 
         uint32_t (*GetAvailableApps)(const AppIdentity** Apps);
 
-        // void (*GottenAvailableApps)(const AppIdentity* Apps);
-
         bool (*IsValidApp)(const AppIdentity* Identity);
 
         // L4 passes a new Update object, the source grabs the new current version and attaches some context to keep track of it

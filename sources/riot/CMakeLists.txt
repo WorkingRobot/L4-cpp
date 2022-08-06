@@ -12,7 +12,7 @@ add_library(SourceRiot SHARED ${SourceRiot_SOURCES})
 
 # Source Interface #
 target_compile_definitions(SourceRiot PRIVATE L4_SOURCE_BUILDING_SOURCE)
-target_link_libraries(SourceRiot PRIVATE L4source)
+target_link_libraries(SourceRiot PUBLIC L4source)
 
 # Json #
 find_package(RapidJSON CONFIG REQUIRED)

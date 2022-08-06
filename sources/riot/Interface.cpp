@@ -1,12 +1,23 @@
-#include <L4/source/Interface.h>
-#include <L4/source/Structs.h>
-#include <cstdio>
+#include "InterfaceManager.h"
 
-const L4::Source::L4Interface* L4Interface = nullptr;
+#include <L4/source/Interface.h>
+
+#include <stdexcept>
 
 const L4::Source::SourceInterface* Initialize(const L4::Source::L4Interface* Interface)
 {
-    L4Interface = Interface;
-    printf("Initializing Riot Source with %s %s (%x)\n", (const char*)L4Interface->Identity.Name.Data, (const char*)L4Interface->Identity.Version.Humanized.Data, L4Interface->Identity.Version.Numeric);
-    return nullptr;
+    try
+    {
+        if (Interface == nullptr)
+        {
+            throw std::invalid_argument("Interface is null");
+        }
+
+        return &L4::Riot::InterfaceManager::Initialize(*Interface);
+    }
+    catch (...)
+    {
+        // extern "C" functions throwing C++ exceptions is undefined behavior
+        return nullptr;
+    }
 }
