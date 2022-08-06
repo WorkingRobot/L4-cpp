@@ -15,7 +15,7 @@ namespace L4
 
         ~SourceUpdate();
 
-        void Start(ArchiveWritable&& Archive, std::chrono::milliseconds UpdateRate);
+        void Start(ArchiveWritable&& Archive, std::chrono::milliseconds ProgressUpdateRate);
 
         void Pause();
 

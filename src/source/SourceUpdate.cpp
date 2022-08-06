@@ -20,7 +20,7 @@ namespace L4
         Library.Interface.UpdateClose(this);
     }
 
-    void SourceUpdate::Start(ArchiveWritable&& Archive, std::chrono::milliseconds UpdateRate)
+    void SourceUpdate::Start(ArchiveWritable&& Archive, std::chrono::milliseconds ProgressUpdateRate)
     {
         if (IsUpdating)
         {
@@ -31,7 +31,7 @@ namespace L4
 
         IsUpdating = true;
         UpdateState = Source::UpdateState::Starting;
-        Library.Interface.UpdateStart(this, &ArchiveRef, UpdateRate.count());
+        Library.Interface.UpdateStart(this, &ArchiveRef, ProgressUpdateRate.count());
     }
 
     void SourceUpdate::Pause()
