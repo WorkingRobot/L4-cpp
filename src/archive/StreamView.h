@@ -294,9 +294,9 @@ namespace L4
 
         // vvv High level API
 
-        const Guid& GetGuid() const noexcept
+        std::u8string_view GetId() const noexcept
         {
-            return GetHeader().Guid;
+            return GetSV(GetHeader().Id);
         }
 
         uint32_t GetVersion() const noexcept
@@ -314,7 +314,7 @@ namespace L4
             return GetSV(GetHeader().Name);
         }
 
-        std::span<const std::byte, 192> GetContext() const noexcept
+        std::span<const std::byte, 184> GetContext() const noexcept
         {
             return GetHeader().Context;
         }

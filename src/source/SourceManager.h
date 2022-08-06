@@ -21,7 +21,7 @@ namespace L4
             static void ArchiveSetIdentity(Source::Archive Archive, const Source::AppIdentity* NewIdentity);
             static uint32_t ArchiveGetStreamCount(Source::Archive Archive);
             static uint32_t ArchiveGetSectorSize(Source::Archive Archive);
-            static uint32_t ArchiveGetStreamIdxFromGuid(Source::Archive Archive, const Source::Guid* Guid);
+            static uint32_t ArchiveGetStreamIdxFromId(Source::Archive Archive, const Source::String* Id);
             static void ArchiveOpenStreamRead(Source::Archive Archive, uint32_t StreamIdx, Source::Stream* OutStream);
             static void ArchiveOpenStreamWrite(Source::Archive Archive, uint32_t StreamIdx, Source::Stream* OutStream);
             static void ArchiveCloseStream(Source::Archive Archive, Source::Stream Stream);
@@ -52,7 +52,7 @@ namespace L4
 
         static const Source::L4Interface& GetInterface() noexcept;
 
-        const SourceLibrary* GetSource(const Source::Guid& Guid) const;
+        const SourceLibrary* GetSource(std::u8string_view Id) const;
 
         std::vector<SourceLibrary> Sources;
     };

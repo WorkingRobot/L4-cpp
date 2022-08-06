@@ -5,7 +5,8 @@
 
 namespace L4::Riot
 {
-    InterfaceManager::InterfaceManager(const Source::L4Interface& Interface)
+    InterfaceManager::InterfaceManager(const Source::L4Interface& Interface) :
+        Interface(Interface)
     {
     }
 
@@ -42,13 +43,11 @@ namespace L4::Riot
     {
         static const Source::SourceInterface Interface {
             .Identity = {
-                .Guid = { 0xDA3C6F8B, 0xE7814B73, 0x813E1425, 0x1AF2A7B5 },
+                .Id = SerializeString(u8"riot"),
                 .Name = SerializeString(u8"Riot Games"),
                 .Version = {
                     .Humanized = SerializeString(u8"0.0.1"),
-                    .Numeric = 1
-                }
-            },
+                    .Numeric = 1 } },
 
             .ConfigOpen = &InterfaceWrapper::ConfigOpen,
         };
@@ -147,14 +146,12 @@ namespace L4::Riot
             throw std::invalid_argument("Update does not exist");
         }
 
-        UpdateItr->second.SetCallbacks({
-            .GetState = [Update]() -> Source::UpdateState { return ManagerSingleton.value().Interface.UpdateGetState(Update); },
-            .OnStart = [Update](const Source::UpdateStartInfo& StartInfo) { ManagerSingleton.value().Interface.UpdateOnStart(Update, &StartInfo); },
-            .OnProgress = [Update](const Source::UpdateProgressInfo& ProgressInfo) { ManagerSingleton.value().Interface.UpdateOnProgress(Update, &ProgressInfo); },
-            .OnPieceUpdate = [Update](uint64_t Id, Source::UpdatePieceStatus NewStatus) { ManagerSingleton.value().Interface.UpdateOnPieceUpdate(Update, Id, NewStatus); },
-            .OnFinalize = [Update]() { ManagerSingleton.value().Interface.UpdateOnFinalize(Update); },
-            .OnComplete = [Update]() { ManagerSingleton.value().Interface.UpdateOnComplete(Update); }
-        });
+        UpdateItr->second.SetCallbacks({ .GetState = [Update]() -> Source::UpdateState { return ManagerSingleton.value().Interface.UpdateGetState(Update); },
+                                         .OnStart = [Update](const Source::UpdateStartInfo& StartInfo) { ManagerSingleton.value().Interface.UpdateOnStart(Update, &StartInfo); },
+                                         .OnProgress = [Update](const Source::UpdateProgressInfo& ProgressInfo) { ManagerSingleton.value().Interface.UpdateOnProgress(Update, &ProgressInfo); },
+                                         .OnPieceUpdate = [Update](uint64_t Id, Source::UpdatePieceStatus NewStatus) { ManagerSingleton.value().Interface.UpdateOnPieceUpdate(Update, Id, NewStatus); },
+                                         .OnFinalize = [Update]() { ManagerSingleton.value().Interface.UpdateOnFinalize(Update); },
+                                         .OnComplete = [Update]() { ManagerSingleton.value().Interface.UpdateOnComplete(Update); } });
 
         UpdateItr->second.Start(Archive, std::chrono::milliseconds(ProgressUpdateRateMs));
     }

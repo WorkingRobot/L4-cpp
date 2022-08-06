@@ -19,9 +19,9 @@ namespace L4
 
         void SetElementSize(uint32_t NewElementSize);
 
-        [[nodiscard]] std::span<const std::byte, 192> GetContext() const;
+        [[nodiscard]] std::span<const std::byte, 184> GetContext() const;
 
-        void SetContext(std::span<const std::byte, 192> NewContext);
+        void SetContext(std::span<const std::byte, 184> NewContext);
 
         [[nodiscard]] uint64_t GetCapacity() const;
 

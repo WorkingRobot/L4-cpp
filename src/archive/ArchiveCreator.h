@@ -19,18 +19,18 @@ namespace L4
 
     struct SourceInfo
     {
+        std::u8string_view Id;
         std::u8string_view Name;
         std::u8string_view Version;
         uint32_t VersionNumeric;
-        Guid Guid;
     };
 
     struct AppInfo
     {
+        std::u8string_view Id;
         std::u8string_view Name;
         std::u8string_view Version;
         uint32_t VersionNumeric;
-        Guid Guid;
     };
 
     struct EnvironmentInfo
@@ -40,11 +40,11 @@ namespace L4
 
     struct SingleStreamInfo
     {
-        Guid Guid;
+        std::u8string_view Id;
         uint32_t Version;
         uint32_t ElementSize;
         std::u8string_view Name;
-        std::span<std::byte, 192> Context;
+        std::span<const std::byte, 184> Context;
     };
 
     using StreamInfo = std::initializer_list<SingleStreamInfo>;
@@ -82,19 +82,19 @@ namespace L4
             void Set(const SourceInfo& SourceInfo)
             {
                 auto& Header = *File.Get<L4::Header>();
+                SetSV(Header.SourceId, SourceInfo.Id);
                 SetSV(Header.SourceName, SourceInfo.Name);
                 SetSV(Header.SourceVersion, SourceInfo.Version);
                 Header.SourceVersionNumeric = SourceInfo.VersionNumeric;
-                Header.SourceGuid = SourceInfo.Guid;
             }
 
             void Set(const AppInfo& AppInfo)
             {
                 auto& Header = *File.Get<L4::Header>();
+                SetSV(Header.AppId, AppInfo.Id);
                 SetSV(Header.AppName, AppInfo.Name);
                 SetSV(Header.AppVersion, AppInfo.Version);
                 Header.AppVersionNumeric = AppInfo.VersionNumeric;
-                Header.AppGuid = AppInfo.Guid;
             }
 
             void Set(const EnvironmentInfo& EnvironmentInfo)
@@ -114,7 +114,7 @@ namespace L4
                 StreamHeader* Header = File.Get<StreamHeader>(sizeof(L4::Header));
                 for (auto& Info : StreamInfo)
                 {
-                    Header->Guid = Info.Guid;
+                    SetSV(Header->Id, Info.Id);
                     Header->Version = Info.Version;
                     Header->ElementSize = Info.ElementSize;
                     SetSV(Header->Name, Info.Name);

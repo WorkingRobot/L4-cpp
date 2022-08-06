@@ -19,7 +19,7 @@ namespace L4
 
         [[nodiscard]] uint32_t GetSectorSize() const;
 
-        [[nodiscard]] uint32_t GetStreamIdxFromGuid(Source::Guid Guid) const;
+        [[nodiscard]] uint32_t GetStreamIdxFromId(std::u8string_view Id) const;
 
         SourceStream* OpenStreamRead(uint32_t StreamIdx);
 

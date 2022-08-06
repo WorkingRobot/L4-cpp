@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../utils/Guid.h"
-
 #include "Consts.h"
 
 #include <type_traits>
@@ -16,13 +14,14 @@ namespace L4
         uint32_t StreamCount;
         uint32_t SourceVersionNumeric;
         uint32_t AppVersionNumeric;
-        Guid SourceGuid;
-        Guid AppGuid;
-        char8_t SourceName[40];
-        char8_t AppName[40];
-        char8_t SourceVersion[40];
-        char8_t AppVersion[40];
-        char8_t Environment[40];
+        char8_t SourceId[32];
+        char8_t AppId[32];
+        char8_t SourceName[32];
+        char8_t AppName[32];
+        char8_t SourceVersion[32];
+        char8_t AppVersion[32];
+        char8_t Environment[16];
+        std::byte Unknown[24];
     };
 
     static_assert(sizeof(Header) == 256);

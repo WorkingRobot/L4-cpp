@@ -12,6 +12,7 @@ namespace L4
         Unknown,
         Initial,
         Environment,
+        UseIds,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1

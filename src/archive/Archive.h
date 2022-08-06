@@ -115,14 +115,14 @@ namespace L4
             return { Header.AppVersionNumeric, GetSV(Header.AppVersion) };
         }
 
-        const Guid& GetSourceGuid() const noexcept
+        std::u8string_view GetSourceId() const noexcept
         {
-            return GetHeader().SourceGuid;
+            return GetSV(GetHeader().SourceId);
         }
 
-        const Guid& GetAppGuid() const noexcept
+        std::u8string_view GetAppId() const noexcept
         {
-            return GetHeader().AppGuid;
+            return GetSV(GetHeader().AppId);
         }
 
         std::u8string_view GetSourceName() const noexcept

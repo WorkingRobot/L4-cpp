@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <compare>
 
 namespace L4::Source
 {
@@ -12,16 +11,6 @@ namespace L4::Source
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
-    };
-
-    struct Guid
-    {
-        uint32_t A;
-        uint32_t B;
-        uint32_t C;
-        uint32_t D;
-
-        auto operator<=>(const Guid&) const = default;
     };
 
     struct String
@@ -38,7 +27,7 @@ namespace L4::Source
 
     struct BaseIdentity
     {
-        Guid Guid;
+        String Id;
         String Name;
         Version Version;
     };
@@ -56,7 +45,7 @@ namespace L4::Source
 
     struct StreamIdentity
     {
-        Guid Guid;
+        String Id;
         String Name;
         uint32_t Version;
     };
@@ -154,7 +143,7 @@ namespace L4::Source
         void (*ArchiveSetIdentity)(Archive Archive, const AppIdentity* NewIdentity);
         uint32_t (*ArchiveGetStreamCount)(Archive Archive);
         uint32_t (*ArchiveGetSectorSize)(Archive Archive);
-        uint32_t (*ArchiveGetStreamIdxFromGuid)(Archive Archive, const Guid* Guid);
+        uint32_t (*ArchiveGetStreamIdxFromId)(Archive Archive, const String* Id);
         void (*ArchiveOpenStreamRead)(Archive Archive, uint32_t StreamIdx, Stream* OutStream);
         void (*ArchiveOpenStreamWrite)(Archive Archive, uint32_t StreamIdx, Stream* OutStream);
         void (*ArchiveCloseStream)(Archive Archive, Stream Stream);

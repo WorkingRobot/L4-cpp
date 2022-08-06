@@ -14,7 +14,7 @@ namespace L4
         auto& Header = Stream.GetHeader();
 
         return Source::StreamIdentity {
-            .Guid = SerializeGuid(Header.Guid),
+            .Id = SerializeString(Header.Id),
             .Name = SerializeString(GetSV(Header.Name)),
             .Version = Header.Version
         };
@@ -24,7 +24,7 @@ namespace L4
     {
         auto& Header = Stream.GetHeader();
 
-        Header.Guid = DeserializeGuid(NewIdentity.Guid);
+        SetSV(Header.Id, DeserializeString(NewIdentity.Id));
         SetSV(Header.Name, DeserializeString(NewIdentity.Name));
         Header.Version = NewIdentity.Version;
     }
@@ -39,12 +39,12 @@ namespace L4
         Stream.GetHeader().ElementSize = NewElementSize;
     }
 
-    std::span<const std::byte, 192> SourceStream::GetContext() const
+    std::span<const std::byte, 184> SourceStream::GetContext() const
     {
         return Stream.GetContext();
     }
 
-    void SourceStream::SetContext(std::span<const std::byte, 192> NewContext)
+    void SourceStream::SetContext(std::span<const std::byte, 184> NewContext)
     {
         std::ranges::copy(NewContext, Stream.GetHeader().Context);
     }

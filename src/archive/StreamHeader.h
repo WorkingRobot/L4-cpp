@@ -6,11 +6,11 @@ namespace L4
 {
     struct StreamHeader
     {
-        Guid Guid;
+        char8_t Id[32];
+        char8_t Name[32];
         uint32_t Version;
         uint32_t ElementSize;
-        char8_t Name[40];
-        std::byte Context[192];
+        std::byte Context[184];
     };
 
     static_assert(sizeof(StreamHeader) == 256);

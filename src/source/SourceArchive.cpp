@@ -13,7 +13,7 @@ namespace L4
 
         return Source::AppIdentity {
             .App = {
-                .Guid = SerializeGuid(Header.AppGuid),
+                .Id = SerializeString(GetSV(Header.AppId)),
                 .Name = SerializeString(GetSV(Header.AppName)),
                 .Version = {
                     .Humanized = SerializeString(GetSV(Header.AppVersion)),
@@ -21,7 +21,7 @@ namespace L4
                 }
             },
             .Source = {
-                .Guid = SerializeGuid(Header.SourceGuid),
+                .Id = SerializeString(GetSV(Header.SourceId)),
                 .Name = SerializeString(GetSV(Header.SourceName)),
                 .Version = {
                     .Humanized = SerializeString(GetSV(Header.SourceName)),
@@ -36,12 +36,12 @@ namespace L4
     {
         auto& Header = Archive.GetHeader();
 
-        Header.AppGuid = DeserializeGuid(NewIdentity.App.Guid);
+        SetSV(Header.AppId, DeserializeString(NewIdentity.App.Id));
         SetSV(Header.AppName, DeserializeString(NewIdentity.App.Name));
         SetSV(Header.AppVersion, DeserializeString(NewIdentity.App.Version.Humanized));
         Header.AppVersionNumeric = NewIdentity.App.Version.Numeric;
 
-        Header.SourceGuid = DeserializeGuid(NewIdentity.Source.Guid);
+        SetSV(Header.SourceId, DeserializeString(NewIdentity.Source.Id));
         SetSV(Header.SourceName, DeserializeString(NewIdentity.Source.Name));
         SetSV(Header.SourceVersion, DeserializeString(NewIdentity.Source.Version.Humanized));
         Header.SourceVersionNumeric = NewIdentity.Source.Version.Numeric;
@@ -59,13 +59,13 @@ namespace L4
         return Archive.GetSectorSize();
     }
 
-    uint32_t SourceArchive::GetStreamIdxFromGuid(Source::Guid Guid) const
+    uint32_t SourceArchive::GetStreamIdxFromId(std::u8string_view Id) const
     {
         uint32_t StreamCount = Archive.GetStreamCount();
         for (uint32_t Idx = 0; Idx < StreamCount; ++Idx)
         {
             auto& Header = Archive.GetStreamHeader(Idx);
-            if (SerializeGuid(Header.Guid) == Guid)
+            if (GetSV(Header.Id) == Id)
             {
                 return Idx;
             }

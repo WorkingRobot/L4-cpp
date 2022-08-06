@@ -11,7 +11,7 @@ namespace L4
         {
             return;
         }
-        if (auto ExistingSource = GetSource(Source.GetIdentity().Guid); ExistingSource != nullptr)
+        if (auto ExistingSource = GetSource(DeserializeString(Source.GetIdentity().Id)); ExistingSource != nullptr)
         {
             return;
         }
@@ -22,7 +22,7 @@ namespace L4
     {
         static const Source::L4Interface Interface {
             .Identity = {
-                .Guid = { 0xDA3C6F8B, 0xE7814B73, 0x813E1425, 0x1AF2A7B5 },
+                .Id = SerializeString(reinterpret_cast<const char8_t*>(Config::GetProjectName())),
                 .Name = SerializeString(reinterpret_cast<const char8_t*>(Config::GetProjectName())),
                 .Version = {
                     .Humanized = SerializeString(reinterpret_cast<const char8_t*>(Config::GetVersionLong())),
@@ -34,7 +34,7 @@ namespace L4
             .ArchiveSetIdentity = &InterfaceWrapper::ArchiveSetIdentity,
             .ArchiveGetStreamCount = &InterfaceWrapper::ArchiveGetStreamCount,
             .ArchiveGetSectorSize = &InterfaceWrapper::ArchiveGetSectorSize,
-            .ArchiveGetStreamIdxFromGuid = &InterfaceWrapper::ArchiveGetStreamIdxFromGuid,
+            .ArchiveGetStreamIdxFromId = &InterfaceWrapper::ArchiveGetStreamIdxFromId,
             .ArchiveOpenStreamRead = &InterfaceWrapper::ArchiveOpenStreamRead,
             .ArchiveOpenStreamWrite = &InterfaceWrapper::ArchiveOpenStreamWrite,
             .ArchiveCloseStream = &InterfaceWrapper::ArchiveCloseStream,
@@ -63,10 +63,10 @@ namespace L4
         return Interface;
     }
 
-    const SourceLibrary* SourceManager::GetSource(const Source::Guid& Guid) const
+    const SourceLibrary* SourceManager::GetSource(std::u8string_view Id) const
     {
-        auto Itr = std::ranges::find(Sources, Guid, [](const SourceLibrary& Source) {
-            return Source.GetIdentity().Guid;
+        auto Itr = std::ranges::find(Sources, Id, [](const SourceLibrary& Source) {
+            return DeserializeString(Source.GetIdentity().Id);
         });
         if (Itr != Sources.end())
         {
@@ -143,16 +143,16 @@ namespace L4
         return Archive.GetSectorSize();
     }
 
-    uint32_t SourceManager::InterfaceWrapper::ArchiveGetStreamIdxFromGuid(Source::Archive ArchiveCtx, const Source::Guid* Guid)
+    uint32_t SourceManager::InterfaceWrapper::ArchiveGetStreamIdxFromId(Source::Archive ArchiveCtx, const Source::String* Id)
     {
         auto& Archive = GetArchive(ArchiveCtx);
 
-        if (Guid == nullptr)
+        if (Id == nullptr)
         {
-            throw std::invalid_argument("Guid is null");
+            throw std::invalid_argument("Id is null");
         }
 
-        return Archive.GetStreamIdxFromGuid(*Guid);
+        return Archive.GetStreamIdxFromId(DeserializeString(*Id));
     }
 
     void SourceManager::InterfaceWrapper::ArchiveOpenStreamRead(Source::Archive ArchiveCtx, uint32_t StreamIdx, Source::Stream* OutStream)
@@ -235,9 +235,9 @@ namespace L4
             throw std::invalid_argument("Dst is null");
         }
 
-        if (Size != 192)
+        if (Size != 184)
         {
-            throw std::invalid_argument("Stream contexts are only allowed to be exactly 192 bytes");
+            throw std::invalid_argument("Stream contexts are only allowed to be exactly 184 bytes");
         }
 
         std::ranges::copy(Stream.GetContext(), reinterpret_cast<std::byte*>(Dst));
@@ -252,12 +252,12 @@ namespace L4
             throw std::invalid_argument("Src is null");
         }
 
-        if (Size != 192)
+        if (Size != 184)
         {
-            throw std::invalid_argument("Stream contexts are only allowed to be exactly 192 bytes");
+            throw std::invalid_argument("Stream contexts are only allowed to be exactly 184 bytes");
         }
 
-        Stream.SetContext(std::span<const std::byte, 192>(reinterpret_cast<const std::byte*>(Src), 192));
+        Stream.SetContext(std::span<const std::byte, 184>(reinterpret_cast<const std::byte*>(Src), 184));
     }
 
     uint64_t SourceManager::InterfaceWrapper::ArchiveStreamGetCapacity(Source::Stream StreamCtx)

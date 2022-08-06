@@ -54,7 +54,7 @@ namespace L4
         /*
         {
             MmioFileWritable File("ar.iar");
-            std::byte NoCtx[192]{};
+            std::byte NoCtx[184]{};
             CreateArchive(File,
                 SectorSize{ 1 << 16 },
                 SourceInfo{ u8"L4", u8"v0.1", 1, {0, 0, 0, 0} },
