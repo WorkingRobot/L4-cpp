@@ -9,6 +9,7 @@ on:
 jobs:
   Build:
     strategy:
+      fail-fast: false
       matrix:
         # https://godbolt.org/z/a8P3KWWqT
         # Clang has a faulty implementation of concepts (for versions under 15)
