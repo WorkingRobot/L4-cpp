@@ -11,19 +11,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # https://godbolt.org/z/a8P3KWWqT
-        # Clang has a faulty implementation of concepts (for versions under 15)
-        # where it emits code for even for methods where its requirements aren't
-        # satisfied. Github Actions and elsewhere currently only have Clang 14
-        configure-preset: [msvc]
+        configure-preset: [msvc, clang-cl]
         build-preset: [debug, release]
         os: [windows-2022]
+        include:
+        - configure-preset: clang-cl
+          llvm-version: "15.0.0-rc2"
         
     runs-on: ${{matrix.os}}
 
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+
+    - name: Cache LLVM and Clang
+      id: cache-llvm
+      if: ${{ matrix.configure-preset == 'clang-cl' }}
+      uses: actions/cache@v3
+      with:
+        path: C:/Program Files/LLVM
+        key: llvm-${{matrix.llvm-version}}
+
+    - name: Install LLVM and Clang
+      if: ${{ matrix.configure-preset == 'clang-cl' }}
+      uses: KyleMayes/install-llvm-action@v1
+      with:
+        version: ${{matrix.llvm-version}}
+        force-version: true
+        cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
     - name: Run Vcpkg
       uses: lukka/run-vcpkg@v10
