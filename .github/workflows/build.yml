@@ -75,5 +75,5 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ${{matrix.configure-preset}}-${{matrix.build-preset}} Binaries
+        name: ${{matrix.configure-preset}}-${{matrix.build-preset}}
         path: ${{matrix.configure-preset}}-${{matrix.build-preset}}.zip
