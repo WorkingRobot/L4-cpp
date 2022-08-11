@@ -1,26 +1,17 @@
-## Source Files ##
+L4_project(L4 EXEC_NOGUI)
 
-add_file(L4 MainSource.cpp)
-add_file(L4 RamDisk.cpp)
-add_file(L4 BasicDisk.cpp)
-add_dir(L4 disk)
-add_dir(L4 utils)
-add_dir(L4 archive)
-add_dir(L4 mmio)
-add_dir(L4 source)
-push_sources(L4)
+L4_add_file(MainSource.cpp)
+L4_add_dir(disk)
+L4_add_dir(utils)
+L4_add_dir(archive)
+L4_add_dir(mmio)
+L4_add_dir(source)
 
-
-## Define L4 executable ##
-
-add_executable(L4 ${L4_SOURCES})
-
-
-## Dependencies ##
-
-find_package(PkgConfig REQUIRED)
+L4_end_sources(L4)
 
 if (FALSE)
+find_package(PkgConfig REQUIRED)
+
 # GUI #
 
 #find_library(GTK_LIB gtk-4 REQUIRED)
@@ -40,32 +31,10 @@ find_package(zstd CONFIG REQUIRED)
 target_link_libraries(L4 PRIVATE zstd::libzstd_shared)
 endif()
 
-# Ntdll #
-target_link_libraries(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll/ntdll64.lib)
-target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/ntdll)
-
-# WinSpd Wrapper #
-target_link_libraries(L4 PRIVATE fastspd)
-target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/fastspd)
-
-# Web #
-target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/L4web)
-target_link_libraries(L4 PRIVATE L4web)
-
-# Discord Rich Presence #
-target_include_directories(L4 PRIVATE ${CMAKE_SOURCE_DIR}/deps/L4discord)
-target_link_libraries(L4 PRIVATE L4discord)
-
-# Source Interface #
-target_link_libraries(L4 PRIVATE L4source)
-
-
-## Properties ##
-
-# C++20 #
-set_property(TARGET L4 PROPERTY CXX_STANDARD 23)
-
-# Add .pdb for release builds #
-force_enable_pdbs(L4)
-
-add_version_defs(utils/Config.cpp)
+L4_link_libraries(PRIVATE fastspd)
+L4_link_libraries(PRIVATE L4::web)
+L4_link_libraries(PRIVATE L4::discord)
+L4_link_libraries(PRIVATE L4::source)
+L4_link_libraries(PRIVATE L4::log)
+L4_link_libraries(PRIVATE L4::utils)
+L4_link_libraries(PRIVATE ntdll)

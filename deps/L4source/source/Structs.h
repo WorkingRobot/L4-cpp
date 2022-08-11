@@ -112,6 +112,9 @@ namespace L4::Source
 
         void (*ConfigOpen)(String ConfigDirectory);
 
+        bool (*IsAuthenticated)();
+
+        void (*Authenticate)();
         // TODO: Authentication
 
         uint32_t (*GetAvailableApps)(const AppIdentity** Apps);

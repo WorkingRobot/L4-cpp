@@ -1,7 +1,7 @@
 #include "MmioFile.h"
 
-#include "../utils/Align.h"
-#include "../utils/Error.h"
+#include "utils/Align.h"
+#include "utils/Error.h"
 
 #include <ntdll.h>
 #include <Psapi.h>

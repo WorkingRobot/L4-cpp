@@ -1,8 +1,8 @@
 #include "exFAT.h"
 
-#include "../utils/Align.h"
-#include "../utils/IntervalTree.h"
-#include "../utils/Random.h"
+#include "utils/Align.h"
+#include "utils/IntervalTree.h"
+#include "utils/Random.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -719,7 +719,7 @@ namespace L4
             };
             Entry = std::move(Val);
 
-            DirectoryEntry Ret;
+            DirectoryEntry Ret {};
             Ret.EntryType = uint8_t(Traits::TypeCode | Traits::TypeImportance << 5 | Traits::TypeCategory << 6 | InUse << 7);
             Ret.EndOfDirectory = Data;
             return Ret;

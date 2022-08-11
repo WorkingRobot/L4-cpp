@@ -17,8 +17,9 @@ namespace L4::Config
     uint8_t GetVersionPatch() noexcept;
     uint32_t GetVersionNumeric() noexcept;
 
-    const char* GetVersionHash() noexcept;
     const char* GetVersionBranch() noexcept;
+    const char* GetVersionRevision() noexcept;
+    bool GetVersionIsModified() noexcept;
     const char* GetVersion() noexcept;
     const char* GetVersionLong() noexcept;
 }

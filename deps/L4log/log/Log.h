@@ -126,7 +126,7 @@ namespace L4
             const Detail::SourceLocation Location;
         };
 
-        [[noreturn]] void Abort(const std::string& Message);
+        void Abort(const std::string& Message);
 
         void LogRaw(LogLevel Level, const std::string& Message);
     }

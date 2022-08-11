@@ -14,7 +14,7 @@ namespace L4::Discord
 
     bool IpcConnection::Connect()
     {
-        char* PipeName = "\\\\?\\pipe\\discord-ipc-0";
+        char PipeName[] = "\\\\?\\pipe\\discord-ipc-0";
         do
         {
             PipeHandle = CreateFile(PipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);

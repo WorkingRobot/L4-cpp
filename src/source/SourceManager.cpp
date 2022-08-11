@@ -1,6 +1,6 @@
 #include "SourceManager.h"
 
-#include "../utils/Config.h"
+#include "utils/Config.h"
 
 namespace L4
 {

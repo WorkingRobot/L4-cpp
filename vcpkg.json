@@ -1,9 +1,9 @@
 {
     "name": "l4",
-    "version-string": "latest",
+    "version-string": "0.1.0",
+    "description": "The world's fastest game updater",
     "dependencies": [
         "rapidjson",
-        "cpr",
-        "zstd"
+        "cpr"
     ]
 }

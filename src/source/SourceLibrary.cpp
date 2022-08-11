@@ -1,6 +1,6 @@
 #include "SourceLibrary.h"
 
-#include "../utils/Error.h"
+#include "utils/Error.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX

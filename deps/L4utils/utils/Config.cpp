@@ -58,14 +58,23 @@ namespace L4::Config
         return uint32_t(GetVersionMajor()) << 24 | uint32_t(GetVersionMinor()) << 16 | uint32_t(GetVersionPatch());
     }
 
-    const char* GetVersionHash() noexcept
-    {
-        return CONFIG_VERSION_HASH;
-    }
-
     const char* GetVersionBranch() noexcept
     {
         return CONFIG_VERSION_BRANCH;
+    }
+
+    const char* GetVersionRevision() noexcept
+    {
+        return CONFIG_VERSION_REVISION;
+    }
+
+    bool GetVersionIsModified() noexcept
+    {
+#ifdef CONFIG_VERSION_IS_MODIFIED
+        return true;
+#else
+        return false;
+#endif
     }
 
     const char* GetVersion() noexcept

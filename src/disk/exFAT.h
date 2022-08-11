@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/IntervalTree.h"
+#include "utils/IntervalTree.h"
 
 #include <chrono>
 #include <memory>

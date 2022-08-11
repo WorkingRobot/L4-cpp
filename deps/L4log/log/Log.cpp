@@ -1,7 +1,7 @@
 #include "Log.h"
 
-#include "Config.h"
-#include "Debug.h"
+#include "utils/Config.h"
+#include "utils/Debug.h"
 #include "formatters/Path.h"
 
 #define WIN32_LEAN_AND_MEAN
