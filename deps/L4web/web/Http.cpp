@@ -4,11 +4,9 @@ namespace L4::Web::Http
 {
     namespace Detail
     {
-        cpr::Session CreateSession()
+        void InitializeSession(cpr::Session& Session)
         {
-            cpr::Session Session;
-
-            return Session;
+            
         }
     }
 }

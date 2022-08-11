@@ -234,38 +234,20 @@ namespace L4::Web::Http
         }
     }
 
-    class ReserveSize
-    {
-    public:
-        size_t size = 0;
-
-        ReserveSize() = default;
-        explicit ReserveSize(size_t _size) :
-            size(_size)
-        {
-        }
-    };
-
     namespace Detail
     {
-        cpr::Session CreateSession();
+        void InitializeSession(cpr::Session& Session);
 
         static constexpr auto ExtraCallbackDefault = [](cpr::Session& Session, auto&& Opt) {
             using T = std::decay_t<decltype(Opt)>;
-            if constexpr (std::is_same_v<T, ReserveSize>)
-            {
-                Session.ResponseStringReserve(Opt.size);
-            }
-            else
-            {
-                static_assert("Unknown option");
-            }
+            static_assert("Unknown option");
         };
 
         template <auto ExtraCallback, class... ExtraTs, class... ArgTs>
-        cpr::Session GetSession(ArgTs&&... Args)
+        void DecorateSession(cpr::Session& Session, ArgTs&&... Args)
         {
-            cpr::Session Session = CreateSession();
+            InitializeSession(Session);
+
             static auto SetOption = [&Session]<class T>(T&& Opt) {
                 if constexpr (std::disjunction_v<std::is_same<T, ExtraTs>...>)
                 {
@@ -280,49 +262,62 @@ namespace L4::Web::Http
             std::initializer_list<int> ignore = { (SetOption(std::forward<ArgTs>(Args)), 0)... };
             (void)ignore;
             // cpr::priv::set_option ^^^
-            return Session;
         }
     }
 
     template <class... ArgTs>
     static cpr::Response Delete(ArgTs&&... Args)
     {
-        return Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Delete();
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return Session.Delete();
     }
 
     template <class T = std::string, Json::Encoding Enc = Json::Encoding::UTF8, class... ArgTs>
     static Response<T> Get(ArgTs&&... Args)
     {
-        return CreateResponse<T, Enc>(Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Get());
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return CreateResponse<T, Enc>(Session.Get());
     }
 
     template <class... ArgTs>
     static cpr::Response Head(ArgTs&&... Args)
     {
-        return Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Head();
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return Session.Head();
     }
 
     template <class... ArgTs>
     static cpr::Response Options(ArgTs&&... Args)
     {
-        return Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Options();
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return Session.Options();
     }
 
     template <class... ArgTs>
     static cpr::Response Patch(ArgTs&&... Args)
     {
-        return Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Patch();
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return Session.Patch();
     }
 
     template <class... ArgTs>
     static cpr::Response Post(ArgTs&&... Args)
     {
-        return Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Post();
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return Session.Post();
     }
 
     template <class... ArgTs>
     static cpr::Response Put(ArgTs&&... Args)
     {
-        return Detail::GetSession<Detail::ExtraCallbackDefault, Http::ReserveSize>(std::forward<ArgTs>(Args)...).Put();
+        cpr::Session Session;
+        Detail::DecorateSession<Detail::ExtraCallbackDefault>(Session, std::forward<ArgTs>(Args)...);
+        return Session.Put();
     }
 }

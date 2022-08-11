@@ -10,7 +10,8 @@ jobs:
   Build:
     strategy:
       matrix:
-        build-type: [debug, release]
+        configure-preset: [clang-cl]
+        build-preset: [debug, release]
         os: [windows-2022]
         
     runs-on: ${{matrix.os}}
@@ -22,20 +23,20 @@ jobs:
     - name: Run Vcpkg
       uses: lukka/run-vcpkg@v10
       with:
-        vcpkgGitCommitId: 'acca474962d8bc714ba555ec0c21b0dabee4e79d'
+        vcpkgGitCommitId: '1370b2c88f1e683c5c6a2465133eaa9a9b3ee679'
         vcpkgJsonGlob: 'vcpkg.json'
     
     - name: Run CMake
       uses: lukka/run-cmake@v10
       with:
-        configurePreset: 'ninja-multi-vcpkg'
-        buildPreset: 'ninja-multi-vcpkg-${{matrix.build-type}}'
+        configurePreset: '${{matrix.configure-preset}}'
+        buildPreset: '${{matrix.configure-preset}}-${{matrix.build-preset}}'
     
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: ${{matrix.build-type}} Binaries
         path: |
-          ${{github.workspace}}/build/src/${{matrix.build-type}}/L4.exe
-          ${{github.workspace}}/build/src/${{matrix.build-type}}/L4.pdb
-      
+          ${{github.workspace}}/builds/${{matrix.configure-preset}}/ar/${{matrix.build-type}}/
+          ${{github.workspace}}/builds/${{matrix.configure-preset}}/lib/${{matrix.build-type}}/
+          ${{github.workspace}}/builds/${{matrix.configure-preset}}/bin/${{matrix.build-type}}/
