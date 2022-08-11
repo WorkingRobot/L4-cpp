@@ -10,7 +10,11 @@ jobs:
   Build:
     strategy:
       matrix:
-        configure-preset: [clang-cl]
+        # https://godbolt.org/z/a8P3KWWqT
+        # Clang has a faulty implementation of concepts (for versions under 15)
+        # where it emits code for even for methods where its requirements aren't
+        # satisfied. Github Actions and elsewhere currently only have Clang 14
+        configure-preset: [msvc]
         build-preset: [debug, release]
         os: [windows-2022]
         
