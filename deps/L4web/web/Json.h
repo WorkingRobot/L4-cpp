@@ -115,7 +115,7 @@ namespace L4::Web::Json
     using Document = DocumentBase<>;
     using Value = ValueBase<>;
 
-    template <Encoding Enc>
+    template <Encoding Enc = Encoding::UTF8>
     static DocumentBase<Enc> Parse(const std::basic_string_view<Detail::JsonCharT<Enc>>& Data)
     {
         DocumentBase<Enc> Json;

@@ -63,6 +63,16 @@ namespace L4
         }
     };
 
+    template <class StreamT, class StringT = std::string, class... ArgTs>
+    static StringT DumpStreamData(ArgTs&&... Args)
+    {
+        StreamT Stream(std::forward<ArgTs>(Args)...);
+        StringT DataString {};
+        DataString.resize(Stream.Size() / sizeof(typename StringT::value_type));
+        Stream.ReadBytes(reinterpret_cast<std::byte*>(DataString.data()), DataString.size() * sizeof(typename StringT::value_type));
+        return DataString;
+    }
+
     template <class T> requires std::is_arithmetic_v<T> || std::is_enum_v<T>
     struct Serializer<T>
     {
