@@ -23,15 +23,27 @@ namespace L4
             OverwriteOnly
         };
 
+        enum class ShareMode : uint8_t
+        {
+            Exclusive,
+            Read,
+            Write,
+            ReadWrite,
+            Delete,
+            DeleteRead,
+            DeleteWrite,
+            DeleteReadWrite
+        };
+
         FileStream() noexcept;
 
-        FileStream(const std::filesystem::path& Path, OpenMode OpenMode, CreateMode CreateMode);
+        FileStream(const std::filesystem::path& Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode = ShareMode::Exclusive);
 
-        FileStream(const std::string& Path, OpenMode OpenMode, CreateMode CreateMode);
+        FileStream(const std::string& Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode = ShareMode::Exclusive);
 
-        FileStream(const wchar_t* Path, OpenMode OpenMode, CreateMode CreateMode);
+        FileStream(const wchar_t* Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode = ShareMode::Exclusive);
 
-        FileStream(const char* Path, OpenMode OpenMode, CreateMode CreateMode);
+        FileStream(const char* Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode = ShareMode::Exclusive);
 
     private:
         FileStream(void* FileHandle);

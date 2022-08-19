@@ -14,10 +14,8 @@ namespace L4
         {
         case FileStream::OpenMode::Read:
             return GENERIC_READ;
-            break;
         case FileStream::OpenMode::Write:
             return GENERIC_WRITE;
-            break;
         case FileStream::OpenMode::ReadWrite:
             return GENERIC_READ | GENERIC_WRITE;
         default:
@@ -44,6 +42,31 @@ namespace L4
         }
     }
 
+    static constexpr DWORD ShareModeToShareModeFlag(FileStream::ShareMode ShareMode)
+    {
+        switch (ShareMode)
+        {
+        case FileStream::ShareMode::Exclusive:
+            return 0;
+        case FileStream::ShareMode::Read:
+            return FILE_SHARE_READ;
+        case FileStream::ShareMode::Write:
+            return FILE_SHARE_WRITE;
+        case FileStream::ShareMode::ReadWrite:
+            return FILE_SHARE_READ | FILE_SHARE_WRITE;
+        case FileStream::ShareMode::Delete:
+            return FILE_SHARE_DELETE;
+        case FileStream::ShareMode::DeleteRead:
+            return FILE_SHARE_DELETE | FILE_SHARE_READ;
+        case FileStream::ShareMode::DeleteWrite:
+            return FILE_SHARE_DELETE | FILE_SHARE_WRITE;
+        case FileStream::ShareMode::DeleteReadWrite:
+            return FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE;
+        default:
+            throw std::invalid_argument("Invalid ShareMode");
+        }
+    }
+
     static constexpr DWORD SeekPositionToMoveMethod(FileStream::SeekPosition SeekPosition)
     {
         switch (SeekPosition)
@@ -64,23 +87,23 @@ namespace L4
     {
     }
 
-    FileStream::FileStream(const std::filesystem::path& Path, OpenMode OpenMode, CreateMode CreateMode) :
-        FileStream(Path.c_str(), OpenMode, CreateMode)
+    FileStream::FileStream(const std::filesystem::path& Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode) :
+        FileStream(Path.c_str(), OpenMode, CreateMode, ShareMode)
     {
     }
 
-    FileStream::FileStream(const std::string& Path, OpenMode OpenMode, CreateMode CreateMode) :
-        FileStream(Path.c_str(), OpenMode, CreateMode)
+    FileStream::FileStream(const std::string& Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode) :
+        FileStream(Path.c_str(), OpenMode, CreateMode, ShareMode)
     {
     }
 
-    FileStream::FileStream(const wchar_t* Path, OpenMode OpenMode, CreateMode CreateMode) :
-        FileStream(CreateFileW(Path, OpenModeToDesiredAccess(OpenMode), 0, NULL, CreateModeToCreationDisposition(CreateMode), FILE_ATTRIBUTE_NORMAL, NULL))
+    FileStream::FileStream(const wchar_t* Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode) :
+        FileStream(CreateFileW(Path, OpenModeToDesiredAccess(OpenMode), ShareModeToShareModeFlag(ShareMode), NULL, CreateModeToCreationDisposition(CreateMode), FILE_ATTRIBUTE_NORMAL, NULL))
     {
     }
 
-    FileStream::FileStream(const char* Path, OpenMode OpenMode, CreateMode CreateMode) :
-        FileStream(CreateFileA(Path, OpenModeToDesiredAccess(OpenMode), 0, NULL, CreateModeToCreationDisposition(CreateMode), FILE_ATTRIBUTE_NORMAL, NULL))
+    FileStream::FileStream(const char* Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode) :
+        FileStream(CreateFileA(Path, OpenModeToDesiredAccess(OpenMode), ShareModeToShareModeFlag(ShareMode), NULL, CreateModeToCreationDisposition(CreateMode), FILE_ATTRIBUTE_NORMAL, NULL))
     {
     }
 
