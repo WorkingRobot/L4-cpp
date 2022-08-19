@@ -8,8 +8,10 @@ namespace L4
     {
         LogSetup();
 
+
+
         SourceManager Manager;
-        Manager.Load(R"(J:\Code\Projects\L4\builds\ninja-multi-vcpkg\sources\riot\Debug\SourceRiot.dll)");
+        Manager.Load(R"(J:\Code\Projects\L4\builds\clang-cl\lib\Debug\L4-source-riot.dll)");
     }
 }
 

@@ -15,8 +15,11 @@ namespace L4::Riot
 
         void SetConfigDirectory(const std::filesystem::path& ConfigDirectory);
 
-        const std::vector<Source::AppIdentity>& GetAvailableApps();
+        void GetUserIdentity(Source::UserIdentity& OutIdentity);
+        const std::vector<Source::AuthMethod>& GetInitialAuthMethods();
+        bool FulfillAuthMethod(const Source::AuthMethodFulfilled& FulfilledAuthMethod, Source::AuthMethod& NextAuthMethod);
 
+        const std::vector<Source::AppIdentity>& GetAvailableApps();
         bool IsValidApp(const Source::AppIdentity& Identity);
 
         static const Source::SourceInterface& Initialize(const Source::L4Interface& Interface);
@@ -25,6 +28,10 @@ namespace L4::Riot
         struct InterfaceWrapper
         {
             static void ConfigOpen(Source::String ConfigDirectory);
+
+            static void GetUserIdentity(Source::UserIdentity* OutIdentity);
+            static uint32_t GetInitialAuthMethods(const Source::AuthMethod** AuthMethods);
+            static bool FulfillAuthMethod(const Source::AuthMethodFulfilled* FulfilledAuthMethod, Source::AuthMethod* NextAuthMethod);
 
             static uint32_t GetAvailableApps(const Source::AppIdentity** Apps);
             static bool IsValidApp(const Source::AppIdentity* Identity);

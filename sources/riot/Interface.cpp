@@ -1,6 +1,7 @@
 #include "InterfaceManager.h"
 
 #include <source/Interface.h>
+#include "ClientServices.h"
 
 #include <stdexcept>
 
@@ -12,6 +13,8 @@ const L4::Source::SourceInterface* Initialize(const L4::Source::L4Interface* Int
         {
             throw std::invalid_argument("Interface is null");
         }
+
+        L4::Riot::ClientServices::WaitForLockFile();
 
         return &L4::Riot::InterfaceManager::Initialize(*Interface);
     }

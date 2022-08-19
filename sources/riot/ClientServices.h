@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <optional>
 #include <string>
 
@@ -12,7 +13,7 @@ namespace L4::Riot
 
         bool IsRunning();
 
-    private:
+    public:
         struct LockFileData
         {
             std::string Name;
@@ -23,5 +24,17 @@ namespace L4::Riot
         };
 
         static std::optional<LockFileData> GetLockFileData();
+        
+        static std::filesystem::path GetLockFilePath();
+
+        static void WaitForLockFile();
+
+        static std::filesystem::path GetProcessPath();
+
+        static void StartProcess();
+
+        static bool IsLockFileDataValid(const LockFileData& LockData);
+
+        LockFileData LockData;
     };
 }

@@ -26,86 +26,23 @@ namespace L4::Riot
         this->ConfigDirectory = ConfigDirectory;
     }
 
+    void InterfaceManager::GetUserIdentity(Source::UserIdentity& OutIdentity)
+    {
+    }
+
+    const std::vector<Source::AuthMethod>& InterfaceManager::GetInitialAuthMethods()
+    {
+        // TODO: insert return statement here
+    }
+
+    bool InterfaceManager::FulfillAuthMethod(const Source::AuthMethodFulfilled& FulfilledAuthMethod, Source::AuthMethod& NextAuthMethod)
+    {
+        return false;
+    }
+
     const std::vector<Source::AppIdentity>& InterfaceManager::GetAvailableApps()
     {
-        auto Resp = Web::Http::Get<Web::Json::Document>(cpr::Url { "https://clientconfig.rpg.riotgames.com/api/v1/config/public" }, cpr::Parameters { { "namespace", "keystone.products" } });
-        if (!Resp)
-        {
-            return AvailableApps;
-        }
-
-
-        std::unordered_map<std::u8string_view, std::pair<std::u8string_view, std::vector<std::u8string_view>>> Apps;
-
-        auto GetApp = [this](std::u8string_view Id) -> Source::AppIdentity& {
-            auto Itr = std::ranges::find(AvailableApps, Id, [](const Source::AppIdentity& App) {
-                return DeserializeString(App.App.Id);
-            });
-            if (Itr != AvailableApps.end())
-            {
-                return *Itr;
-            }
-            auto& Ret = AvailableApps.emplace_back();
-            Ret.App.Id = SerializeString(Id);
-            Ret.Source.Id = SerializeString(u8"riot");
-            Ret.Source.Name = SerializeString(u8"Riot Games");
-            Ret.Source.Version.Humanized = SerializeString(u8"0.0.0");
-            Ret.Source.Version.Numeric = 1;
-            return Ret;
-        };
-
-        for (const auto& Property : Resp->GetObject())
-        {
-            std::u8string_view Key { Property.name.GetString(), Property.name.GetStringLength() };
-            if (!Key.starts_with(u8"keystone.products."))
-            {
-                continue;
-            }
-            Key.remove_prefix(18);
-            auto DotIdx = Key.find(u8'.');
-            if (DotIdx == std::u8string_view::npos)
-            {
-                continue;
-            }
-            auto Name = Key.substr(0, DotIdx);
-            Key.remove_prefix(DotIdx + 1);
-            auto& App = Apps.try_emplace(Name).first->second;
-            if (Key == u8"full_name")
-            {
-                if (Property.value.IsString())
-                {
-                    App.first = { Property.value.GetString(), Property.value.GetStringLength() };
-                }
-            }
-            else if (Key.starts_with(u8"patchlines."))
-            {
-                Key.remove_prefix(11);
-                App.second.emplace_back(Key);
-            }
-        }
-
-        AvailableApps.clear();
-        for (auto& App : Apps)
-        {
-            Source::AppIdentity Identity
-            {
-                .App = {
-                    .Id = SerializeString(App.first),
-                    .Name = SerializeString(App.second.first),
-                },
-                .Source = {
-                    .Id = SerializeString(u8"riot"),
-                    .Name = SerializeString(u8"Riot Games"),
-                    .Version = {
-                        .Humanized = SerializeString(u8"0.0.0"),
-                        .Numeric = 1 }
-                }
-            };
-            for (auto& Environment : App.second.second)
-            {
-                Identity.Environment = SerializeString(Environment);
-            }
-        }
+        
 
         return AvailableApps;
     }
@@ -151,6 +88,50 @@ namespace L4::Riot
         auto& Manager = ManagerSingleton.value();
 
         Manager.SetConfigDirectory(DeserializeString(ConfigDirectory));
+    }
+
+    void InterfaceManager::InterfaceWrapper::GetUserIdentity(Source::UserIdentity* OutIdentity)
+    {
+        auto& Manager = ManagerSingleton.value();
+
+        if (OutIdentity == nullptr)
+        {
+            throw std::invalid_argument("OutIdentity is null");
+        }
+
+        return Manager.GetUserIdentity(*OutIdentity);
+    }
+
+    uint32_t InterfaceManager::InterfaceWrapper::GetInitialAuthMethods(const Source::AuthMethod** AuthMethods)
+    {
+        auto& Manager = ManagerSingleton.value();
+
+        if (AuthMethods == nullptr)
+        {
+            throw std::invalid_argument("AuthMethods is null");
+        }
+
+        auto& AuthMethodVector = Manager.GetInitialAuthMethods();
+
+        *AuthMethods = AuthMethodVector.data();
+        return AuthMethodVector.size();
+    }
+
+    bool InterfaceManager::InterfaceWrapper::FulfillAuthMethod(const Source::AuthMethodFulfilled* FulfilledAuthMethod, Source::AuthMethod* NextAuthMethod)
+    {
+        auto& Manager = ManagerSingleton.value();
+
+        if (FulfilledAuthMethod == nullptr)
+        {
+            throw std::invalid_argument("FulfilledAuthMethod is null");
+        }
+
+        if (NextAuthMethod == nullptr)
+        {
+            throw std::invalid_argument("NextAuthMethod is null");
+        }
+
+        return Manager.FulfillAuthMethod(*FulfilledAuthMethod, *NextAuthMethod);
     }
 
     uint32_t InterfaceManager::InterfaceWrapper::GetAvailableApps(const Source::AppIdentity** Apps)

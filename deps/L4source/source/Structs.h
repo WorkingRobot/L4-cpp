@@ -106,16 +106,136 @@ namespace L4::Source
         Completed
     };
 
+    struct UserIdentity
+    {
+        String Id;
+        String DisplayName;
+    };
+
+    enum class AuthMethodType : uint8_t
+    {
+        Form,
+        WebCallback,
+        AuthCode
+    };
+
+    enum class AuthMethodFormFieldType : uint8_t
+    {
+        Text,
+        Checkbox,
+        Dropdown,
+        SubmitButton
+    };
+
+    struct AuthMethodFormFieldDropdownEntry
+    {
+        String Id;
+        String Name;
+    };
+
+    struct AuthMethodFormField
+    {
+        AuthMethodFormFieldType Type;
+        String Id;
+        String Name;
+        union
+        {
+            struct
+            {
+                String Placeholder;
+                String VerifyRegex;
+                String VerifyErrorMessage;
+                bool IsPassword;
+            } Text;
+            struct
+            {
+                bool CheckedByDefault;
+            } Checkbox;
+            struct
+            {
+                const AuthMethodFormFieldDropdownEntry* Entries;
+                uint32_t EntryCount;
+                String DefaultEntry;
+                bool IsRadio;
+            } Dropdown;
+            struct
+            {
+
+            } SubmitButton;
+        };
+    };
+
+    struct AuthMethod
+    {
+        AuthMethodType Type;
+        String Id;
+        String DisplayName;
+        String Icon;
+        union
+        {
+            struct
+            {
+                const AuthMethodFormField* Fields;
+                uint32_t FieldCount;
+            } Form;
+            struct
+            {
+
+            } WebCallback;
+            struct
+            {
+                String Description;
+                String Placeholder;
+                String VerifyRegex;
+                String VerifyErrorMessage;
+            } AuthCode;
+        };
+    };
+
+    struct AuthMethodFulfilledFormField
+    {
+        String Id;
+        union
+        {
+            String Text;
+            bool Checkbox;
+            String Dropdown;
+            bool SubmitButton;
+        };
+    };
+
+    struct AuthMethodFulfilled
+    {
+        const AuthMethod* Method;
+        union
+        {
+            struct
+            {
+                const AuthMethodFulfilledFormField* Fields;
+                uint32_t FieldCount;
+            } Form;
+            struct
+            {
+            
+            } WebCallback;
+            struct
+            {
+                String Code;
+            } AuthCode;
+        };
+    };
+
     struct SourceInterface
     {
         SourceIdentity Identity;
 
         void (*ConfigOpen)(String ConfigDirectory);
 
-        bool (*IsAuthenticated)();
+        void (*GetUserIdentity)(UserIdentity* OutIdentity);
 
-        void (*Authenticate)();
-        // TODO: Authentication
+        uint32_t (*GetInitialAuthMethods)(const AuthMethod** AuthMethods);
+
+        bool (*FulfillAuthMethod)(const AuthMethodFulfilled* FulfilledAuthMethod, AuthMethod* NextAuthMethod);
 
         uint32_t (*GetAvailableApps)(const AppIdentity** Apps);
 
