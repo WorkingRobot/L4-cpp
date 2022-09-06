@@ -1,6 +1,6 @@
 #include "SourceStream.h"
 
-#include "../archive/StreamView.h"
+#include "archive/StreamView.h"
 
 namespace L4
 {

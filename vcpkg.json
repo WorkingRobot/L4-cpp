@@ -4,6 +4,22 @@
     "description": "The world's fastest game updater",
     "dependencies": [
         "rapidjson",
-        "cpr"
+        "cpr",
+        {
+            "name": "libbacktrace",
+            "platform": "linux"
+        },
+        {
+            "name": "breakpad",
+            "platform": "linux"
+        },
+        {
+            "name": "fmt",
+            "platform": "linux"
+        },
+        {
+            "name": "date",
+            "platform": "linux"
+        }
     ]
 }

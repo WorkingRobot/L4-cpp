@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <algorithm>
 #include <memory>
 
 namespace L4
@@ -358,13 +359,12 @@ namespace L4
         return Checksum;
     }
 
-    template <class T>
-    constexpr T toupper(T Char)
+    char16_t toupper(char16_t Char)
     {
-        return std::use_facet<std::ctype<T>>(std::locale()).toupper(Char);
+        return towupper(Char);
     }
 
-    constexpr uint16_t NameChecksum(const std::u16string_view Data) noexcept
+    uint16_t NameChecksum(const std::u16string_view Data) noexcept
     {
         uint16_t Checksum = 0;
         for (size_t i = 0; i < Data.size(); ++i)
@@ -439,9 +439,9 @@ namespace L4
 
         AssertRange(BootSector.FatLength, Align((BootSector.ClusterCount + 2) * sizeof(uint32_t), 1 << BootSector.BytesPerSectorShift) / 1 << BootSector.BytesPerSectorShift, (BootSector.ClusterHeapOffset - BootSector.FatOffset) / BootSector.NumberOfFats);
 
-        AssertRange(BootSector.ClusterHeapOffset, BootSector.FatOffset + BootSector.FatLength * BootSector.NumberOfFats, std::min((1llu << 32) - 1, BootSector.VolumeLength - (BootSector.ClusterCount * (1 << BootSector.SectorsPerClusterShift))));
+        AssertRange(BootSector.ClusterHeapOffset, BootSector.FatOffset + BootSector.FatLength * BootSector.NumberOfFats, std::min<uint64_t>((1llu << 32) - 1, BootSector.VolumeLength - (BootSector.ClusterCount * (1 << BootSector.SectorsPerClusterShift))));
 
-        AssertEquals(BootSector.ClusterCount, std::min((BootSector.VolumeLength - BootSector.ClusterHeapOffset) / (1 << BootSector.SectorsPerClusterShift), (1llu << 32) - 11));
+        AssertEquals(BootSector.ClusterCount, std::min<uint64_t>((BootSector.VolumeLength - BootSector.ClusterHeapOffset) / (1 << BootSector.SectorsPerClusterShift), (1llu << 32) - 11));
 
         AssertRange(BootSector.FirstClusterOfRootDirectory, 2, BootSector.ClusterCount + 1);
 
@@ -484,7 +484,7 @@ namespace L4
 
                 BootRegion.BootSector.ClusterHeapOffset = BootRegion.BootSector.FatOffset + BootRegion.BootSector.FatLength;
 
-                BootRegion.BootSector.ClusterCount = std::min((BootRegion.BootSector.VolumeLength - BootRegion.BootSector.ClusterHeapOffset) / SectorsPerCluster, (1llu << 32) - 11);
+                BootRegion.BootSector.ClusterCount = std::min<uint64_t>((BootRegion.BootSector.VolumeLength - BootRegion.BootSector.ClusterHeapOffset) / SectorsPerCluster, (1llu << 32) - 11);
 
                 // BootRegion.BootSector.FirstClusterOfRootDirectory = 0;
 
@@ -561,8 +561,13 @@ namespace L4
         {
             auto TimePoint = Time.get_local_time();
             auto DatePoint = std::chrono::floor<std::chrono::days>(TimePoint);
+#if __cpp_lib_chrono >= 201907
             auto Ymd = std::chrono::year_month_day(DatePoint);
             auto Hms = std::chrono::hh_mm_ss(TimePoint - DatePoint);
+#else
+            auto Ymd = date::year_month_day(DatePoint);
+            auto Hms = date::hh_mm_ss(TimePoint - DatePoint);
+#endif
             union
             {
                 uint32_t TimestampStruct;

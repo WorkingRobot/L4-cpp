@@ -4,6 +4,11 @@
 
 #include <chrono>
 #include <memory>
+#include <string_view>
+
+#if __cpp_lib_chrono < 201907
+#include <date/tz.h>
+#endif
 
 namespace L4
 {
@@ -17,7 +22,11 @@ namespace L4
     };
 
     using centiseconds = std::chrono::duration<std::chrono::milliseconds::rep, std::centi>;
+#if __cpp_lib_chrono >= 201907
     using ExFatTime = std::chrono::zoned_time<centiseconds>;
+#else
+    using ExFatTime = date::zoned_time<centiseconds>;
+#endif
 
     struct ExFatEntry
     {
@@ -42,7 +51,11 @@ namespace L4
 
     static ExFatTime GetTime() noexcept
     {
+#if __cpp_lib_chrono >= 201907
         return { std::chrono::current_zone(), std::chrono::time_point_cast<centiseconds>(std::chrono::system_clock::now()) };
+#else
+        return { date::current_zone(), std::chrono::time_point_cast<centiseconds>(std::chrono::system_clock::now()) };
+#endif
     }
 
     static ExFatDirectory CreateDirectory(

@@ -1,8 +1,7 @@
 #pragma once
 
+#include "archive/StreamView.h"
 #include "SourceStructs.h"
-
-#include "../archive/StreamView.h"
 
 namespace L4
 {

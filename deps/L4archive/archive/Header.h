@@ -2,6 +2,7 @@
 
 #include "Consts.h"
 
+#include <string_view>
 #include <type_traits>
 
 namespace L4

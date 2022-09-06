@@ -1,10 +1,7 @@
 #pragma once
 
-#include "../archive/Archive.h"
-
-#include "SourceUpdate.h"
-
 #include "SourceStructs.h"
+#include "SourceUpdate.h"
 
 #include <filesystem>
 

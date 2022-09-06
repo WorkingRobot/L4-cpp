@@ -1,8 +1,7 @@
 #pragma once
 
+#include "archive/Archive.h"
 #include "SourceStream.h"
-
-#include "../archive/Archive.h"
 
 namespace L4
 {
