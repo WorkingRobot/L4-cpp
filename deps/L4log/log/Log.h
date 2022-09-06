@@ -1,8 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <format>
+#include "format/Format.h"
+
 #include <concepts>
+#include <cstdint>
+#include <string_view>
 
 namespace L4
 {
@@ -43,12 +45,11 @@ namespace L4
             std::string_view FixedFilename = Offset == std::string_view::npos ? Filename : Filename.substr(Offset + Pattern.size());
             return FixedFilename;
         }
-        
+
         // Until this is fixed: https://godbolt.org/z/415z5jna9, this is a workaround
         struct SourceLocation
         {
-            [[nodiscard]]
-            static constexpr SourceLocation Current(
+            [[nodiscard]] static constexpr SourceLocation Current(
                 const uint_least32_t Line = __builtin_LINE(), const uint_least32_t Column = __builtin_COLUMN(),
                 const char* const File = __builtin_FILE(), const char* const Function = __builtin_FUNCTION()) noexcept
             {
@@ -75,44 +76,66 @@ namespace L4
             }
             else
             {
-                return std::vformat(Message, Evaluator());
+                return FMT::vformat(Message, Evaluator());
             }
         }
 
         template <LogLevel Level, size_t ArgCount, class FuncT>
         static auto inline FormatMessage(std::string_view Message, const SourceLocation Location, FuncT Evaluator)
         {
-            return std::format("{}: {} ({}({},{}) @ {})\n", LogLevelToString(Level), FormatMessage<ArgCount>(Message, Evaluator), Location.File, Location.Line, Location.Column, Location.Function);
+            return FMT::format("{}: {} ({}({},{}) @ {})\n", LogLevelToString(Level), FormatMessage<ArgCount>(Message, Evaluator), Location.File, Location.Line, Location.Column, Location.Function);
         }
 
         template <class ArgsT>
         struct FormatStringFor
         {
-
         };
 
         template <class ContextT, class... ArgTs>
+#if defined(CONFIG_VERSION_PLATFORM_lnx)
+        struct FormatStringFor<fmt::format_arg_store<ContextT, ArgTs...>>
+        {
+            using Type = fmt::format_string<std::type_identity_t<ArgTs>...>;
+            static constexpr size_t ArgCount = sizeof...(ArgTs);
+        };
+#elif defined(CONFIG_VERSION_PLATFORM_win)
         struct FormatStringFor<std::_Format_arg_store<ContextT, ArgTs...>>
         {
             using Type = std::_Fmt_string<std::type_identity_t<ArgTs>...>;
             static constexpr size_t ArgCount = sizeof...(ArgTs);
         };
+#endif
 
         template <class ArgsT>
         using FormatStringForT = typename FormatStringFor<ArgsT>::Type;
 
-        static constexpr auto EmptyEvaluator = []() { return std::make_format_args(); };
+        static constexpr auto EmptyEvaluator = []() { return FMT::make_format_args(); };
 
         template <class ArgsT>
         struct MessageCtx
         {
+        private:
+            // Provide a compile time error if the format string is invalid
+            struct FormattedMessage
+            {
+                template <class T>
+                consteval FormattedMessage(const T& Message) :
+                    Message(Message),
+                    Formatted(Message)
+                {
+                }
+
+                const std::string_view Message;
+                const FormatStringForT<ArgsT> Formatted;
+            };
+
+        public:
             template <class T>
             requires std::convertible_to<const T&, std::string_view>
             consteval MessageCtx(const T& Message, const SourceLocation Location = SourceLocation::Current()) :
-                Message(FormatStringForT<ArgsT>(Message)._Str),
+                Message(FormattedMessage(Message).Message),
                 Location(Location)
             {
-
             }
 
             template <LogLevel Level, class FuncT>
@@ -131,7 +154,7 @@ namespace L4
         void LogRaw(LogLevel Level, const std::string& Message);
     }
 
-    void LogSetup();
+    void SetupLogging();
 
     template <LogLevel Level, class FuncT = decltype(Detail::EmptyEvaluator)>
     inline void Log(Detail::MessageCtx<std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)

@@ -12,7 +12,7 @@
 #include <array>
 #include <format>
 
-namespace L4
+namespace L4::Debug
 {
     struct FrameDataBuffer
     {
@@ -187,6 +187,16 @@ namespace L4
         return GetStackTrace(std::span(FramePtr).first(FrameCount));
     }
 
+    bool IsDebuggerPresent()
+    {
+        return ::IsDebuggerPresent();
+    }
+
+    [[noreturn]] void ExitProcess(int ReturnCode)
+    {
+        return ::ExitProcess(ReturnCode);
+    }
+
     bool WriteMiniDump(const std::filesystem::path& Path, void* ExceptionPointers)
     {
         auto FileHandle = CreateFile2(Path.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS, NULL);
@@ -204,5 +214,15 @@ namespace L4
                                                   &ExceptionInformation, NULL, NULL);
         CloseHandle(FileHandle);
         return IsDumpSuccessful;
+    }
+
+    // Defined in LogImpl.win.cpp
+    LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo);
+
+    void SetupExceptions()
+    {
+        ULONG StackBytes = 0x10000;
+        SetThreadStackGuarantee(&StackBytes);
+        SetUnhandledExceptionFilter(ExceptionHandler);
     }
 }

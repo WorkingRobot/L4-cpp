@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Json.h"
-
-#include <format>
+#include "log/Log.h"
 
 // Prevents Windows.h from being included
 #if defined(_WIN32) && !defined(_WINSOCKAPI_)
@@ -213,7 +212,7 @@ namespace L4::Web::Http
             auto Document = Json::Parse<Enc>({ (const Json::Detail::JsonCharT<Enc>*)Resp.text.c_str(), Resp.text.size() / sizeof(Json::Detail::JsonCharT<Enc>) });
             if (Document.HasParseError())
             {
-                return Response<T>(ResponseStatus::InvalidFormat, std::format("{:d} @ {:d}", (int)Document.GetParseError(), Document.GetErrorOffset()));
+                return Response<T>(ResponseStatus::InvalidFormat, FMT::format("{:d} @ {:d}", (int)Document.GetParseError(), Document.GetErrorOffset()));
             }
             if constexpr (std::is_same_v<decltype(Document), T>)
             {

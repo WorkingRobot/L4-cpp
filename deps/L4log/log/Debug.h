@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <span>
 #include <filesystem>
+#include <span>
+#include <string>
 
-namespace L4
+namespace L4::Debug
 {
     std::string GetStackTrace(void* ContextRecord);
 
@@ -12,5 +12,11 @@ namespace L4
 
     std::string GetStackTrace();
 
+    bool IsDebuggerPresent();
+
+    [[noreturn]] void ExitProcess(int ReturnCode = 0);
+
     bool WriteMiniDump(const std::filesystem::path& Path, void* ExceptionPointers);
+
+    void SetupExceptions();
 }

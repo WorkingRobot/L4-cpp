@@ -1,8 +1,4 @@
-#include "Log.h"
-
-#include "utils/Config.h"
-#include "utils/Debug.h"
-#include "formatters/Path.h"
+#include "LogImpl.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -10,12 +6,9 @@
 
 namespace L4
 {
-    static constexpr bool UseConsole = true;
-    static constexpr bool CanCreateUIDialogs = true;
-
     struct LoggerConsole
     {
-        void Setup()
+        LoggerConsole()
         {
             if constexpr (!UseConsole)
             {
@@ -65,43 +58,22 @@ namespace L4
         }
 
     private:
-        static constexpr std::string_view LogLevelToEscColorCode(LogLevel Level)
-        {
-            switch (Level)
-            {
-            case LogLevel::Critical:
-                return "\33[31m"; // Dark Red
-            case LogLevel::Error:
-                return "\33[31;1m"; // Bold/Bright Red
-            case LogLevel::Warning:
-                return "\33[33;1m"; // Bold/Bright Yellow
-            case LogLevel::Info:
-                return "\33[37;1m"; // Bold/Bright White
-            case LogLevel::Debug:
-                return "\33[36;1m"; // Bold/Bright Aqua
-            default:
-                return "\33[32;1m"; // Bold/Bright Green
-            }
-        }
-
-        static constexpr std::string_view ResetEscColorCode = "\33[0m";
-
         bool ColorsEnabled = false;
         HANDLE StdOutHandle = INVALID_HANDLE_VALUE;
     };
 
     struct LoggerFile
     {
+        LoggerFile()
+        {
+            auto FilePath = GetLogFilePath();
+            FileHandle = CreateFile2(FilePath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, OPEN_ALWAYS, NULL);
+            Ensure<LogLevel::Error>(FileHandle != INVALID_HANDLE_VALUE, "Could not open {} for logging", [&] { return std::make_format_args(FilePath); });
+        }
+
         ~LoggerFile()
         {
             CloseHandle(FileHandle);
-        }
-
-        void Setup()
-        {
-            auto FilePath = Config::GetFolder() / std::format("{:%Y-%m-%d_%H-%M-%S}.log", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-            FileHandle = CreateFile2(FilePath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, OPEN_ALWAYS, NULL);
-            Ensure<LogLevel::Error>(FileHandle != INVALID_HANDLE_VALUE, "Could not open {} for logging", [&] { return std::make_format_args(FilePath); });
         }
 
         void Log(LogLevel Level, const std::string& Message)
@@ -116,53 +88,10 @@ namespace L4
         HANDLE FileHandle = INVALID_HANDLE_VALUE;
     };
 
-    template <class... LoggerTs>
-    struct LoggerComposite
-    {
-        void Setup()
-        {
-            std::apply([&](auto&... Loggers) { (Loggers.Setup(), ...); }, Loggers);
-        }
-
-        void Log(LogLevel Level, const std::string& Message)
-        {
-            std::apply([&](auto&... Loggers) { (Loggers.Log(Level, Message), ...); }, Loggers);
-        }
-
-    private:
-        std::tuple<LoggerTs...> Loggers {};
-    };
-
-    static auto& GetLogger()
+    static Logger auto& GetLogger()
     {
         static LoggerComposite<LoggerConsole, LoggerFile> Logger;
         return Logger;
-    }
-
-    void Detail::Abort(const std::string& Message)
-    {
-        if (IsDebuggerPresent())
-        {
-            LogRaw(LogLevel::Critical, Message);
-            LogRaw(LogLevel::Critical, GetStackTrace());
-        }
-        else
-        {
-            auto DumpPath = Config::GetFolder() / std::format("{:%Y-%m-%d_%H-%M-%S}.dmp", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-            bool DumpWritten = WriteMiniDump(DumpPath, NULL);
-
-            LogRaw(LogLevel::Critical, Message);
-            LogRaw(LogLevel::Critical, GetStackTrace());
-            LogRaw(LogLevel::Critical, DumpWritten ? std::format("\nDump written to {:s}\n", DumpPath)
-                                                   : std::format("\nCould not write dump to {:s}\n", DumpPath));
-
-            ExitProcess(0);
-        }
-    }
-
-    void Detail::LogRaw(LogLevel Level, const std::string& Message)
-    {
-        GetLogger().Log(Level, Message);
     }
 
     static constexpr std::string_view GetExceptionNameFromCode(DWORD ExceptionCode)
@@ -224,33 +153,23 @@ namespace L4
         return Ret;
     }
 
-    static LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
+    LONG WINAPI Debug::ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
     {
-        if (IsDebuggerPresent())
+        if (Debug::IsDebuggerPresent())
         {
             Detail::LogRaw(LogLevel::Critical, PrettifySEHException(ExceptionInfo->ExceptionRecord));
             Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
         }
         else
         {
-            auto DumpPath = Config::GetFolder() / std::format("{:%Y-%m-%d_%H-%M-%S}.dmp", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-            bool DumpWritten = WriteMiniDump(DumpPath, ExceptionInfo);
+            auto DumpPath = GetDumpFilePath();
+            bool DumpWritten = Debug::WriteMiniDump(DumpPath, ExceptionInfo);
 
-            Detail::LogRaw(LogLevel::Critical, PrettifySEHException(ExceptionInfo->ExceptionRecord));
-            Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
-            Detail::LogRaw(LogLevel::Critical, DumpWritten ? std::format("\nDump written to {:s}\n", DumpPath)
-                                                           : std::format("\nCould not write dump to {:s}\n", DumpPath));
+            LogMiniDump(DumpPath, DumpWritten);
         }
 
         return EXCEPTION_CONTINUE_SEARCH;
     }
-
-    void LogSetup()
-    {
-        ULONG StackBytes = 0x10000;
-        SetThreadStackGuarantee(&StackBytes);
-        SetUnhandledExceptionFilter(ExceptionHandler);
-
-        GetLogger().Setup();
-    }
 }
+
+#include "LogImpl2.h"
