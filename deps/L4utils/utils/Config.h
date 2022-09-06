@@ -20,6 +20,7 @@ namespace L4::Config
     const char* GetVersionBranch() noexcept;
     const char* GetVersionRevision() noexcept;
     bool GetVersionIsModified() noexcept;
+    const char* GetVersionPlatform() noexcept;
     const char* GetVersion() noexcept;
     const char* GetVersionLong() noexcept;
 }

@@ -10,23 +10,6 @@ namespace L4::Config
         return Path;
     }
 
-    static inline std::filesystem::path GetExePathInternal() noexcept
-    {
-        char* Path;
-        if (_get_pgmptr(&Path) == 0)
-        {
-            std::error_code Error;
-            return std::filesystem::absolute(Path, Error);
-        }
-        return "";
-    }
-
-    const std::filesystem::path& GetExePath() noexcept
-    {
-        static const auto Path = GetExePathInternal();
-        return Path;
-    }
-
     const std::filesystem::path& GetExeFolder() noexcept
     {
         static const auto Path = GetExePath().parent_path();
@@ -75,6 +58,15 @@ namespace L4::Config
 #else
         return false;
 #endif
+    }
+
+    const char* GetVersionPlatform() noexcept
+    {
+#define STR_(v) #v
+#define STR(v) STR_(v)
+        return STR(CONFIG_VERSION_PLATFORM);
+#undef STR
+#undef STR_
     }
 
     const char* GetVersion() noexcept
