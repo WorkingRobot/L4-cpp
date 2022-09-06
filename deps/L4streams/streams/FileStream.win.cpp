@@ -1,6 +1,6 @@
 #include "FileStream.h"
 
-#include "utils/Error.h"
+#include "utils/Error.win.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -30,9 +30,9 @@ namespace L4
         case FileStream::CreateMode::CreateOrOverwrite:
             return CREATE_ALWAYS;
         case FileStream::CreateMode::CreateOrOpen:
-            return CREATE_NEW;
-        case FileStream::CreateMode::CreateOnly:
             return OPEN_ALWAYS;
+        case FileStream::CreateMode::CreateOnly:
+            return CREATE_NEW;
         case FileStream::CreateMode::OpenOnly:
             return OPEN_EXISTING;
         case FileStream::CreateMode::OverwriteOnly:

@@ -6,6 +6,12 @@ namespace L4
 {
     class FileStream : public Stream
     {
+#if defined(CONFIG_VERSION_PLATFORM_lnx)
+        using HandleT = int;
+#elif defined(CONFIG_VERSION_PLATFORM_win)
+        using HandleT = void*;
+#endif
+
     public:
         enum class OpenMode : uint8_t
         {
@@ -46,7 +52,7 @@ namespace L4
         FileStream(const char* Path, OpenMode OpenMode, CreateMode CreateMode, ShareMode ShareMode = ShareMode::Exclusive);
 
     private:
-        FileStream(void* FileHandle);
+        FileStream(HandleT FileHandle);
 
     public:
         ~FileStream();
@@ -74,6 +80,6 @@ namespace L4
         void Truncate();
 
     private:
-        void* FileHandle;
+        HandleT FileHandle;
     };
 }
