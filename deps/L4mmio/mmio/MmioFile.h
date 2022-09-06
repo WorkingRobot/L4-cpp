@@ -7,10 +7,11 @@ namespace L4
     template <bool Writable>
     class MmioFileBase
     {
-        using MM_HANDLE = void*;
-        using MM_PVOID = void*;
-        using MM_LARGE_INTEGER = long long;
-        using MM_SIZE_T = size_t;
+#if defined(CONFIG_VERSION_PLATFORM_lnx)
+        using HandleT = int;
+#elif defined(CONFIG_VERSION_PLATFORM_win)
+        using HandleT = void*;
+#endif
 
     public:
         MmioFileBase(const std::filesystem::path& Path);
@@ -22,7 +23,7 @@ namespace L4
         MmioFileBase(const char* Path);
 
     private:
-        MmioFileBase(MM_HANDLE HFile);
+        MmioFileBase(HandleT FileHandle);
 
     public:
         MmioFileBase(const MmioFileBase<Writable>&) = delete;
@@ -31,11 +32,9 @@ namespace L4
 
         ~MmioFileBase();
 
-        std::filesystem::path GetPath() const;
-
         const void* GetBaseAddress() const noexcept;
 
-        void* GetBaseAddress() const noexcept requires(Writable);
+        void* GetBaseAddress() noexcept requires(Writable);
 
         size_t GetSize() const noexcept;
 
@@ -46,23 +45,32 @@ namespace L4
         }
 
         template <class T = void>
-        T* Get(size_t ByteOffset = 0) const noexcept requires(Writable)
+        T* Get(size_t ByteOffset = 0) noexcept requires(Writable)
         {
             return reinterpret_cast<T*>(static_cast<char*>(GetBaseAddress()) + ByteOffset);
         }
 
         void Reserve(size_t Size) requires(Writable);
 
-        void Flush(size_t Position, size_t Size) const requires(Writable);
-
-        void Flush() const requires(Writable);
+        void Flush(size_t Position = 0, size_t Size = -1) const requires(Writable);
 
     private:
+#if defined(CONFIG_VERSION_PLATFORM_lnx)
+        void* BaseAddress;
+        int FileHandle;
+        off_t FileSize;
+#elif defined(CONFIG_VERSION_PLATFORM_win)
+        using MM_HANDLE = HandleT;
+        using MM_PVOID = void*;
+        using MM_LARGE_INTEGER = long long;
+        using MM_SIZE_T = size_t;
+
         MM_PVOID BaseAddress;
         MM_HANDLE HFile;
         MM_HANDLE HSection;
         MM_LARGE_INTEGER SectionSize;
         MM_SIZE_T ViewSize;
+#endif
     };
 
     using MmioFile = MmioFileBase<false>;

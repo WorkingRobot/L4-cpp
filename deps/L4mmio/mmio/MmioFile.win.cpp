@@ -1,42 +1,13 @@
 #include "MmioFile.h"
 
 #include "utils/Align.h"
-#include "utils/Error.h"
+#include "utils/Error.win.h"
 
 #include <ntdll.h>
 #include <Psapi.h>
 
 namespace L4
 {
-    // Formats GetMappedFileName into something more readable
-    static bool ResolveDevicePath(std::string& Filename)
-    {
-        char DriveLetters[512];
-        if (GetLogicalDriveStrings(sizeof(DriveLetters) - 1, DriveLetters))
-        {
-            char DriveName[MAX_PATH];
-            char Drive[3] = " :";
-            for (auto DriveLetter = DriveLetters; *DriveLetter; DriveLetter += strlen(DriveLetter) + 1)
-            {
-                Drive[0] = *DriveLetter;
-                if (QueryDosDevice(Drive, DriveName, MAX_PATH))
-                {
-                    size_t DriveNameLen = strlen(DriveName);
-
-                    if (DriveNameLen < MAX_PATH)
-                    {
-                        if (Filename.starts_with({ DriveName, DriveNameLen }) && Filename[DriveNameLen] == '\\')
-                        {
-                            Filename.replace(0, DriveNameLen, Drive);
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     static constexpr SIZE_T ViewSizeIncrement = 1ull << 37; // 128 gb
 
     template <bool Writable>
@@ -169,28 +140,13 @@ namespace L4
     }
 
     template <bool Writable>
-    std::filesystem::path MmioFileBase<Writable>::GetPath() const
-    {
-        char Filename[MAX_PATH] {};
-        if (GetMappedFileName(GetCurrentProcess(), BaseAddress, Filename, MAX_PATH))
-        {
-            std::string FilenameString = Filename;
-            if (ResolveDevicePath(FilenameString))
-            {
-                return FilenameString;
-            }
-        }
-        return "";
-    }
-
-    template <bool Writable>
     const void* MmioFileBase<Writable>::GetBaseAddress() const noexcept
     {
         return BaseAddress;
     }
 
     template <bool Writable>
-    void* MmioFileBase<Writable>::GetBaseAddress() const noexcept requires(Writable)
+    void* MmioFileBase<Writable>::GetBaseAddress() noexcept requires(Writable)
     {
         return BaseAddress;
     }
@@ -237,16 +193,17 @@ namespace L4
     template <bool Writable>
     void MmioFileBase<Writable>::Flush(size_t Position, size_t Size) const requires(Writable)
     {
-        VirtualUnlock((LPBYTE)BaseAddress + Position, Size);
-    }
-
-    template <bool Writable>
-    void MmioFileBase<Writable>::Flush() const requires(Writable)
-    {
-        SIZE_T FlushSize = 0;
-        PVOID FlushAddr = BaseAddress;
-        IO_STATUS_BLOCK Block;
-        NtFlushVirtualMemory(GetCurrentProcess(), &FlushAddr, &FlushSize, &Block);
+        if (Position == 0 && Size == -1)
+        {
+            SIZE_T FlushSize = 0;
+            PVOID FlushAddr = BaseAddress;
+            IO_STATUS_BLOCK Block;
+            NtFlushVirtualMemory(GetCurrentProcess(), &FlushAddr, &FlushSize, &Block);
+        }
+        else
+        {
+            VirtualUnlock((LPBYTE)BaseAddress + Position, Size);
+        }
     }
 
     template class MmioFileBase<false>;
