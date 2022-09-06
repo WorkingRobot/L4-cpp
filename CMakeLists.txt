@@ -12,7 +12,7 @@ project(L4
 
 L4_retrieve_version_info()
 
-message(STATUS "Compiling for ${PROJECT_NAME}/${PROJECT_VERSION_LONG}")
+message(STATUS "Compiling ${PROJECT_NAME} ${PROJECT_VERSION_LONG} for ${CMAKE_SYSTEM_NAME} (${VCPKG_TARGET_TRIPLET})")
 
 ## Set output directories ##
 

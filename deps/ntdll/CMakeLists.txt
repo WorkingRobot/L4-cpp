@@ -1,1 +1,1 @@
-L4_project_imported(ntdll "ntdll64.lib")
+L4_project(ntdll IMPORT_LIB IMPORTED_LOCATION ntdll64.lib PLATFORMS win)
