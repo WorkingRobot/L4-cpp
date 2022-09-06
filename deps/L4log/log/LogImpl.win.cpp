@@ -88,87 +88,84 @@ namespace L4
         HANDLE FileHandle = INVALID_HANDLE_VALUE;
     };
 
-    static Logger auto& GetLogger()
+    namespace Debug
     {
-        static LoggerComposite<LoggerConsole, LoggerFile> Logger;
-        return Logger;
-    }
-
-    static constexpr std::string_view GetExceptionNameFromCode(DWORD ExceptionCode)
-    {
-        switch (ExceptionCode)
+        static constexpr std::string_view GetExceptionNameFromCode(DWORD ExceptionCode)
         {
-            // clang-format off
+            switch (ExceptionCode)
+            {
+                // clang-format off
 #define CASE(Name) case Name: return #Name
-            // clang-format on
+                // clang-format on
 
-            CASE(EXCEPTION_ACCESS_VIOLATION);
-            CASE(EXCEPTION_ARRAY_BOUNDS_EXCEEDED);
-            CASE(EXCEPTION_DATATYPE_MISALIGNMENT);
-            CASE(EXCEPTION_FLT_DENORMAL_OPERAND);
-            CASE(EXCEPTION_FLT_DIVIDE_BY_ZERO);
-            CASE(EXCEPTION_FLT_INVALID_OPERATION);
-            CASE(EXCEPTION_ILLEGAL_INSTRUCTION);
-            CASE(EXCEPTION_INT_DIVIDE_BY_ZERO);
-            CASE(EXCEPTION_PRIV_INSTRUCTION);
-            CASE(EXCEPTION_STACK_OVERFLOW);
+                CASE(EXCEPTION_ACCESS_VIOLATION);
+                CASE(EXCEPTION_ARRAY_BOUNDS_EXCEEDED);
+                CASE(EXCEPTION_DATATYPE_MISALIGNMENT);
+                CASE(EXCEPTION_FLT_DENORMAL_OPERAND);
+                CASE(EXCEPTION_FLT_DIVIDE_BY_ZERO);
+                CASE(EXCEPTION_FLT_INVALID_OPERATION);
+                CASE(EXCEPTION_ILLEGAL_INSTRUCTION);
+                CASE(EXCEPTION_INT_DIVIDE_BY_ZERO);
+                CASE(EXCEPTION_PRIV_INSTRUCTION);
+                CASE(EXCEPTION_STACK_OVERFLOW);
 
 #undef CASE
-        default:
-            return "";
-        }
-    }
-
-    static inline std::string PrettifySEHException(PEXCEPTION_RECORD Record)
-    {
-        std::string Ret;
-        Ret.reserve(256);
-        auto Itr = std::back_inserter(Ret);
-        Itr = std::format_to(Itr, "SEH Exception: ");
-        if (auto Code = GetExceptionNameFromCode(Record->ExceptionCode); !Code.empty())
-        {
-            Itr = std::format_to(Itr, "{:s}", Code);
-        }
-        else
-        {
-            Itr = std::format_to(Itr, "{:#08x}", Record->ExceptionCode);
-        }
-        if (Record->NumberParameters)
-        {
-            *Itr++ = ' ';
-            *Itr++ = '[';
-            for (DWORD Idx = 0; Idx < Record->NumberParameters; ++Idx)
-            {
-                if (Idx)
-                {
-                    *Itr++ = ',';
-                    *Itr++ = ' ';
-                }
-                Itr = std::format_to(Itr, "{:x}", Record->ExceptionInformation[Idx]);
+            default:
+                return "";
             }
-            *Itr++ = ']';
         }
-        *Itr++ = '\n';
 
-        return Ret;
-    }
-
-    LONG WINAPI Debug::ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
-    {
-        if (Debug::IsDebuggerPresent())
+        static inline std::string PrettifySEHException(PEXCEPTION_RECORD Record)
         {
-            Detail::LogRaw(LogLevel::Critical, PrettifySEHException(ExceptionInfo->ExceptionRecord));
-            Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
+            std::string Ret;
+            Ret.reserve(256);
+            auto Itr = std::back_inserter(Ret);
+            Itr = std::format_to(Itr, "SEH Exception: ");
+            if (auto Code = GetExceptionNameFromCode(Record->ExceptionCode); !Code.empty())
+            {
+                Itr = std::format_to(Itr, "{:s}", Code);
+            }
+            else
+            {
+                Itr = std::format_to(Itr, "{:#08x}", Record->ExceptionCode);
+            }
+            if (Record->NumberParameters)
+            {
+                *Itr++ = ' ';
+                *Itr++ = '[';
+                for (DWORD Idx = 0; Idx < Record->NumberParameters; ++Idx)
+                {
+                    if (Idx)
+                    {
+                        *Itr++ = ',';
+                        *Itr++ = ' ';
+                    }
+                    Itr = std::format_to(Itr, "{:x}", Record->ExceptionInformation[Idx]);
+                }
+                *Itr++ = ']';
+            }
+            *Itr++ = '\n';
+
+            return Ret;
         }
-        else
+
+        LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
         {
-            auto DumpPath = GetDumpFilePath();
-            bool DumpWritten = Debug::WriteMiniDump(DumpPath, ExceptionInfo);
+            if (IsDebuggerPresent())
+            {
+                Detail::LogRaw(LogLevel::Critical, PrettifySEHException(ExceptionInfo->ExceptionRecord));
+                Detail::LogRaw(LogLevel::Critical, GetStackTrace(ExceptionInfo->ContextRecord));
+            }
+            else
+            {
+                auto DumpPath = GetDumpFilePath();
+                bool DumpWritten = WriteMiniDump(DumpPath, ExceptionInfo);
 
-            LogMiniDump(DumpPath, DumpWritten);
+                LogMiniDump(DumpPath, DumpWritten);
+            }
+
+            return EXCEPTION_CONTINUE_SEARCH;
         }
-
-        return EXCEPTION_CONTINUE_SEARCH;
     }
 }
 

@@ -1,5 +1,7 @@
 #include "Debug.h"
 
+#include "format/Format.h"
+
 // clang-format off
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -10,7 +12,6 @@
 #pragma comment(lib, "DbgHelp.lib")
 
 #include <array>
-#include <format>
 
 namespace L4::Debug
 {
@@ -194,7 +195,7 @@ namespace L4::Debug
 
     [[noreturn]] void ExitProcess(int ReturnCode)
     {
-        return ::ExitProcess(ReturnCode);
+        ::ExitProcess(ReturnCode);
     }
 
     bool WriteMiniDump(const std::filesystem::path& Path, void* ExceptionPointers)

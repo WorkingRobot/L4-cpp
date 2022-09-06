@@ -1,6 +1,6 @@
 #include "ClientServices.h"
 
-#include "formatters/Path.h"
+#include "format/Path.h"
 #include "KnownFolders.h"
 #include "streams/FileStream.h"
 #include "utils/HandleWrapper.h"
@@ -256,7 +256,8 @@ namespace L4::Riot
     {
         HandleWrapper ProcessHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, Pid);
 
-        if (ProcessHandle == NULL) {
+        if (ProcessHandle == NULL)
+        {
             if (GetLastError() == ERROR_ACCESS_DENIED)
             {
                 return true;
@@ -285,7 +286,5 @@ namespace L4::Riot
         {
             return false;
         }
-
-        
     }
 }

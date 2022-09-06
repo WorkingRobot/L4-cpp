@@ -2,6 +2,7 @@
 
 #include "Consts.h"
 
+#include <stdexcept>
 #include <string_view>
 #include <type_traits>
 
