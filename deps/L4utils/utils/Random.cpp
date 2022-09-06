@@ -12,6 +12,6 @@ namespace L4
 
     Guid RandomGuid()
     {
-        return { RandGenerator(), RandGenerator(), RandGenerator(), RandGenerator() };
+        return { static_cast<uint32_t>(RandGenerator()), static_cast<uint32_t>(RandGenerator()), static_cast<uint32_t>(RandGenerator()), static_cast<uint32_t>(RandGenerator()) };
     }
 }

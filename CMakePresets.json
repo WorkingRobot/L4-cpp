@@ -43,6 +43,7 @@
             "name": "clang",
             "displayName": "Clang",
             "inherits": "clang-cl",
+            "toolchainFile": "clang-lnx.cmake",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
