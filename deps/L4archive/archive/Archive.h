@@ -1,12 +1,11 @@
 #pragma once
 
-#include "../mmio/MmioFile.h"
-#include "utils/Align.h"
-
 #include "Freelist.h"
 #include "Header.h"
+#include "mmio/MmioFile.h"
 #include "StreamHeader.h"
 #include "StreamRunlist.h"
+#include "utils/Align.h"
 
 namespace L4
 {
@@ -34,7 +33,7 @@ namespace L4
             return *File.template Get<Header>();
         }
 
-        Header& GetHeader() const noexcept requires(Writable)
+        Header& GetHeader() noexcept requires(Writable)
         {
             return *File.template Get<Header>();
         }
@@ -44,7 +43,7 @@ namespace L4
             return *File.template Get<StreamHeader>(sizeof(Header) + Idx * sizeof(StreamHeader));
         }
 
-        StreamHeader& GetStreamHeader(uint32_t Idx) const noexcept requires(Writable)
+        StreamHeader& GetStreamHeader(uint32_t Idx) noexcept requires(Writable)
         {
             return *File.template Get<StreamHeader>(sizeof(Header) + Idx * sizeof(StreamHeader));
         }
@@ -54,7 +53,7 @@ namespace L4
             return *File.template Get<Freelist>(FreelistOffset);
         }
 
-        Freelist& GetFreelist() const noexcept requires(Writable)
+        Freelist& GetFreelist() noexcept requires(Writable)
         {
             return *File.template Get<Freelist>(FreelistOffset);
         }
@@ -64,7 +63,7 @@ namespace L4
             return *File.template Get<StreamRunlist>(FreelistOffset + sizeof(Freelist) + Idx * sizeof(StreamRunlist));
         }
 
-        StreamRunlist& GetStreamRunlist(uint32_t Idx) const noexcept requires(Writable)
+        StreamRunlist& GetStreamRunlist(uint32_t Idx) noexcept requires(Writable)
         {
             return *File.template Get<StreamRunlist>(FreelistOffset + sizeof(Freelist) + Idx * sizeof(StreamRunlist));
         }
@@ -74,7 +73,7 @@ namespace L4
             return File.Get((size_t)Idx * SectorSize);
         }
 
-        void* GetSector(uint32_t Idx) const noexcept requires(Writable)
+        void* GetSector(uint32_t Idx) noexcept requires(Writable)
         {
             return File.Get((size_t)Idx * SectorSize);
         }

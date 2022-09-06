@@ -24,7 +24,7 @@ namespace L4
             return Archive->GetStreamHeader(StreamIdx);
         }
 
-        StreamHeader& GetHeader() const noexcept requires(Writable)
+        StreamHeader& GetHeader() noexcept requires(Writable)
         {
             return Archive->GetStreamHeader(StreamIdx);
         }
@@ -34,7 +34,7 @@ namespace L4
             return Archive->GetStreamRunlist(StreamIdx);
         }
 
-        StreamRunlist& GetRunlist() const noexcept requires(Writable)
+        StreamRunlist& GetRunlist() noexcept requires(Writable)
         {
             return Archive->GetStreamRunlist(StreamIdx);
         }
