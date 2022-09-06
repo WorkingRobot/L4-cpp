@@ -16,7 +16,7 @@ jobs:
         os: [windows-2022]
         include:
         - configure-preset: clang-cl
-          llvm-version: "15.0.0-rc2"
+          llvm-version: "15.0.0"
         
     runs-on: ${{matrix.os}}
 
