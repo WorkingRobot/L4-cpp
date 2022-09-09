@@ -2,10 +2,6 @@
 
 #include "JsonParsing.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
-
 namespace L4::Discord
 {
     PresenceConnection::PresenceConnection(const std::string& ApplicationId, CallbackList Callbacks) :
@@ -36,7 +32,7 @@ namespace L4::Discord
                 Writer.StartObject();
                 {
                     Writer.Key("pid", 3);
-                    Writer.Int(GetCurrentProcessId());
+                    Writer.Int(IpcConnection::GetProcessId());
                 }
                 {
                     Writer.Key("activity", 8);
@@ -187,7 +183,7 @@ namespace L4::Discord
                 Writer.StartObject();
                 {
                     Writer.Key("pid", 3);
-                    Writer.Int(GetCurrentProcessId());
+                    Writer.Int(IpcConnection::GetProcessId());
                 }
                 Writer.EndObject();
             }

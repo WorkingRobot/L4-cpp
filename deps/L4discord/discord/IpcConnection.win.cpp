@@ -6,6 +6,11 @@
 
 namespace L4::Discord
 {
+    int IpcConnection::GetProcessId()
+    {
+        return GetCurrentProcessId();
+    }
+
     IpcConnection::IpcConnection() :
         PipeHandle(INVALID_HANDLE_VALUE),
         IsPipeOpen(false)
@@ -15,6 +20,7 @@ namespace L4::Discord
     bool IpcConnection::Connect()
     {
         char PipeName[] = "\\\\?\\pipe\\discord-ipc-0";
+        char& PipeNameNum = PipeName[21];
         do
         {
             PipeHandle = CreateFile(PipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -29,9 +35,9 @@ namespace L4::Discord
             {
             case ERROR_FILE_NOT_FOUND:
                 // Try digits 0-9 consecutively
-                if (PipeName[21] < '9')
+                if (PipeNameNum < '9')
                 {
-                    PipeName[21]++;
+                    PipeNameNum++;
                     continue;
                 }
                 break;

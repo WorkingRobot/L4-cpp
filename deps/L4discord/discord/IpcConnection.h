@@ -6,6 +6,12 @@ namespace L4::Discord
 {
     class IpcConnection
     {
+#if defined(CONFIG_VERSION_PLATFORM_lnx)
+        using HandleT = int;
+#elif defined(CONFIG_VERSION_PLATFORM_win)
+        using HandleT = void*;
+#endif
+
     public:
         IpcConnection();
 
@@ -22,8 +28,10 @@ namespace L4::Discord
             return IsPipeOpen;
         }
 
+        static int GetProcessId();
+
     private:
-        void* PipeHandle;
+        HandleT PipeHandle;
         bool IsPipeOpen;
     };
 }

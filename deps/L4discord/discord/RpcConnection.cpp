@@ -2,10 +2,6 @@
 
 #include "JsonParsing.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
-
 namespace L4::Discord
 {
     static constexpr int RpcVersion = 1;
@@ -51,7 +47,6 @@ namespace L4::Discord
                 auto Data = Document.GetObjectMember("data");
                 ErrorCode = Data->GetIntMember("code");
                 ErrorMessage = Data->GetStringMember("message", "");
-
             }
         }
         else
@@ -182,6 +177,5 @@ namespace L4::Discord
                 return false;
             }
         } while (true);
-        __assume(false);
     }
 }

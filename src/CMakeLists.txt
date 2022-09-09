@@ -1,11 +1,6 @@
 L4_project(L4 EXEC_NOGUI)
 
-L4_add_file(MainSource.cpp)
-L4_add_dir(disk)
-L4_add_dir(utils)
-L4_add_dir(archive)
-L4_add_dir(mmio)
-L4_add_dir(source)
+L4_add_file(MainDiscord.cpp)
 
 L4_end_sources(L4)
 
@@ -33,7 +28,7 @@ endif()
 
 #L4_link_libraries(PRIVATE fastspd)
 L4_link_libraries(PRIVATE L4::web)
-# L4_link_libraries(PRIVATE L4::discord)
+L4_link_libraries(PRIVATE L4::discord)
 L4_link_libraries(PRIVATE L4::sourcemgr)
 L4_link_libraries(PRIVATE L4::log)
 L4_link_libraries(PRIVATE L4::utils)
