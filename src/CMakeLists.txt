@@ -2,7 +2,7 @@ L4_project(L4 EXEC_NOGUI)
 
 L4_add_file(MainDiscord.cpp)
 
-L4_end_sources(L4)
+L4_end_sources()
 
 if (FALSE)
 find_package(PkgConfig REQUIRED)

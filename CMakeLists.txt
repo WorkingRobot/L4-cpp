@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0091 NEW)
-include(CMakeL4Utils.cmake)
+include(cmake/L4.cmake)
 
 ## Project Definition ##
 
