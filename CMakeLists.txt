@@ -8,7 +8,7 @@ project(L4
     VERSION 0.1.0
     DESCRIPTION "The world's fastest game updater"
     HOMEPAGE_URL "https://epic.gl"
-    LANGUAGES CXX)
+    LANGUAGES CXX C)
 
 L4_retrieve_version_info()
 
@@ -25,6 +25,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 L4_add_subdirectories_in(deps)
 L4_add_subdirectories_in(sources)
 add_subdirectory(src)
+add_subdirectory(driver)
 
 ## Define extra targets ##
 

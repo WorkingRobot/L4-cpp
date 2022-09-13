@@ -1,0 +1,1 @@
+L4_project(L4::driver DRIVER_LNX IS_SIMPLE PLATFORMS lnx)
