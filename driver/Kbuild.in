@@ -1,2 +1,0 @@
-obj-m := @KBUILD_PROJECT_NAME@.o
-@KBUILD_PROJECT_NAME@-objs := $(patsubst %.c,%.o, $(filter %.c, @KBUILD_PROJECT_SOURCES@))

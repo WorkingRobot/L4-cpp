@@ -24,8 +24,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 L4_add_subdirectories_in(deps)
 L4_add_subdirectories_in(sources)
+L4_add_subdirectories_in(driver)
 add_subdirectory(src)
-add_subdirectory(driver)
 
 ## Define extra targets ##
 

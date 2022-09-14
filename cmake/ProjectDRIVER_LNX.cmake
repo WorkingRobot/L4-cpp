@@ -5,7 +5,11 @@ function(L4_define_project_internal)
             message(FATAL_ERROR "The Linux kernel driver ${L4_CURRENT_PROJECT_NAME} only supports .c files")
         endif()
     endforeach()
-    
+
+    list(TRANSFORM L4_CURRENT_PROJECT_DRIVER_STATIC_LIBS PREPEND "$<PATH:RELATIVE_PATH,$<TARGET_FILE:")
+    list(TRANSFORM L4_CURRENT_PROJECT_DRIVER_STATIC_LIBS APPEND ">,${CMAKE_CURRENT_BINARY_DIR}>")
+    string(REPLACE ";" " " KBUILD_PROJECT_LIBS "${L4_CURRENT_PROJECT_DRIVER_STATIC_LIBS}")
+
     string(REPLACE ";" " " KBUILD_PROJECT_SOURCES "${L4_CURRENT_PROJECT_SOURCES}")
     set(KBUILD_PROJECT_NAME "${L4_CURRENT_PROJECT_SANITIZED_NAME}")
     configure_file(Kbuild.in Kbuild @ONLY)
@@ -19,9 +23,9 @@ function(L4_define_project_internal)
         VERBATIM)
 
     L4_get_kernel_dir(KERNEL_DIR)
-    set(KBUILD_CMD make -C ${KERNEL_DIR} M=${CMAKE_CURRENT_BINARY_DIR})
+    set(KBUILD_CMD make -C ${KERNEL_DIR} M=${CMAKE_CURRENT_BINARY_DIR} KBUILD_PROJECT_LIBS=${KBUILD_PROJECT_LIBS} modules)
     add_custom_command(OUTPUT ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko
-        COMMAND ${KBUILD_CMD} modules
+        COMMAND ${KBUILD_CMD}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${L4_CURRENT_PROJECT_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Kbuild
         COMMENT "Building ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko"
