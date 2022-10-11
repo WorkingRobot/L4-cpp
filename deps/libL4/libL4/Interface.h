@@ -12,4 +12,4 @@
 #define L4_SOURCE_EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
-L4_SOURCE_EXPORT const L4::Source::SourceInterface* Initialize(const L4::Source::L4Interface* Interface);
+L4_SOURCE_EXPORT const libL4::PluginInterface* Initialize(const libL4::ClientInterface* Interface);
