@@ -4,37 +4,41 @@
 
 #include "Macros.h"
 
-#include <concepts>
 #include <string>
 
 namespace libL4::Marshal
 {
-    bool To(bool In)
+    using libL4::Handle;
+
+    static bool To(bool In)
     {
         return In;
     }
 
-    uint32_t To(uint32_t In)
+    static uint32_t To(uint32_t In)
     {
         return In;
     }
 
-    uint64_t To(uint64_t In)
+    static uint64_t To(uint64_t In)
     {
         return In;
     }
 
     using String = std::u8string;
 
-    libL4::String To(const String& In)
+    static libL4::String To(const String& In)
     {
-        return {
-            .Data = In.c_str(),
-            .Size = In.size()
+        if (In.size() > 250)
+            throw std::out_of_range("String might be too big"); // TODO: remove before deployment, this is just a failsafe
+        libL4::String Ret {
+            .Size = uint8_t(In.size())
         };
+        In.copy(Ret.Data, Ret.Size);
+        return Ret;
     }
 
-    String To(const libL4::String& In)
+    static String To(const libL4::String& In)
     {
         return String(In.Data, In.Size);
     }

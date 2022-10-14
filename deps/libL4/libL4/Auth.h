@@ -4,8 +4,6 @@
 
 namespace libL4
 {
-    typedef void* Auth;
-
     struct UserIdentity
     {
         String Id;
@@ -40,8 +38,8 @@ namespace libL4
 
     struct AuthFieldRadio
     {
-        const AuthFieldRadioEntry* Entries;
-        uint32_t EntryCount;
+        AuthFieldRadioEntry Entries[16];
+        uint8_t EntryCount;
         String DefaultEntryId;
     };
 
@@ -75,6 +73,7 @@ namespace libL4
             AuthFieldRadio Radio;
             AuthFieldDropdown Dropdown;
             AuthFieldCheckbox Checkbox;
+            AuthFieldSubmitButton SubmitButton;
             AuthFieldOpenUrlAction OpenUrlAction;
         };
     };
@@ -103,12 +102,12 @@ namespace libL4
     {
         bool (*GetUser)(UserIdentity* OutIdentity);
 
-        void (*Open)(Auth Auth);
+        void (*Open)(Handle Auth);
 
-        void (*Close)(Auth Auth);
+        void (*Close)(Handle Auth);
 
-        void (*GetFields)(Auth Auth, const AuthField** Fields, uint32_t* FieldCount);
+        void (*GetFields)(Handle Auth, AuthField Fields[16], uint32_t* FieldCount);
 
-        void (*Submit)(Auth Auth, const AuthFulfilledField* Fields, uint32_t FieldCount);
+        void (*Submit)(Handle Auth, const AuthFulfilledField Fields[16], uint32_t FieldCount);
     };
 }

@@ -4,10 +4,12 @@
 
 namespace libL4
 {
+    typedef uintptr_t Handle;
+
     struct String
     {
-        const char8_t* Data;
-        uint64_t Size;
+        uint8_t Size;
+        char8_t Data[255];
     };
 
     struct AppIdentity

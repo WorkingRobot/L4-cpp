@@ -23,7 +23,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 ## Add projects ##
 
 L4_add_subdirectories_in(deps)
-L4_add_subdirectories_in(sources)
+L4_add_subdirectories_in(plugins)
 L4_add_subdirectories_in(driver)
 add_subdirectory(src)
 

@@ -1,4 +1,4 @@
-L4_project(L4 EXEC_NOGUI)
+L4_project(L4 EXEC_NOGUI IS_DISABLED)
 
 L4_add_file(MainDiscord.cpp)
 

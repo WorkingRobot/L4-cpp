@@ -4,8 +4,6 @@
 
 namespace libL4
 {
-    typedef void* Archive;
-
     struct ArchiveIdentity
     {
         AppIdentity App;
@@ -15,13 +13,13 @@ namespace libL4
 
     struct ArchiveOperations
     {
-        void (*GetIdentity)(Archive Archive, ArchiveIdentity* OutIdentity);
-        void (*SetIdentity)(Archive Archive, const ArchiveIdentity* NewIdentity);
-        uint32_t (*GetStreamCount)(Archive Archive);
-        uint32_t (*GetSectorSize)(Archive Archive);
-        uint32_t (*GetStreamIdxFromId)(Archive Archive, const String* Id);
-        void (*OpenStreamRead)(Archive Archive, uint32_t StreamIdx, Stream* OutStream);
-        void (*OpenStreamWrite)(Archive Archive, uint32_t StreamIdx, Stream* OutStream);
-        void (*CloseStream)(Archive Archive, Stream Stream);
+        void (*GetIdentity)(Handle Archive, ArchiveIdentity* OutIdentity);
+        void (*SetIdentity)(Handle Archive, const ArchiveIdentity* NewIdentity);
+        uint32_t (*GetStreamCount)(Handle Archive);
+        uint32_t (*GetSectorSize)(Handle Archive);
+        uint32_t (*GetStreamIdxFromId)(Handle Archive, const String* Id);
+        void (*OpenStreamRead)(Handle Archive, uint32_t StreamIdx, Handle* OutStream);
+        void (*OpenStreamWrite)(Handle Archive, uint32_t StreamIdx, Handle* OutStream);
+        void (*CloseStream)(Handle Archive, Handle Stream);
     };
 }
