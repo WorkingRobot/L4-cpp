@@ -1,3 +1,5 @@
+#pragma once
+
 #include "IAuthSession.h"
 
 #include <libL4/marshal/Marshal.h>

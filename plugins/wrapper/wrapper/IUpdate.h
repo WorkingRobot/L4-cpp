@@ -1,3 +1,5 @@
+#pragma once
+
 #include "IUpdateSession.h"
 
 #include <libL4/marshal/Marshal.h>

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <libL4/marshal/Marshal.h>
 #include <libL4/Structs.h>
 
@@ -14,7 +16,6 @@ namespace L4::Plugin::Wrapper
 
         virtual ~IAuthSession() = default;
 
-    private:
         virtual std::vector<AuthField> GetFields() = 0;
         virtual void Submit(const std::vector<AuthFulfilledField>& Fields) = 0;
     };

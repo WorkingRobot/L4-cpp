@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ClientInterface.h"
 #include "IAuth.h"
 #include "IUpdate.h"
@@ -12,7 +14,9 @@ namespace L4::Plugin::Wrapper
     class IPlugin
     {
     public:
-        IPlugin(const libL4::ClientInterface* ClientInterface);
+        IPlugin(const libL4::ClientInterface* ClientInterface, std::unique_ptr<IAuth>&& AuthInterface, std::unique_ptr<IUpdate>&& UpdateInterface);
+
+        virtual ~IPlugin() = default;
 
         libL4::PluginInterface GetRawInterface();
 
@@ -33,7 +37,7 @@ namespace L4::Plugin::Wrapper
 
                 static void Submit(libL4::Handle Auth, const libL4::AuthFulfilledField Fields[16], uint32_t FieldCount);
 
-                static IAuth& Interface;
+                static IAuth* Interface;
             };
 
             struct Update
@@ -48,7 +52,7 @@ namespace L4::Plugin::Wrapper
 
                 static void Resume(libL4::Handle Update);
 
-                static IUpdate& Interface;
+                static IUpdate* Interface;
             };
         };
 

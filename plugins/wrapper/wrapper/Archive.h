@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Stream.h"
 
 #include <libL4/marshal/Marshal.h>

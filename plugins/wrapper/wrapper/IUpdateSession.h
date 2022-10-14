@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Archive.h"
 
 #include <libL4/marshal/Marshal.h>
@@ -14,7 +16,6 @@ namespace L4::Plugin::Wrapper
 
         virtual ~IUpdateSession() = default;
 
-    private:
         virtual void Start(const Archive& Archive, std::chrono::milliseconds ProgressUpdateRate) = 0;
 
         virtual void Pause() = 0;

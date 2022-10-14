@@ -2,9 +2,13 @@
 
 namespace L4::Plugin::Wrapper
 {
-    IPlugin::IPlugin(const libL4::ClientInterface* ClientInterface) :
-        Client(ClientInterface)
+    IPlugin::IPlugin(const libL4::ClientInterface* ClientInterface, std::unique_ptr<IAuth>&& AuthInterface, std::unique_ptr<IUpdate>&& UpdateInterface) :
+        Client(ClientInterface),
+        Auth(std::move(AuthInterface)),
+        Update(std::move(UpdateInterface))
     {
+        RawOps::Auth::Interface = Auth.get();
+        RawOps::Update::Interface = Update.get();
     }
 
     libL4::PluginInterface IPlugin::GetRawInterface()

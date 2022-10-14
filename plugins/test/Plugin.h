@@ -1,3 +1,5 @@
+#pragma once
+
 #include <wrapper/IPlugin.h>
 
 namespace L4::Plugin::Test
