@@ -1,7 +1,7 @@
 #include <libL4/marshal/Marshal.h>
 #include <libL4/Structs.h>
 
-#include <optional>
+#include <span>
 
 namespace L4::Plugin::Wrapper
 {
@@ -10,6 +10,8 @@ namespace L4::Plugin::Wrapper
     class Stream
     {
     public:
+        Stream(Handle ClientHandle);
+
         StreamIdentity GetIdentity() const;
 
         void SetIdentity(const StreamIdentity& NewIdentity);

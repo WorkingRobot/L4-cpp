@@ -12,11 +12,11 @@ namespace L4::Plugin::Wrapper
     class IAuthSession
     {
     public:
-        IAuthSession(Handle ClientHandle);
+        IAuthSession();
 
         virtual ~IAuthSession() = default;
 
         virtual std::vector<AuthField> GetFields() = 0;
-        virtual void Submit(const std::vector<AuthFulfilledField>& Fields) = 0;
+        virtual AuthSubmitResponse Submit(const std::vector<AuthFulfilledField>& Fields) = 0;
     };
 }

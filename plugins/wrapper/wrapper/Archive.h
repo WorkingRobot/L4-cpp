@@ -14,6 +14,8 @@ namespace L4::Plugin::Wrapper
     class Archive
     {
     public:
+        Archive(Handle ClientHandle);
+
         ArchiveIdentity GetIdentity() const;
 
         void SetIdentity(const ArchiveIdentity& NewIdentity);

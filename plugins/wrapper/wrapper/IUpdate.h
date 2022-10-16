@@ -19,5 +19,13 @@ namespace L4::Plugin::Wrapper
         virtual ~IUpdate() = default;
 
         virtual std::unique_ptr<IUpdateSession> CreateSession(Handle ClientHandle, const AppIdentity& OldIdentity, AppIdentity& NewIdentity) = 0;
+
+    private:
+        friend class IPlugin;
+        bool CreateSessionInternal(Handle ClientHandle, const AppIdentity& OldIdentity, AppIdentity& NewIdentity);
+        bool CloseSessionInternal(Handle ClientHandle);
+        IUpdateSession* GetSessionInternal(Handle ClientHandle);
+
+        std::unordered_map<Handle, std::unique_ptr<IUpdateSession>> Sessions;
     };
 }
