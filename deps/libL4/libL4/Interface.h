@@ -8,4 +8,9 @@
 #define L4_EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
-L4_EXPORT bool Initialize(const libL4::ClientInterface* Interface, libL4::PluginInterface* OutInterface);
+namespace libL4
+{
+    using Initializer = void (*)(const libL4::ClientInterface* Interface, libL4::PluginInterface* OutInterface);
+}
+
+L4_EXPORT libL4::Initializer GetInitializer();
