@@ -27,11 +27,9 @@ namespace libL4::Marshal
     struct AuthFieldText
     {
         String Placeholder;
-        String VerifyRegex;
-        String VerifyErrorMessage;
     };
 
-    L4_MARSHAL_BETWEEN(AuthFieldText, Placeholder, VerifyRegex, VerifyErrorMessage)
+    L4_MARSHAL_BETWEEN(AuthFieldText, Placeholder)
 
     using AuthFieldPassword = AuthFieldText;
 
@@ -245,4 +243,12 @@ namespace libL4::Marshal
         }
         return Ret;
     }
+
+    struct AuthSubmitResponse
+    {
+        bool IsSuccessful;
+        String Message;
+    };
+
+    L4_MARSHAL_BETWEEN(AuthSubmitResponse, IsSuccessful, Message)
 }

@@ -24,8 +24,6 @@ namespace libL4
     struct AuthFieldText
     {
         String Placeholder;
-        String VerifyRegex;
-        String VerifyErrorMessage;
     };
 
     typedef AuthFieldText AuthFieldPassword;
@@ -93,6 +91,12 @@ namespace libL4
         };
     };
 
+    struct AuthSubmitResponse
+    {
+        bool IsSuccessful;
+        String Message;
+    };
+
     struct AuthOperations
     {
         void (*OnUserUpdated)();
@@ -108,6 +112,6 @@ namespace libL4
 
         void (*GetFields)(Handle Auth, AuthField Fields[16], uint32_t* FieldCount);
 
-        void (*Submit)(Handle Auth, const AuthFulfilledField Fields[16], uint32_t FieldCount);
+        void (*Submit)(Handle Auth, const AuthFulfilledField Fields[16], uint32_t FieldCount, AuthSubmitResponse* Response);
     };
 }
