@@ -23,6 +23,10 @@ function(L4_disable_stdlib)
     target_compile_options(${L4_CURRENT_PROJECT_SANITIZED_NAME} PRIVATE -nostdlib -fno-exceptions)
 endfunction()
 
+function(L4_use_pic)
+    set_target_properties(${L4_CURRENT_PROJECT_SANITIZED_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+endfunction()
+
 function(L4_set_default_properties)
     L4_set_cxx_standard()
     L4_force_pdbs()
