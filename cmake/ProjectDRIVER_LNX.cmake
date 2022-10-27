@@ -32,13 +32,15 @@ function(L4_define_project_internal)
         VERBATIM)
     add_custom_target(${L4_CURRENT_PROJECT_SANITIZED_NAME} ALL DEPENDS ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko)
 
-    if (DEFINED ENV{KBUILD_MOK_PATH})
-        L4_get_driver_sign_command(SIGN_CMD)
-        add_custom_command(TARGET ${L4_CURRENT_PROJECT_SANITIZED_NAME} POST_BUILD
-            COMMAND ${SIGN_CMD} ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Signing ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko"
-            VERBATIM)
+    if (L4_CURRENT_PROJECT_IS_SIGNED)
+        if (DEFINED ENV{KBUILD_MOK_PATH})
+            L4_get_driver_sign_command(SIGN_CMD)
+            add_custom_command(TARGET ${L4_CURRENT_PROJECT_SANITIZED_NAME} POST_BUILD
+                COMMAND ${SIGN_CMD} ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                COMMENT "Signing ${L4_CURRENT_PROJECT_SANITIZED_NAME}.ko"
+                VERBATIM)
+        endif()
     endif()
 
     add_library(${L4_CURRENT_PROJECT_SANITIZED_NAME}-dummy MODULE ${L4_CURRENT_PROJECT_SOURCES})
