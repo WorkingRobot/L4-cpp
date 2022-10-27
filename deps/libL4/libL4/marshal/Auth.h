@@ -27,9 +27,10 @@ namespace libL4::Marshal
     struct AuthFieldText
     {
         String Placeholder;
+        bool IsReadonly;
     };
 
-    L4_MARSHAL_BETWEEN(AuthFieldText, Placeholder)
+    L4_MARSHAL_BETWEEN(AuthFieldText, Placeholder, IsReadonly)
 
     using AuthFieldPassword = AuthFieldText;
 
@@ -50,7 +51,6 @@ namespace libL4::Marshal
     static libL4::AuthFieldRadio To(const AuthFieldRadio& In)
     {
         libL4::AuthFieldRadio Ret {
-            .EntryCount = uint8_t(In.Entries.size()),
             .DefaultEntryId = To(In.DefaultEntryId)
         };
         for (int i = 0; i < In.Entries.size(); ++i)
@@ -63,12 +63,17 @@ namespace libL4::Marshal
     static AuthFieldRadio To(const libL4::AuthFieldRadio& In)
     {
         AuthFieldRadio Ret {
-            .Entries = std::vector<AuthFieldRadioEntry>(In.EntryCount),
+            .Entries = std::vector<AuthFieldRadioEntry>(),
             .DefaultEntryId = To(In.DefaultEntryId)
         };
-        for (int i = 0; i < In.EntryCount; ++i)
+        for (int i = 0; i < 16; ++i)
         {
-            Ret.Entries[i] = To(In.Entries[i]);
+            AuthFieldRadioEntry Entry = To(In.Entries[i]);
+            if (Entry.Id.empty())
+            {
+                break;
+            }
+            Ret.Entries.emplace_back(std::move(Entry));
         }
         return Ret;
     }
@@ -82,14 +87,6 @@ namespace libL4::Marshal
 
     L4_MARSHAL_BETWEEN(AuthFieldCheckbox, IsCheckedByDefault)
 
-    struct AuthFieldSubmitButton
-    {
-        String Id;
-        String Name;
-    };
-
-    L4_MARSHAL_BETWEEN(AuthFieldSubmitButton, Id, Name)
-
     struct AuthFieldOpenUrlAction
     {
         String Url;
@@ -102,7 +99,7 @@ namespace libL4::Marshal
         String Id;
         String Name;
         AuthFieldType Type;
-        std::variant<AuthFieldText, AuthFieldRadio, AuthFieldCheckbox, AuthFieldSubmitButton, AuthFieldOpenUrlAction> Data;
+        std::variant<std::monostate, AuthFieldText, AuthFieldRadio, AuthFieldCheckbox, AuthFieldOpenUrlAction> Data;
     };
 
     static libL4::AuthField To(const AuthField& In)
@@ -114,6 +111,8 @@ namespace libL4::Marshal
         };
         switch (In.Type)
         {
+        case AuthFieldType::Label:
+            break;
         case AuthFieldType::Text:
             Ret.Text = To(std::get<AuthFieldText>(In.Data));
             break;
@@ -130,7 +129,6 @@ namespace libL4::Marshal
             Ret.Checkbox = To(std::get<AuthFieldCheckbox>(In.Data));
             break;
         case AuthFieldType::SubmitButton:
-            Ret.SubmitButton = To(std::get<AuthFieldSubmitButton>(In.Data));
             break;
         case AuthFieldType::OpenUrlAction:
             Ret.OpenUrlAction = To(std::get<AuthFieldOpenUrlAction>(In.Data));
@@ -148,6 +146,9 @@ namespace libL4::Marshal
         };
         switch (In.Type)
         {
+        case AuthFieldType::Label:
+            Ret.Data.emplace<std::monostate>();
+            break;
         case AuthFieldType::Text:
             Ret.Data.emplace<AuthFieldText>(To(In.Text));
             break;
@@ -164,7 +165,7 @@ namespace libL4::Marshal
             Ret.Data.emplace<AuthFieldCheckbox>(To(In.Checkbox));
             break;
         case AuthFieldType::SubmitButton:
-            Ret.Data.emplace<AuthFieldSubmitButton>(To(In.SubmitButton));
+            Ret.Data.emplace<std::monostate>();
             break;
         case AuthFieldType::OpenUrlAction:
             Ret.Data.emplace<AuthFieldOpenUrlAction>(To(In.OpenUrlAction));
@@ -177,7 +178,7 @@ namespace libL4::Marshal
     {
         String Id;
         AuthFieldType Type;
-        std::variant<String, bool> Data;
+        std::variant<std::monostate, String, bool> Data;
     };
 
     static libL4::AuthFulfilledField To(const AuthFulfilledField& In)
@@ -188,6 +189,8 @@ namespace libL4::Marshal
         };
         switch (In.Type)
         {
+        case AuthFieldType::Label:
+            break;
         case AuthFieldType::Text:
             Ret.Text = To(std::get<String>(In.Data));
             break;
@@ -220,6 +223,9 @@ namespace libL4::Marshal
         };
         switch (In.Type)
         {
+        case AuthFieldType::Label:
+            Ret.Data.emplace<std::monostate>();
+            break;
         case AuthFieldType::Text:
             Ret.Data.emplace<String>(To(In.Text));
             break;
@@ -239,6 +245,7 @@ namespace libL4::Marshal
             Ret.Data.emplace<bool>(In.SubmitButton);
             break;
         case AuthFieldType::OpenUrlAction:
+            Ret.Data.emplace<std::monostate>();
             break;
         }
         return Ret;

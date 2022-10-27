@@ -12,6 +12,7 @@ namespace libL4
 
     enum class AuthFieldType : uint8_t
     {
+        Label,
         Text,
         Password,
         Radio,
@@ -24,6 +25,7 @@ namespace libL4
     struct AuthFieldText
     {
         String Placeholder;
+        bool IsReadonly;
     };
 
     typedef AuthFieldText AuthFieldPassword;
@@ -37,7 +39,6 @@ namespace libL4
     struct AuthFieldRadio
     {
         AuthFieldRadioEntry Entries[16];
-        uint8_t EntryCount;
         String DefaultEntryId;
     };
 
@@ -46,12 +47,6 @@ namespace libL4
     struct AuthFieldCheckbox
     {
         bool IsCheckedByDefault;
-    };
-
-    struct AuthFieldSubmitButton
-    {
-        String Id;
-        String Name;
     };
 
     struct AuthFieldOpenUrlAction
@@ -71,7 +66,6 @@ namespace libL4
             AuthFieldRadio Radio;
             AuthFieldDropdown Dropdown;
             AuthFieldCheckbox Checkbox;
-            AuthFieldSubmitButton SubmitButton;
             AuthFieldOpenUrlAction OpenUrlAction;
         };
     };
