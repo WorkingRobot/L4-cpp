@@ -5,6 +5,7 @@
     "dependencies": [
         "rapidjson",
         "cpr",
+        "openssl",
         {
             "name": "libbacktrace",
             "platform": "linux"

@@ -51,3 +51,7 @@ endfunction()
 function(L4_dependency_date)
     L4_add_dependency_findpkg(date CONFIG LIBS date::date date::date-tz)
 endfunction()
+
+function(L4_dependency_OpenSSL)
+    L4_add_dependency_findpkg(OpenSSL LIBS OpenSSL::Crypto)
+endfunction()
