@@ -12,7 +12,7 @@ namespace L4::Plugin::Wrapper
     class IAuthSession
     {
     public:
-        IAuthSession();
+        IAuthSession() = default;
 
         virtual ~IAuthSession() = default;
 

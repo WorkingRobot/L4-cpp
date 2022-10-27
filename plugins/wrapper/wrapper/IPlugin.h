@@ -23,8 +23,10 @@ namespace L4::Plugin::Wrapper
         virtual PluginIdentity GetIdentity() const = 0;
 
     private:
+        friend class Archive;
+        friend class Stream;
         friend class IAuth;
-        friend class IUpdate;
+        friend class IUpdateSession;
 
         struct RawOps
         {

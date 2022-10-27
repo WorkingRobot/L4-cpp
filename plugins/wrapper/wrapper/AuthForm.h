@@ -15,6 +15,13 @@ namespace L4::Plugin::Wrapper
         struct FieldTypeData;
 
         template <>
+        struct FieldTypeData<Wrapper::AuthFieldType::Label>
+        {
+            using Type = std::monostate;
+            using FulfilledType = std::monostate;
+        };
+
+        template <>
         struct FieldTypeData<Wrapper::AuthFieldType::Text>
         {
             using Type = Wrapper::AuthFieldText;
@@ -52,7 +59,7 @@ namespace L4::Plugin::Wrapper
         template <>
         struct FieldTypeData<Wrapper::AuthFieldType::SubmitButton>
         {
-            using Type = Wrapper::AuthFieldSubmitButton;
+            using Type = std::monostate;
             using FulfilledType = bool;
         };
 
@@ -60,7 +67,7 @@ namespace L4::Plugin::Wrapper
         struct FieldTypeData<Wrapper::AuthFieldType::OpenUrlAction>
         {
             using Type = Wrapper::AuthFieldOpenUrlAction;
-            using FulfilledType = void;
+            using FulfilledType = std::monostate;
         };
 
         template <Wrapper::AuthFieldType Type>
@@ -86,9 +93,40 @@ namespace L4::Plugin::Wrapper
             });
         }
 
-        const std::vector<Wrapper::AuthField>& Build() const;
+        const std::vector<Wrapper::AuthField>& Build() const
+        {
+            return Fields;
+        }
 
     private:
         std::vector<Wrapper::AuthField> Fields;
+    };
+
+    class AuthFulfilledForm
+    {
+    public:
+        AuthFulfilledForm(const std::vector<Wrapper::AuthFulfilledField>& Fields) :
+            Fields(Fields)
+        {
+        }
+
+        template <Wrapper::AuthFieldType Type>
+        const auto& Get(const std::u8string& Id) const
+        {
+            auto FieldItr = std::ranges::find(Fields, Id, &Wrapper::AuthFulfilledField::Id);
+            if (FieldItr == Fields.end())
+            {
+                throw std::invalid_argument("No such id exists");
+            }
+            const auto& Field = *FieldItr;
+            if (Field.Type != Type)
+            {
+                throw std::invalid_argument("Field has invalid type");
+            }
+            return std::get<Detail::FulfilledFieldT<Type>>(Field.Data);
+        }
+
+    private:
+        std::vector<Wrapper::AuthFulfilledField> Fields;
     };
 }

@@ -14,7 +14,7 @@ namespace L4::Plugin::Wrapper
     class IUpdate
     {
     public:
-        IUpdate();
+        IUpdate() = default;
 
         virtual ~IUpdate() = default;
 

@@ -14,7 +14,7 @@ namespace L4::Plugin::Wrapper
     class IAuth
     {
     public:
-        IAuth();
+        IAuth() = default;
 
         virtual ~IAuth() = default;
 

@@ -26,9 +26,13 @@ namespace L4::Plugin::Wrapper
 
         uint32_t GetStreamIdxFromId(const std::u8string& Id) const;
 
-        Stream OpenStreamRead(uint32_t StreamIdx);
+        const Stream OpenStreamRead(uint32_t StreamIdx) const;
 
         Stream OpenStreamWrite(uint32_t StreamIdx);
+
+        const Stream OpenStreamRead(const std::u8string& Id) const;
+
+        Stream OpenStreamWrite(const std::u8string& Id);
 
     private:
         Handle ClientHandle;

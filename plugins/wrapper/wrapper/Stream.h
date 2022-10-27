@@ -1,3 +1,5 @@
+#pragma once
+
 #include <libL4/marshal/Marshal.h>
 #include <libL4/Structs.h>
 

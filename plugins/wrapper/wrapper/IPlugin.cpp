@@ -2,6 +2,8 @@
 
 namespace L4::Plugin::Wrapper
 {
+    IPlugin* IPlugin::Instance = nullptr;
+
     IPlugin::IPlugin(const libL4::ClientInterface* ClientInterface, std::unique_ptr<IAuth> AuthInterface, std::unique_ptr<IUpdate> UpdateInterface) :
         Client(ClientInterface),
         Auth(std::move(AuthInterface)),

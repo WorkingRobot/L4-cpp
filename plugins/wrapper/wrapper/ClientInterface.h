@@ -22,6 +22,11 @@ namespace L4::Plugin::Wrapper
         const std::filesystem::path& GetConfigDirectory() const;
 
     private:
+        friend class Archive;
+        friend class Stream;
+        friend class IAuth;
+        friend class IUpdateSession;
+
         libL4::ClientInterface Interface;
     };
 }
