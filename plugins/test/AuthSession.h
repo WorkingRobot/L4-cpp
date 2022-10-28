@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Auth.h"
+
 #include <wrapper/IAuthSession.h>
 
 namespace L4::Plugin::Test
@@ -7,7 +9,7 @@ namespace L4::Plugin::Test
     class AuthSession final : public Wrapper::IAuthSession
     {
     public:
-        AuthSession();
+        AuthSession(Auth& AuthModule);
 
         std::vector<Wrapper::AuthField> GetFields() final;
         Wrapper::AuthSubmitResponse Submit(const std::vector<Wrapper::AuthFulfilledField>& Fields) final;
@@ -17,12 +19,23 @@ namespace L4::Plugin::Test
         {
             Initial,
             SignUp,
+            SignUpCode,
             Login,
-            WebLogin,
-            WebLoginCode,
+            OAuth,
+            Import,
             Done
         };
 
         State CurrentState;
+
+        struct SignUpData
+        {
+            std::u8string Username;
+            std::u8string Email;
+            std::u8string Password;
+        };
+
+        Auth& AuthModule;
+        std::variant<std::monostate, SignUpData> Data;
     };
 }
