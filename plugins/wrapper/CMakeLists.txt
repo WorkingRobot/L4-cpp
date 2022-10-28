@@ -1,4 +1,4 @@
-L4_project(L4::source::wrapper STATIC_LIB IS_SIMPLE)
+L4_project(L4::plugin::wrapper STATIC_LIB IS_SIMPLE)
 
 L4_link_libraries(PUBLIC libL4)
 

@@ -62,13 +62,13 @@ namespace libL4
 
     struct UpdateCallbacks
     {
-        // L4 passes a new Update object, the source grabs the new current version and attaches some context to keep track of it
+        // L4 passes a new Update object, the plugin grabs the new current version and attaches some context to keep track of it
         void (*Open)(Handle Update, const AppIdentity* OldIdentity, AppIdentity* NewIdentity);
 
-        // Stop the update if started, close the Update object, it won't be referenced again (the source should dispose of its internal context data and its archive if it's not nullptr)
+        // Stop the update if started, close the Update object, it won't be referenced again (the plugin should dispose of its internal context data and its archive if it's not nullptr)
         void (*Close)(Handle Update);
 
-        // Begin an actual update sequence, archive object is valid, source can attach its context to it
+        // Begin an actual update sequence, archive object is valid, plugin can attach its context to it
         void (*Start)(Handle Update, Handle Archive, uint32_t ProgressUpdateRateMs);
 
         // Pause the update sequence. Can call UpdateResume to resume the update
