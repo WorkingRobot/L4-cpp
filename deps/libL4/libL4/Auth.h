@@ -93,7 +93,7 @@ namespace libL4
 
     struct AuthOperations
     {
-        void (*OnUserUpdated)();
+        void (*OnUserUpdated)(libL4::Handle Plugin);
     };
 
     struct AuthCallbacks

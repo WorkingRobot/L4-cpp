@@ -1,0 +1,23 @@
+On init:
+C2P trade interfaces
+C2P Auth.GetUserIdentity
+(Client knows what apps it has on its own)
+
+On version check:
+C2P Update.Open
+Client figures out if its up to date or not
+
+On update:
+C2P If app does not have a valid update attached, Update.Open
+C2P Update.Start
+P2C Update.OnStart, OnProgress, OnPieceUpdate
+C2P Update.Pause, Resume
+C2P Update.OnFinalize (cannot be paused when finalizing), OnComplete
+
+On sign in, if Auth.GetUser is false:
+C2P Auth.Open
+C2P Auth.GetFields, Submit until it returns true, until GetFields returns 0 for FieldCount
+C2P Auth.Close
+
+On launch:
+C2P (TODO)

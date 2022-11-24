@@ -15,6 +15,7 @@ static int __init my_block_init(void)
         return -EBUSY;
     }
     //...
+    return 0;
 }
 
 static void __exit my_block_exit(void)

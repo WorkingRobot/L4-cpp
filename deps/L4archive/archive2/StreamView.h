@@ -314,7 +314,7 @@ namespace L4
             return GetSV(GetHeader().Name);
         }
 
-        std::span<const std::byte, 184> GetContext() const noexcept
+        std::span<const std::byte, 128> GetContext() const noexcept
         {
             return GetHeader().Context;
         }

@@ -1,0 +1,53 @@
+File:
+- Header
+- Stream Headers
+= (Align to sector)
+- Freelist
+- Stream Runlists
+= (Align to sector)
+- File Data
+
+Header:
+- u32 Magic
+- u32 Version
+- u32 SectorSize
+- u32 SequenceNum
+- u32 StreamCount
+- u32 MaxStreamCount
+- u32 PluginVerNum
+- u32 AppVerNum
+- ch8 PluginId[32]
+- ch8 AppId[32]
+- ch8 PluginName[32]
+- ch8 AppName[32]
+- ch8 PluginVer[32]
+- ch8 AppVer[32]
+- ch8 Environment[32]
+
+Stream Header:
+- ch8 Id[32]
+- u32 Version
+- u32 ElementSize
+- u8  Reserved[88]
+- u8  Context[128]
+
+Freelist:
+- u32 EntryCount
+- u32 TotalSectorCount
+- Entry Entries[4095]
+
+Entry (Freelist):
+- u32 SectorCount
+- u32 SectorOffset
+
+Stream Runlist
+- u32 RunCount
+- u8  Reserved[4]
+- u64 Size
+- Run Runs[1023]
+
+Run (Stream Runlist):
+- u32 StreamSectorOffset
+- u32 SectorOffset
+- u32 SectorCount
+- u8  Reserved[4]

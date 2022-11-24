@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Utils.h"
+#include <type_traits>
 
-namespace L4::Archive
+namespace L4
 {
     struct Freelist
     {
@@ -14,9 +14,9 @@ namespace L4::Archive
 
         uint32_t EntryCount;
         uint32_t TotalSectorCount;
-        Entry Entries[4095];
+        Entry Entries[511];
     };
 
-    static_assert(sizeof(Freelist::Entry) == 8);
-    static_assert(sizeof(Freelist) == 32768);
+    static_assert(sizeof(Freelist) == 4096);
+    static_assert(std::has_unique_object_representations_v<Freelist>);
 }

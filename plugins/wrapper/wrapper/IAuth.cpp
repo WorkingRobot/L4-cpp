@@ -6,7 +6,7 @@ namespace L4::Plugin::Wrapper
 {
     void IAuth::OnUserUpdated()
     {
-        IPlugin::Instance->Client.Interface.Auth.OnUserUpdated();
+        IPlugin::Instance->Client.Interface.Auth.OnUserUpdated(IPlugin::Instance->Client.Interface.PluginHandle);
     }
 
     bool IAuth::CreateSessionInternal(Handle ClientHandle)
