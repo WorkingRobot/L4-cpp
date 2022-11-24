@@ -6,7 +6,7 @@
 #include <ntdll.h>
 #include <Psapi.h>
 
-namespace L4
+namespace L4::Mmio
 {
     static constexpr SIZE_T ViewSizeIncrement = 1ull << 37; // 128 gb
 

@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-namespace L4
+namespace L4::Mmio
 {
     template <bool Writable>
     class MmioFileBase

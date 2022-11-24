@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace L4
+namespace L4::Mmio
 {
     static constexpr off_t ViewSizeIncrement = 1ull << 37; // 128 gb
 

@@ -1,1 +1,1 @@
-L4_project(libL4 HEADER_LIB IS_SIMPLE)
+s_project(libL4 HEADER_LIB IS_SIMPLE)

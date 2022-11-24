@@ -1,1 +1,1 @@
-L4_project(ntdll IMPORT_LIB IMPORTED_LOCATION ntdll64.lib PLATFORMS win)
+s_project(ntdll IMPORT_LIB IMPORTED_LOCATION ntdll64.lib PLATFORMS win)

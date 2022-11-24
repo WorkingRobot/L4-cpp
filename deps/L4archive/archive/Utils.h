@@ -5,7 +5,7 @@
 
 namespace L4::Archive
 {
-    static constexpr uint32_t ExpectedMagic = 0xCAE791A5;
+    static constexpr uint32_t ExpectedMagic = 0x6D69541A;
     static constexpr uint32_t DefaultSectorSize = 1 << 16;
 
     enum class Version : uint32_t
@@ -14,6 +14,7 @@ namespace L4::Archive
         Initial,
         Environment,
         UseIds,
+        NewMagic,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1

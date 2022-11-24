@@ -1,16 +1,23 @@
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0091 NEW)
-include(cmake/L4.cmake)
+
+include(FetchContent)
+FetchContent_Declare(
+  smake
+  GIT_REPOSITORY https://github.com/WorkingRobot/smake.git
+  GIT_TAG        v2
+)
+FetchContent_MakeAvailable(smake)
+include(${smake_SOURCE_DIR}/smake.cmake)
 
 ## Project Definition ##
 
-project(L4
-    VERSION 0.1.0
-    DESCRIPTION "The world's fastest game updater"
+s_get_version_info(DEFAULT_BRANCH "main")
+project(${PROJECT_NAME}
+    VERSION ${PROJECT_VERSION}
+    DESCRIPTION ${PROJECT_DESCRIPTION}
     HOMEPAGE_URL "https://epic.gl"
-    LANGUAGES CXX C)
-
-L4_retrieve_version_info()
+    LANGUAGES CXX)
 
 message(STATUS "Compiling ${PROJECT_NAME} ${PROJECT_VERSION_LONG} for ${CMAKE_SYSTEM_NAME} (${VCPKG_TARGET_TRIPLET})")
 
@@ -22,17 +29,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 ## Add projects ##
 
-L4_add_subdirectories_in(deps)
-L4_add_subdirectories_in(plugins)
-L4_add_subdirectories_in(driver)
+s_add_subdirectories_in(deps)
+s_add_subdirectories_in(plugins)
+# s_add_subdirectories_in(driver)
 add_subdirectory(src)
-
-## Define extra targets ##
-
-get_property(ALL_SOURCES GLOBAL PROPERTY ALL_SOURCES)
-add_custom_target(
-    format
-    COMMAND clang-format -style=file -i ${ALL_SOURCES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Formatting all source files"
-)
