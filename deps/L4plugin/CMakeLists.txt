@@ -1,4 +1,4 @@
-s_project(L4::plugin::manager STATIC_LIB)
+s_project(L4::plugin::manager STATIC_LIB IS_DISABLED)
 
 s_add_dir_recursive(plugin)
 s_end_sources()
