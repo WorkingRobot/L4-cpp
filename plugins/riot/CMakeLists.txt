@@ -1,4 +1,4 @@
-s_project(L4::source::riot MODULE_LIB IS_SIMPLE PLATFORMS win)
+s_project(L4::source::riot MODULE_LIB IS_SIMPLE PLATFORMS win IS_DISABLED)
 
 s_link_libraries(PRIVATE L4::source)
 s_compile_definitions(PRIVATE L4_SOURCE_BUILDING_SOURCE)
