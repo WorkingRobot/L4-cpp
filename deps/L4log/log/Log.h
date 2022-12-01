@@ -92,16 +92,16 @@ namespace L4
         };
 
         template <class ContextT, class... ArgTs>
-#if defined(CONFIG_VERSION_PLATFORM_lnx)
+#if 1
         struct FormatStringFor<fmt::format_arg_store<ContextT, ArgTs...>>
         {
             using Type = fmt::format_string<std::type_identity_t<ArgTs>...>;
             static constexpr size_t ArgCount = sizeof...(ArgTs);
         };
-#elif defined(CONFIG_VERSION_PLATFORM_win)
+#else
         struct FormatStringFor<std::_Format_arg_store<ContextT, ArgTs...>>
         {
-            using Type = std::_Fmt_string<std::type_identity_t<ArgTs>...>;
+            using Type = std::format_string<std::type_identity_t<ArgTs>...>;
             static constexpr size_t ArgCount = sizeof...(ArgTs);
         };
 #endif

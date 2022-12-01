@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 // Prevents Windows.h from being included
 #if defined(_WIN32) && !defined(_WINSOCKAPI_)
 #define _WINSOCKAPI_

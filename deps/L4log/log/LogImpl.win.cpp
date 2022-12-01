@@ -68,7 +68,7 @@ namespace L4
         {
             auto FilePath = GetLogFilePath();
             FileHandle = CreateFile2(FilePath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, OPEN_ALWAYS, NULL);
-            Ensure<LogLevel::Error>(FileHandle != INVALID_HANDLE_VALUE, "Could not open {} for logging", [&] { return std::make_format_args(FilePath); });
+            Ensure<LogLevel::Error>(FileHandle != INVALID_HANDLE_VALUE, "Could not open {} for logging", [&] { return FMT::make_format_args(FilePath); });
         }
 
         ~LoggerFile()

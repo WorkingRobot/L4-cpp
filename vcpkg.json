@@ -6,16 +6,13 @@
         "rapidjson",
         "cpr",
         "openssl",
+        "fmt",
         {
             "name": "libbacktrace",
             "platform": "linux"
         },
         {
             "name": "breakpad",
-            "platform": "linux"
-        },
-        {
-            "name": "fmt",
             "platform": "linux"
         },
         {

@@ -15,7 +15,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
                 "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_LINKER": "lld-link"
+                "CMAKE_LINKER": "link"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {

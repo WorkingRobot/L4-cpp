@@ -5,6 +5,7 @@
 #include "Macros.h"
 
 #include <string>
+#include <stdexcept>
 
 namespace libL4::Marshal
 {
