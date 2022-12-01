@@ -8,6 +8,7 @@ namespace libL4
     {
         String Id;
         String Name;
+        String Description;
     };
 
     enum class AuthFieldType : uint8_t

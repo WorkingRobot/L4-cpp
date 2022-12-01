@@ -13,9 +13,10 @@ namespace libL4::Marshal
     {
         String Id;
         String Name;
+        String Description;
     };
 
-    L4_MARSHAL_BETWEEN(UserIdentity, Id, Name)
+    L4_MARSHAL_BETWEEN(UserIdentity, Id, Name, Description)
 
     using AuthFieldType = libL4::AuthFieldType;
 
