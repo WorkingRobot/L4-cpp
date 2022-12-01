@@ -53,6 +53,4 @@ LambdaBodyIndentation: OuterScope
 NamespaceIndentation: All
 SortIncludes: CaseInsensitive
 RequiresClausePosition: WithPreceding
-MacroBlockBegin: '^JSON_DEFINE$'
-MacroBlockEnd: '^JSON_DEFINE_END$'
 ...

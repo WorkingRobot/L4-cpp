@@ -3,11 +3,11 @@
 #include "Json.h"
 
 #ifndef JSON_ERROR_PARSE
-#define JSON_ERROR_PARSE return false;
+#define JSON_ERROR_PARSE
 #endif
 
 #ifndef JSON_ERROR_NOTFOUND
-#define JSON_ERROR_NOTFOUND return false;
+#define JSON_ERROR_NOTFOUND
 #endif
 
 #ifndef JSON_STRING_PREFIX
@@ -21,70 +21,112 @@
 #define JSON_STRING_TYPE ::std::JSON_STRING(string)
 
 using JsonString = JSON_STRING_TYPE;
+using __JsonItr = ::L4::Web::Json::Value::ConstMemberIterator;
+template <typename T>
+using __JsonParser = ::L4::Web::Json::Parser<T>;
 
-#define JSON_DEFINE                                \
-    bool Parse(const ::L4::Web::Json::Value& Json) \
-    {                                              \
-        ::L4::Web::Json::Value::ConstMemberIterator Itr;
+class __JsonReturn
+{
+    bool Value;
 
-#define JSON_DEFINE_END \
-    return true;        \
+public:
+    __JsonReturn() :
+        Value(true)
+    {
     }
 
-#define JSON_BASE(BaseClass)     \
-    if (!BaseClass::Parse(Json)) \
-    {                            \
-        JSON_ERROR_PARSE;        \
+    __JsonReturn(bool Value) :
+        Value(Value)
+    {
     }
 
-#define JSON_ITEM(JsonName, TargetVariable)                                                \
-    Itr = Json.FindMember(JSON_STRING(JsonName));                                          \
-    if (Itr == Json.MemberEnd())                                                           \
-    {                                                                                      \
-        JSON_ERROR_NOTFOUND;                                                               \
-    }                                                                                      \
-    if (!::L4::Web::Json::Parser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
-    {                                                                                      \
-        JSON_ERROR_PARSE;                                                                  \
+    operator bool() const noexcept
+    {
+        return Value;
     }
+};
 
-#define JSON_ITEM_NULL(JsonName, TargetVariable)                                                                   \
-    Itr = Json.FindMember(JSON_STRING(JsonName));                                                                  \
-    if (Itr == Json.MemberEnd())                                                                                   \
-    {                                                                                                              \
-        JSON_ERROR_NOTFOUND;                                                                                       \
-    }                                                                                                              \
-    if (!Itr->value.IsNull() && !::L4::Web::Json::Parser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
-    {                                                                                                              \
-        JSON_ERROR_PARSE;                                                                                          \
-    }
+#define JSON_FORCE_SEMI static_assert(true, "")
 
-#define JSON_ITEM_OPT(JsonName, TargetVariable)                                                \
-    Itr = Json.FindMember(JSON_STRING(JsonName));                                              \
-    if (Itr != Json.MemberEnd())                                                               \
-    {                                                                                          \
-        if (!::L4::Web::Json::Parser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
-        {                                                                                      \
-            JSON_ERROR_PARSE;                                                                  \
-        }                                                                                      \
-    }
+#define JSON_DEFINE \
+    __JsonReturn Parse(const ::L4::Web::Json::Value& Json)
 
-#define JSON_ITEM_DEF(JsonName, TargetVariable, Default)                                       \
-    Itr = Json.FindMember(JSON_STRING(JsonName));                                              \
-    if (Itr != Json.MemberEnd())                                                               \
-    {                                                                                          \
-        if (!::L4::Web::Json::Parser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
-        {                                                                                      \
-            (TargetVariable) = Default;                                                        \
-        }                                                                                      \
-    }
+#define JSON_BASE(BaseClass)         \
+    {                                \
+        if (!BaseClass::Parse(Json)) \
+        {                            \
+            JSON_ERROR_PARSE;        \
+            return false;            \
+        }                            \
+    }                                \
+    JSON_FORCE_SEMI
 
-#define JSON_ITEM_ROOT(TargetVariable)                                                   \
-    bool Parse(const ::L4::Web::Json::Value& Json)                                       \
-    {                                                                                    \
-        if (!::L4::Web::Json::Parser<decltype(TargetVariable)> {}(Json, TargetVariable)) \
-        {                                                                                \
-            JSON_ERROR_PARSE;                                                            \
-        }                                                                                \
-        return true;                                                                     \
+#define JSON_ITEM(JsonName, TargetVariable)                                         \
+    {                                                                               \
+        __JsonItr Itr = Json.FindMember(JSON_STRING(JsonName));                     \
+        if (Itr == Json.MemberEnd())                                                \
+        {                                                                           \
+            JSON_ERROR_NOTFOUND;                                                    \
+            return false;                                                           \
+        }                                                                           \
+        if (!__JsonParser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
+        {                                                                           \
+            JSON_ERROR_PARSE;                                                       \
+            return false;                                                           \
+        }                                                                           \
+    }                                                                               \
+    JSON_FORCE_SEMI
+
+#define JSON_ITEM_NULL(JsonName, TargetVariable)                                                            \
+    {                                                                                                       \
+        __JsonItr Itr = Json.FindMember(JSON_STRING(JsonName));                                             \
+        if (Itr == Json.MemberEnd())                                                                        \
+        {                                                                                                   \
+            JSON_ERROR_NOTFOUND;                                                                            \
+            return false;                                                                                   \
+        }                                                                                                   \
+        if (!Itr->value.IsNull() && !__JsonParser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
+        {                                                                                                   \
+            JSON_ERROR_PARSE;                                                                               \
+            return false;                                                                                   \
+        }                                                                                                   \
+    }                                                                                                       \
+    JSON_FORCE_SEMI
+
+#define JSON_ITEM_OPT(JsonName, TargetVariable)                                         \
+    {                                                                                   \
+        __JsonItr Itr = Json.FindMember(JSON_STRING(JsonName));                         \
+        if (Itr != Json.MemberEnd())                                                    \
+        {                                                                               \
+            if (!__JsonParser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
+            {                                                                           \
+                JSON_ERROR_PARSE;                                                       \
+                return false;                                                           \
+            }                                                                           \
+        }                                                                               \
+    }                                                                                   \
+    JSON_FORCE_SEMI
+
+#define JSON_ITEM_DEF(JsonName, TargetVariable, Default)                                \
+    {                                                                                   \
+        __JsonItr Itr = Json.FindMember(JSON_STRING(JsonName));                         \
+        if (Itr != Json.MemberEnd())                                                    \
+        {                                                                               \
+            if (!__JsonParser<decltype(TargetVariable)> {}(Itr->value, TargetVariable)) \
+            {                                                                           \
+                (TargetVariable) = Default;                                             \
+            }                                                                           \
+        }                                                                               \
+    }                                                                                   \
+    JSON_FORCE_SEMI
+
+#define JSON_ITEM_ROOT(TargetVariable)                                        \
+    bool Parse(const ::L4::Web::Json::Value& Json)                            \
+    {                                                                         \
+        if (!__JsonParser<decltype(TargetVariable)> {}(Json, TargetVariable)) \
+        {                                                                     \
+            JSON_ERROR_PARSE;                                                 \
+            return false;                                                     \
+        }                                                                     \
+        return true;                                                          \
     }

@@ -67,7 +67,7 @@ namespace L4::Web::Json
         template <Encoding Enc>
         using JsonCharT = typename JsonTraits<Enc>::CharT;
 
-        template<class Encoding>
+        template <class Encoding>
         struct JsonEncoding
         {
         };
@@ -126,6 +126,15 @@ namespace L4::Web::Json
     template <typename T>
     struct Parser
     {
+
+    };
+
+    template <class T>
+    concept ManuallyParsable = requires(T& Obj, const Value& Json) { { Obj.Parse(Json) } -> std::convertible_to<bool>; };
+
+    template <ManuallyParsable T>
+    struct Parser<T>
+    {
         template <typename Encoding>
         bool operator()(const rapidjson::GenericValue<Encoding>& Json, T& Obj) const
         {
@@ -180,7 +189,7 @@ namespace L4::Web::Json
         }
     };
 
-    template<>
+    template <>
     struct Parser<uint32_t>
     {
         template <typename Encoding>
