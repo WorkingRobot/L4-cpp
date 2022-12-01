@@ -5,6 +5,7 @@
 #include <libL4/marshal/Marshal.h>
 #include <libL4/Structs.h>
 
+#include <memory>
 #include <unordered_map>
 
 namespace L4::Plugin::Wrapper

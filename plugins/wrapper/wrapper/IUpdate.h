@@ -6,6 +6,7 @@
 #include <libL4/Structs.h>
 
 #include <optional>
+#include <unordered_map>
 
 namespace L4::Plugin::Wrapper
 {
