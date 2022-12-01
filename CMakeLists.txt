@@ -5,7 +5,7 @@ include(FetchContent)
 FetchContent_Declare(
   smake
   GIT_REPOSITORY https://github.com/WorkingRobot/smake.git
-  GIT_TAG        v2
+  GIT_TAG        a724e5ca8595f05ee076d0ca6ecd58e8ec746e74
 )
 FetchContent_MakeAvailable(smake)
 include(${smake_SOURCE_DIR}/smake.cmake)
