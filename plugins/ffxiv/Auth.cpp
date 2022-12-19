@@ -9,7 +9,8 @@ namespace L4::Plugin::FFXIV
 
     std::unique_ptr<Wrapper::IAuthSession> Auth::CreateSession()
     {
-        return std::make_unique<AuthSession>(*this);
+        return nullptr;
+        //std::make_unique<AuthSession>(*this);
     }
 
     void Auth::SetIdentity(const Wrapper::UserIdentity& User)

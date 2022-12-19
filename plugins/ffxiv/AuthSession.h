@@ -6,6 +6,7 @@
 
 namespace L4::Plugin::FFXIV
 {
+    // Based off of https://github.com/goatcorp/FFXIVQuickLauncher/blob/d238e2473a53151274729f8ae85704f8cbfbefa4/src/XIVLauncher/Windows/ViewModel/MainWindowViewModel.cs#L162
     class AuthSession final : public Wrapper::IAuthSession
     {
     public:
@@ -15,27 +16,23 @@ namespace L4::Plugin::FFXIV
         Wrapper::AuthSubmitResponse Submit(const std::vector<Wrapper::AuthFulfilledField>& Fields) final;
 
     private:
+        Wrapper::AuthSubmitResponse SendToServer();
+
         enum class State : uint8_t
         {
-            Initial,
-            SignUp,
-            SignUpCode,
-            Login,
-            OAuth,
-            Import,
+            UserPass,
+            OTP,
             Done
         };
 
         State CurrentState;
 
-        struct SignUpData
-        {
-            std::u8string Username;
-            std::u8string Email;
-            std::u8string Password;
-        };
+        std::u8string Username;
+        std::u8string Password;
+        bool UseOTP;
+        bool UseSteam;
+        std::u8string OTP;
 
         Auth& AuthModule;
-        std::variant<std::monostate, SignUpData> Data;
     };
 }
