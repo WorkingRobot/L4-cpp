@@ -1,13 +1,13 @@
 #pragma once
 
-#include "compat/expected.h"
-#include "cpr.h"
-#include "format/Format.h"
-#include "Json.h"
-
-#include <string>
+#include "Response.h"
 
 namespace L4::Web::Http
 {
-
+    class Client
+    {
+    protected:
+        template <class T>
+        using Response = Response<T>;
+    };
 }

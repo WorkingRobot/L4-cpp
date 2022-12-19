@@ -3,6 +3,7 @@
 #include <rapidjson/document.h>
 
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -106,6 +107,20 @@ namespace L4::Web::Json
         static constexpr Encoding JsonEncodingEnumT = JsonEncoding<EncodingT>::Encoding;
     }
 
+    class ParseException : public std::runtime_error
+    {
+    public:
+        explicit ParseException(const std::string& Message) :
+            std::runtime_error(Message.c_str())
+        {
+        }
+
+        explicit ParseException(const char* Message) :
+            std::runtime_error(Message)
+        {
+        }
+    };
+
     template <Encoding Enc = Encoding::UTF8>
     using DocumentBase = rapidjson::GenericDocument<Detail::JsonEncodingT<Enc>>;
 
@@ -126,17 +141,19 @@ namespace L4::Web::Json
     template <typename T>
     struct Parser
     {
-
     };
 
+    template<class T>
+    concept Parsable = requires(T& Obj, const Value& Json) { { Parser<T> {}(Json, Obj) } -> std::convertible_to<void>; };
+
     template <class T>
-    concept ManuallyParsable = requires(T& Obj, const Value& Json) { { Obj.Parse(Json) } -> std::convertible_to<bool>; };
+    concept ManuallyParsable = requires(T& Obj, const Value& Json) { { Obj.Parse(Json) } -> std::convertible_to<void>; };
 
     template <ManuallyParsable T>
     struct Parser<T>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, T& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, T& Obj) const
         {
             return Obj.Parse(Json);
         }
@@ -146,16 +163,15 @@ namespace L4::Web::Json
     struct Parser<std::basic_string<CharT>>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, std::basic_string<CharT>& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, std::basic_string<CharT>& Obj) const
         {
             static_assert(std::is_same_v<CharT, typename Encoding::Ch>, "String character types must match");
 
-            if (Json.IsString())
+            if (!Json.IsString()) [[unlikely]]
             {
-                Obj.assign(Json.GetString(), Json.GetStringLength());
-                return true;
+                throw ParseException("Value is not a string");
             }
-            return false;
+            Obj.assign(Json.GetString(), Json.GetStringLength());
         }
     };
 
@@ -163,14 +179,20 @@ namespace L4::Web::Json
     struct Parser<bool>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, bool& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, bool& Obj) const
         {
             if (Json.IsBool())
             {
                 Obj = Json.GetBool();
-                return true;
             }
-            return false;
+            else if (Json.IsInt())
+            {
+                Obj = Json.GetInt();
+            }
+            else [[unlikely]]
+            {
+                throw ParseException("Value is not a bool");
+            }
         }
     };
 
@@ -178,14 +200,13 @@ namespace L4::Web::Json
     struct Parser<int32_t>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, int32_t& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, int32_t& Obj) const
         {
-            if (Json.IsInt())
+            if (!Json.IsInt()) [[unlikely]]
             {
-                Obj = Json.GetInt();
-                return true;
+                throw ParseException("Value is not an int32");
             }
-            return false;
+            Obj = Json.GetInt();
         }
     };
 
@@ -193,14 +214,13 @@ namespace L4::Web::Json
     struct Parser<uint32_t>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, uint32_t& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, uint32_t& Obj) const
         {
-            if (Json.IsUint())
+            if (!Json.IsUint()) [[unlikely]]
             {
-                Obj = Json.GetUint();
-                return true;
+                throw ParseException("Value is not a uint32");
             }
-            return false;
+            Obj = Json.GetUint();
         }
     };
 
@@ -208,14 +228,13 @@ namespace L4::Web::Json
     struct Parser<int64_t>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, int64_t& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, int64_t& Obj) const
         {
-            if (Json.IsInt64())
+            if (!Json.IsInt64()) [[unlikely]]
             {
-                Obj = Json.GetInt64();
-                return true;
+                throw ParseException("Value is not an int64");
             }
-            return false;
+            Obj = Json.GetInt64();
         }
     };
 
@@ -223,14 +242,13 @@ namespace L4::Web::Json
     struct Parser<uint64_t>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, uint64_t& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, uint64_t& Obj) const
         {
-            if (Json.IsUInt64())
+            if (!Json.IsUInt64()) [[unlikely]]
             {
-                Obj = Json.GetUInt64();
-                return true;
+                throw ParseException("Value is not a uint64");
             }
-            return false;
+            Obj = Json.GetUInt64();
         }
     };
 
@@ -238,14 +256,13 @@ namespace L4::Web::Json
     struct Parser<float>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, float& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, float& Obj) const
         {
-            if (Json.IsFloat())
+            if (!Json.IsFloat()) [[unlikely]]
             {
-                Obj = Json.GetFloat();
-                return true;
+                throw ParseException("Value is not a float");
             }
-            return false;
+            Obj = Json.GetFloat();
         }
     };
 
@@ -253,24 +270,22 @@ namespace L4::Web::Json
     struct Parser<double>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, double& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, double& Obj) const
         {
-            if (Json.IsDouble())
+            if (!Json.IsDouble()) [[unlikely]]
             {
-                Obj = Json.GetDouble();
-                return true;
+                throw ParseException("Value is not a double");
             }
-            return false;
+            Obj = Json.GetDouble();
         }
     };
 
     template <typename Encoding>
     struct Parser<rapidjson::GenericDocument<Encoding>>
     {
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, rapidjson::GenericDocument<Encoding>& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, rapidjson::GenericDocument<Encoding>& Obj) const
         {
             Obj.CopyFrom(Json, Obj.GetAllocator(), false);
-            return true;
         }
     };
 
@@ -278,9 +293,9 @@ namespace L4::Web::Json
     struct Parser<std::optional<T>>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, std::optional<T>& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, std::optional<T>& Obj) const
         {
-            return Parser<T> {}(Json, Obj.emplace());
+            Parser<T> {}(Json, Obj.emplace());
         }
     };
 
@@ -288,22 +303,19 @@ namespace L4::Web::Json
     struct Parser<std::vector<T>>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, std::vector<T>& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, std::vector<T>& Obj) const
         {
-            if (Json.IsArray())
+            if (!Json.IsArray()) [[unlikely]]
             {
-                Obj.clear();
-                Obj.reserve(Json.Size());
-                for (auto& Value : Json.GetArray())
-                {
-                    if (!Parser<T> {}(Value, Obj.emplace_back()))
-                    {
-                        return false;
-                    }
-                }
-                return true;
+                throw ParseException("Value is not an array");
             }
-            return false;
+
+            Obj.clear();
+            Obj.reserve(Json.Size());
+            for (auto& Value : Json.GetArray())
+            {
+                Parser<T> {}(Value, Obj.emplace_back());
+            }
         }
     };
 
@@ -311,30 +323,30 @@ namespace L4::Web::Json
     struct Parser<std::unordered_map<std::basic_string<CharT>, T>>
     {
         template <typename Encoding>
-        bool operator()(const rapidjson::GenericValue<Encoding>& Json, std::unordered_map<std::basic_string<CharT>, T>& Obj) const
+        void operator()(const rapidjson::GenericValue<Encoding>& Json, std::unordered_map<std::basic_string<CharT>, T>& Obj) const
         {
-            if (Json.IsObject())
+            if (!Json.IsObject()) [[unlikely]]
             {
-                Obj.clear();
-                Obj.reserve(Json.MemberCount());
-                for (auto& Value : Json.GetObject())
-                {
-                    auto Item = Obj.emplace(
-                        std::piecewise_construct,
-                        std::forward_as_tuple(Value.name.GetString(), Value.name.GetStringLength()),
-                        std::forward_as_tuple());
-                    if (!Item.second)
-                    {
-                        return false;
-                    }
-                    if (!Parser<T> {}(Value.value, Item.first->second))
-                    {
-                        return false;
-                    }
-                }
-                return true;
+                throw ParseException("Value is not an object");
             }
-            return false;
+
+            Obj.clear();
+            Obj.reserve(Json.MemberCount());
+            for (auto& Value : Json.GetObject())
+            {
+                auto Item = Obj.emplace(
+                    std::piecewise_construct,
+                    std::forward_as_tuple(Value.name.GetString(), Value.name.GetStringLength()),
+                    std::forward_as_tuple());
+                if (!Item.second)
+                {
+                    return false;
+                }
+                if (!Parser<T> {}(Value.value, Item.first->second))
+                {
+                    return false;
+                }
+            }
         }
     };
 }

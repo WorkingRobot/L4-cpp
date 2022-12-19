@@ -6,7 +6,14 @@ namespace L4::Web::Http
     {
         void InitializeSession(cpr::Session& Session)
         {
-            
+            if constexpr (true)
+            {
+                Session.SetProxies({
+                    { "http", "localhost:8888" },
+                    { "https", "localhost:8888" },
+                });
+                Session.SetVerifySsl(false);
+            }
         }
     }
 }
