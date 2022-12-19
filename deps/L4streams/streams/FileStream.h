@@ -67,9 +67,9 @@ namespace L4
 
         bool IsValid() const;
 
-        void WriteBytes(const std::byte* Src, size_t ByteCount) override;
+        void WriteBytes(std::span<const std::byte> Src) override;
 
-        void ReadBytes(std::byte* Dst, size_t ByteCount) override;
+        void ReadBytes(std::span<std::byte> Dst) override;
 
         void Seek(ptrdiff_t Position, SeekPosition SeekFrom) override;
 

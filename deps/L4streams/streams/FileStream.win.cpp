@@ -137,14 +137,14 @@ namespace L4
         return FileHandle != INVALID_HANDLE_VALUE;
     }
 
-    void FileStream::WriteBytes(const std::byte* Src, size_t ByteCount)
+    void FileStream::WriteBytes(std::span<const std::byte> Src)
     {
         do
         {
-            DWORD CurrentByteCount = std::min<DWORD>(ByteCount, MAXDWORD);
+            DWORD CurrentByteCount = std::min<DWORD>(Src.size(), MAXDWORD);
             DWORD WriteByteCount = 0;
 
-            if (!WriteFile(FileHandle, Src, CurrentByteCount, &WriteByteCount, NULL))
+            if (!WriteFile(FileHandle, Src.data(), CurrentByteCount, &WriteByteCount, NULL))
             {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
@@ -154,19 +154,18 @@ namespace L4
                 throw std::runtime_error("Could not fully satisfy write");
             }
 
-            ByteCount -= WriteByteCount;
-            Src += WriteByteCount;
-        } while (ByteCount);
+            Src = Src.subspan(WriteByteCount);
+        } while (!Src.empty());
     }
 
-    void FileStream::ReadBytes(std::byte* Dst, size_t ByteCount)
+    void FileStream::ReadBytes(std::span<std::byte> Dst)
     {
         do
         {
-            DWORD CurrentByteCount = std::min<DWORD>(ByteCount, MAXDWORD);
+            DWORD CurrentByteCount = std::min<DWORD>(Dst.size(), MAXDWORD);
             DWORD ReadByteCount = 0;
 
-            if (!ReadFile(FileHandle, Dst, CurrentByteCount, &ReadByteCount, NULL))
+            if (!ReadFile(FileHandle, Dst.data(), CurrentByteCount, &ReadByteCount, NULL))
             {
                 throw CreateErrorWin32(GetLastError(), __FUNCTION__);
             }
@@ -176,9 +175,8 @@ namespace L4
                 throw std::runtime_error("Could not fully satisfy read");
             }
 
-            ByteCount -= ReadByteCount;
-            Dst += ReadByteCount;
-        } while (ByteCount);
+            Dst = Dst.subspan(ReadByteCount);
+        } while (!Dst.empty());
     }
 
     void FileStream::Seek(ptrdiff_t Position, SeekPosition SeekFrom)

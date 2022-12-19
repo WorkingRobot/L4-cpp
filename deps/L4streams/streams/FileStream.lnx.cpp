@@ -113,17 +113,17 @@ namespace L4
         return FileHandle != -1;
     }
 
-    void FileStream::WriteBytes(const std::byte* Src, size_t ByteCount)
+    void FileStream::WriteBytes(std::span<const std::byte> Src)
     {
-        if (write(FileHandle, Src, ByteCount) == -1)
+        if (write(FileHandle, Src.data(), Src.size()) == -1)
         {
             throw CreateErrorErrno(__FUNCTION__);
         }
     }
 
-    void FileStream::ReadBytes(std::byte* Dst, size_t ByteCount)
+    void FileStream::ReadBytes(std::span<std::byte> Dst)
     {
-        if (read(FileHandle, Dst, ByteCount) == -1)
+        if (read(FileHandle, Dst.data(), Data.size()) == -1)
         {
             throw CreateErrorErrno(__FUNCTION__);
         }

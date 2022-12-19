@@ -5,8 +5,8 @@
 #include <filesystem>
 #include <span>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace L4
 {
@@ -16,6 +16,8 @@ namespace L4
     class Stream
     {
     public:
+        virtual ~Stream() = default;
+
         enum class SeekPosition : int8_t
         {
             Beg,
@@ -27,8 +29,8 @@ namespace L4
         static constexpr SeekPosition Cur = SeekPosition::Cur;
         static constexpr SeekPosition End = SeekPosition::End;
 
-        virtual void WriteBytes(const std::byte* Src, size_t ByteCount) = 0;
-        virtual void ReadBytes(std::byte* Dst, size_t ByteCount) = 0;
+        virtual void WriteBytes(std::span<const std::byte> Src) = 0;
+        virtual void ReadBytes(std::span<std::byte> Dst) = 0;
         virtual void Seek(ptrdiff_t Position, SeekPosition SeekFrom) = 0;
         virtual size_t Tell() const = 0;
         virtual size_t Size() const = 0;
@@ -70,21 +72,47 @@ namespace L4
         StreamT Stream(std::forward<ArgTs>(Args)...);
         StringT DataString {};
         DataString.resize(Stream.Size() / sizeof(typename StringT::value_type));
-        Stream.ReadBytes(reinterpret_cast<std::byte*>(DataString.data()), DataString.size() * sizeof(typename StringT::value_type));
+        Stream.ReadBytes(std::as_writable_bytes(std::span(DataString.data(), DataString.size())));
         return DataString;
     }
+
+    template <class T>
+    concept ExplicitlySerializable = requires(Stream& Stream, const T& Val) { Val.Serialize(Stream); };
+
+    template <class T>
+    concept ExplicitlyDeserializable = requires(Stream& Stream, T& Val) { Val.Deserialize(Stream); };
+
+    template <class T>
+    concept ExplicitlyWeaklyBiserializable = ExplicitlySerializable<T> || ExplicitlyDeserializable<T>;
+
+    template <class T>
+    concept ExplicitlyBiserializable = ExplicitlySerializable<T> && ExplicitlyDeserializable<T>;
+
+    template <ExplicitlyWeaklyBiserializable T>
+    struct Serializer<T>
+    {
+        static void Serialize(Stream& Stream, const T& Val) requires(ExplicitlySerializable<T>)
+        {
+            Val.Serialize(Stream);
+        }
+
+        static void Deserialize(Stream& Stream, T& Val) requires(ExplicitlyDeserializable<T>)
+        {
+            Val.Deserialize(Stream);
+        }
+    };
 
     template <class T> requires std::is_arithmetic_v<T> || std::is_enum_v<T>
     struct Serializer<T>
     {
         static void Serialize(Stream& Stream, const T Val)
         {
-            Stream.WriteBytes(reinterpret_cast<const std::byte*>(&Val), sizeof(Val));
+            Stream.WriteBytes(std::as_bytes(std::span(&Val, 1)));
         }
 
         static void Deserialize(Stream& Stream, T& Val)
         {
-            Stream.ReadBytes(reinterpret_cast<std::byte*>(&Val), sizeof(Val));
+            Stream.ReadBytes(std::as_writable_bytes(std::span(&Val, 1)));
         }
     };
 
@@ -94,7 +122,7 @@ namespace L4
         static void Serialize(Stream& Stream, const std::span<T, Extent> Val)
         {
             Stream << Val.size();
-            Stream.WriteBytes(reinterpret_cast<const std::byte*>(Val.data()), Val.size() * sizeof(T));
+            Stream.WriteBytes(std::as_bytes(Val));
         }
 
         static void Deserialize(Stream& Stream, const std::span<T, Extent> Val)
@@ -104,7 +132,7 @@ namespace L4
             {
                 throw std::invalid_argument("Span sizes do not match");
             }
-            Stream.ReadBytes(reinterpret_cast<std::byte*>(Val.data()), Val.size() * sizeof(T));
+            Stream.ReadBytes(std::as_writable_bytes(Val));
         }
     };
 
@@ -114,7 +142,7 @@ namespace L4
         static void Serialize(Stream& Stream, const std::basic_string_view<T, Traits> Val)
         {
             Stream << Val.size();
-            Stream.WriteBytes(reinterpret_cast<const std::byte*>(Val.data()), Val.size() * sizeof(T));
+            Stream.WriteBytes(std::as_bytes(std::span(Val.data(), Val.size())));
         }
 
         static void Deserialize(Stream& Stream, const std::basic_string_view<T, Traits> Val)
@@ -124,7 +152,7 @@ namespace L4
             {
                 throw std::invalid_argument("String view do not match");
             }
-            Stream.ReadBytes(reinterpret_cast<std::byte*>(Val.data()), Val.size() * sizeof(T));
+            Stream.ReadBytes(std::as_writable_bytes(std::span(Val.data(), Val.size())));
         }
     };
 
@@ -134,14 +162,16 @@ namespace L4
         static void Serialize(Stream& Stream, const std::basic_string<T, Traits, Allocator>& Val)
         {
             Stream << Val.size();
-            Stream.WriteBytes(reinterpret_cast<const std::byte*>(Val.data()), Val.size() * sizeof(T));
+            Stream.WriteBytes(std::as_bytes(std::span(Val.data(), Val.size())));
         }
 
         static void Deserialize(Stream& Stream, std::basic_string<T, Traits, Allocator>& Val)
         {
             auto Size = Stream.Read<size_t>();
-            Val.resize(Size);
-            Stream.ReadBytes(reinterpret_cast<std::byte*>(Val.data()), Val.size() * sizeof(T));
+            Val.resize_and_overwrite(Size, [&Stream](T* Buffer, size_t Count) {
+                Stream.ReadBytes(std::as_writable_bytes(std::span(Buffer, Count)));
+                return Count;
+            });
         }
     };
 
