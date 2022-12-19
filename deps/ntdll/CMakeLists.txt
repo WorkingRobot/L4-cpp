@@ -1,1 +1,3 @@
-s_project(ntdll IMPORT_LIB IMPORTED_LOCATION ntdll64.lib PLATFORMS win)
+s_project(ntdll IMPORT_LIB PLATFORMS win)
+
+set_target_properties(ntdll PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/ntdll64.lib")
