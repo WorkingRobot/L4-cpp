@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <chrono>
 #include <deque>
 #include <filesystem>
@@ -34,6 +35,11 @@ namespace L4
         virtual void Seek(ptrdiff_t Position, SeekPosition SeekFrom) = 0;
         virtual size_t Tell() const = 0;
         virtual size_t Size() const = 0;
+
+        inline void Skip(size_t ByteCount)
+        {
+            Seek(ByteCount, Cur);
+        }
 
         // Write ops
 
@@ -201,6 +207,26 @@ namespace L4
         }
 
         static void Deserialize(Stream& Stream, T (&Val)[Size])
+        {
+            for (size_t Idx = 0; Idx < Size; ++Idx)
+            {
+                Stream >> Val[Idx];
+            }
+        }
+    };
+
+    template <class T, size_t Size>
+    struct Serializer<std::array<T, Size>>
+    {
+        static void Serialize(Stream& Stream, const std::array<T, Size>& Val)
+        {
+            for (size_t Idx = 0; Idx < Size; ++Idx)
+            {
+                Stream << Val[Idx];
+            }
+        }
+
+        static void Deserialize(Stream& Stream, std::array<T, Size>& Val)
         {
             for (size_t Idx = 0; Idx < Size; ++Idx)
             {
