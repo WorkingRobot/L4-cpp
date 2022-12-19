@@ -5,10 +5,22 @@ include(FetchContent)
 FetchContent_Declare(
   smake
   GIT_REPOSITORY https://github.com/WorkingRobot/smake.git
-  GIT_TAG        a724e5ca8595f05ee076d0ca6ecd58e8ec746e74
+  GIT_TAG        10dab48e231689267310ca61f777450d169ebd04
 )
 FetchContent_MakeAvailable(smake)
-include(${smake_SOURCE_DIR}/smake.cmake)
+#include(${smake_SOURCE_DIR}/smake.cmake)
+include("J:/Code/Projects/smake/smake.cmake")
+
+function(s_force_pdbs)
+    if(MSVC)
+        target_compile_options(${S_CURRENT_PROJECT_SANITIZED_NAME} PRIVATE /Zi)
+        set_target_properties(${S_CURRENT_PROJECT_SANITIZED_NAME} PROPERTIES
+            LINK_FLAGS "/DEBUG /OPT:REF /OPT:ICF"
+            COMPILE_PDB_NAME ${S_CURRENT_PROJECT_SANITIZED_NAME}
+            COMPILE_PDB_OUTPUT_DIR ${CMAKE_BINARY_DIR}
+        )
+    endif()
+endfunction()
 
 ## Project Definition ##
 
