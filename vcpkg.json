@@ -6,6 +6,7 @@
         "rapidjson",
         "cpr",
         "fmt",
+        "gtkmm",
         "openssl",
         {
             "name": "libbacktrace",

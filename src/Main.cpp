@@ -1,11 +1,24 @@
-#include <openssl/provider.h>
-#include <streams/FileStream.h>
-#include <web/LauncherClient.h>
-#include <web/SteamClient.h>
-#include <web/zipatch/PatchFile.h>
+#include "Main.h"
+
+#include "App.h"
+
+#include <gtkmm/builder.h>
+// #include <openssl/provider.h>
+// #include <streams/FileStream.h>
+// #include <web/LauncherClient.h>
+// #include <web/SteamClient.h>
+// #include <web/zipatch/PatchFile.h>
 
 namespace L4
 {
+    int Main(int argc, char* argv[])
+    {
+        auto App = App::create();
+
+        return App->run(argc, argv);
+    }
+
+    /*
     void ParsePatch(const std::filesystem::path& Path)
     {
         printf("Parsing %s\n", Path.string().c_str());
@@ -62,10 +75,10 @@ namespace L4
             }
         }
     }
+    */
 }
 
 int main(int argc, char* argv[])
 {
-    L4::Main();
-    return 0;
+    return L4::Main(argc, argv);
 }
