@@ -10,7 +10,7 @@
 
 namespace libL4
 {
-    using Initializer = void (*)(const libL4::ClientInterface* Interface, libL4::PluginInterface* OutInterface);
+    using Initializer = void (*)(libL4::Handle ClientHandle, const libL4::ClientInterface* Interface, libL4::PluginInterface* OutInterface);
 }
 
 L4_EXPORT libL4::Initializer GetInitializer();

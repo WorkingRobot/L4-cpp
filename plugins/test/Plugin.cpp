@@ -5,12 +5,12 @@
 
 namespace L4::Plugin::Test
 {
-    Plugin::Plugin(const libL4::ClientInterface* Interface) :
-        IPlugin(Interface, std::make_unique<Test::Auth>(), std::make_unique<Test::Update>())
+    Plugin::Plugin(libL4::Handle ClientHandle, const libL4::ClientInterface* Interface) :
+        IPlugin(ClientHandle, Interface, std::make_unique<Test::Auth>(), std::make_unique<Test::Update>())
     {
     }
 
-    Wrapper::PluginIdentity Plugin::GetIdentity() const
+    libL4::Marshal::PluginIdentity Plugin::GetIdentity() const
     {
         return {
             .Id = u8"test",

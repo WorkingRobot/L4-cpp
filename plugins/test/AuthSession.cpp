@@ -13,45 +13,45 @@ namespace L4::Plugin::Test
     {
     }
 
-    std::vector<Wrapper::AuthField> AuthSession::GetFields()
+    std::vector<libL4::Marshal::AuthField> AuthSession::GetFields()
     {
         Wrapper::AuthForm Form;
         switch (CurrentState)
         {
         case State::Initial:
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"sign-up", u8"Sign Up");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"login", u8"Login");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"oauth", u8"Open in Browser");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"import", u8"Import Credentials");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"sign-up", u8"Sign Up");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"login", u8"Login");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"oauth", u8"Open in Browser");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"import", u8"Import Credentials");
             break;
         case State::SignUp:
-            Form.Add<Wrapper::AuthFieldType::Text>(u8"username", u8"Username");
-            Form.Add<Wrapper::AuthFieldType::Text>(u8"email", u8"Email");
-            Form.Add<Wrapper::AuthFieldType::Password>(u8"password", u8"Password");
-            Form.Add<Wrapper::AuthFieldType::Password>(u8"password-repeat", u8"Repeat Password");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"submit", u8"Sign Up");
+            Form.Add<libL4::AuthFieldType::Text>(u8"username", u8"Username");
+            Form.Add<libL4::AuthFieldType::Text>(u8"email", u8"Email");
+            Form.Add<libL4::AuthFieldType::Password>(u8"password", u8"Password");
+            Form.Add<libL4::AuthFieldType::Password>(u8"password-repeat", u8"Repeat Password");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"submit", u8"Sign Up");
             break;
         case State::SignUpCode:
-            Form.Add<Wrapper::AuthFieldType::Text>(u8"code", u8"Code");
-            Form.Add<Wrapper::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"submit", u8"Sign Up");
+            Form.Add<libL4::AuthFieldType::Text>(u8"code", u8"Code");
+            Form.Add<libL4::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"submit", u8"Sign Up");
             break;
         case State::Login:
-            Form.Add<Wrapper::AuthFieldType::Text>(u8"username", u8"Username");
-            Form.Add<Wrapper::AuthFieldType::Password>(u8"password", u8"Password");
-            Form.Add<Wrapper::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"submit", u8"Login");
+            Form.Add<libL4::AuthFieldType::Text>(u8"username", u8"Username");
+            Form.Add<libL4::AuthFieldType::Password>(u8"password", u8"Password");
+            Form.Add<libL4::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"submit", u8"Login");
             break;
         case State::OAuth:
-            Form.Add<Wrapper::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"open-browser", u8"Open in Browser");
-            Form.Add<Wrapper::AuthFieldType::Label>(u8"submit-description", u8"Click Done after you've logged in through the browser");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"submit", u8"Done");
+            Form.Add<libL4::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"open-browser", u8"Open in Browser");
+            Form.Add<libL4::AuthFieldType::Label>(u8"submit-description", u8"Click Done after you've logged in through the browser");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"submit", u8"Done");
             break;
         case State::Import:
-            Form.Add<Wrapper::AuthFieldType::Text>(u8"data", u8"Data");
-            Form.Add<Wrapper::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
-            Form.Add<Wrapper::AuthFieldType::SubmitButton>(u8"submit", u8"Login");
+            Form.Add<libL4::AuthFieldType::Text>(u8"data", u8"Data");
+            Form.Add<libL4::AuthFieldType::Checkbox>(u8"remember-me", u8"Remember Me");
+            Form.Add<libL4::AuthFieldType::SubmitButton>(u8"submit", u8"Login");
             break;
         case State::Done:
             break;
@@ -59,27 +59,27 @@ namespace L4::Plugin::Test
         return Form.Build();
     }
 
-    Wrapper::AuthSubmitResponse AuthSession::Submit(const std::vector<Wrapper::AuthFulfilledField>& Fields)
+    libL4::Marshal::AuthSubmitResponse AuthSession::Submit(const std::vector<libL4::Marshal::AuthFulfilledField>& Fields)
     {
         Wrapper::AuthFulfilledForm Form(Fields);
         switch (CurrentState)
         {
         case State::Initial:
         {
-            if (Form.Get<Wrapper::AuthFieldType::SubmitButton>(u8"sign-up"))
+            if (Form.Get<libL4::AuthFieldType::SubmitButton>(u8"sign-up"))
             {
                 CurrentState = State::SignUp;
                 Data.emplace<SignUpData>();
             }
-            else if (Form.Get<Wrapper::AuthFieldType::SubmitButton>(u8"login"))
+            else if (Form.Get<libL4::AuthFieldType::SubmitButton>(u8"login"))
             {
                 CurrentState = State::Login;
             }
-            else if (Form.Get<Wrapper::AuthFieldType::SubmitButton>(u8"oauth"))
+            else if (Form.Get<libL4::AuthFieldType::SubmitButton>(u8"oauth"))
             {
                 CurrentState = State::OAuth;
             }
-            else if (Form.Get<Wrapper::AuthFieldType::SubmitButton>(u8"import"))
+            else if (Form.Get<libL4::AuthFieldType::SubmitButton>(u8"import"))
             {
                 CurrentState = State::Import;
             }
@@ -92,9 +92,9 @@ namespace L4::Plugin::Test
         case State::SignUp:
         {
             auto& Data = std::get<SignUpData>(this->Data);
-            Data.Username = Form.Get<Wrapper::AuthFieldType::Text>(u8"username");
-            Data.Email = Form.Get<Wrapper::AuthFieldType::Text>(u8"email");
-            Data.Password = Form.Get<Wrapper::AuthFieldType::Password>(u8"password");
+            Data.Username = Form.Get<libL4::AuthFieldType::Text>(u8"username");
+            Data.Email = Form.Get<libL4::AuthFieldType::Text>(u8"email");
+            Data.Password = Form.Get<libL4::AuthFieldType::Password>(u8"password");
 
             static constexpr auto IsAlphaL = [](char8_t Char) {
                 return u8'a' <= Char && Char <= u8'z';
@@ -170,7 +170,7 @@ namespace L4::Plugin::Test
                 return { false, u8"Password is invalid" };
             }
 
-            if (Data.Password != Form.Get<Wrapper::AuthFieldType::Password>(u8"password-repeat"))
+            if (Data.Password != Form.Get<libL4::AuthFieldType::Password>(u8"password-repeat"))
             {
                 return { false, u8"Passwords don't match" };
             }
@@ -181,7 +181,7 @@ namespace L4::Plugin::Test
         case State::SignUpCode:
         {
             auto& Data = std::get<SignUpData>(this->Data);
-            auto Code = Form.Get<Wrapper::AuthFieldType::Text>(u8"code");
+            auto Code = Form.Get<libL4::AuthFieldType::Text>(u8"code");
 
             uint8_t Digest[20];
             {
@@ -224,7 +224,7 @@ namespace L4::Plugin::Test
         }
         case State::Login:
         {
-            auto Username = Form.Get<Wrapper::AuthFieldType::Text>(u8"username");
+            auto Username = Form.Get<libL4::AuthFieldType::Text>(u8"username");
 
             AuthModule.SetIdentity({ .Id = Username, .Name = Username });
 
@@ -233,10 +233,10 @@ namespace L4::Plugin::Test
         }
         case State::OAuth:
         {
-            auto ShouldOpenBrowser = Form.Get<Wrapper::AuthFieldType::SubmitButton>(u8"open-browser");
+            auto ShouldOpenBrowser = Form.Get<libL4::AuthFieldType::SubmitButton>(u8"open-browser");
             if (ShouldOpenBrowser)
             {
-                auto RememberMe = Form.Get<Wrapper::AuthFieldType::Checkbox>(u8"remember-me");
+                auto RememberMe = Form.Get<libL4::AuthFieldType::Checkbox>(u8"remember-me");
 
                 // Just a dummy function
                 auto LaunchBrowser = [](const std::u8string& Url) {};
@@ -263,7 +263,7 @@ namespace L4::Plugin::Test
         }
         case State::Import:
         {
-            auto Data = Form.Get<Wrapper::AuthFieldType::Text>(u8"data");
+            auto Data = Form.Get<libL4::AuthFieldType::Text>(u8"data");
             std::u8string_view DataView = Data;
 
             auto Sep = DataView.find(u8';');

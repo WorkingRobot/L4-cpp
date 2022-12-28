@@ -7,73 +7,71 @@
 
 namespace L4::Plugin::Wrapper
 {
-    using namespace libL4::Marshal;
-
     namespace Detail
     {
-        template <Wrapper::AuthFieldType Type>
+        template <libL4::AuthFieldType Type>
         struct FieldTypeData;
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::Label>
+        struct FieldTypeData<libL4::AuthFieldType::Label>
         {
             using Type = std::monostate;
             using FulfilledType = std::monostate;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::Text>
+        struct FieldTypeData<libL4::AuthFieldType::Text>
         {
-            using Type = Wrapper::AuthFieldText;
-            using FulfilledType = Wrapper::String;
+            using Type = libL4::Marshal::AuthFieldText;
+            using FulfilledType = libL4::Marshal::String;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::Password>
+        struct FieldTypeData<libL4::AuthFieldType::Password>
         {
-            using Type = Wrapper::AuthFieldPassword;
-            using FulfilledType = Wrapper::String;
+            using Type = libL4::Marshal::AuthFieldPassword;
+            using FulfilledType = libL4::Marshal::String;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::Radio>
+        struct FieldTypeData<libL4::AuthFieldType::Radio>
         {
-            using Type = Wrapper::AuthFieldRadio;
-            using FulfilledType = Wrapper::String;
+            using Type = libL4::Marshal::AuthFieldRadio;
+            using FulfilledType = libL4::Marshal::String;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::Dropdown>
+        struct FieldTypeData<libL4::AuthFieldType::Dropdown>
         {
-            using Type = Wrapper::AuthFieldDropdown;
-            using FulfilledType = Wrapper::String;
+            using Type = libL4::Marshal::AuthFieldDropdown;
+            using FulfilledType = libL4::Marshal::String;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::Checkbox>
+        struct FieldTypeData<libL4::AuthFieldType::Checkbox>
         {
-            using Type = Wrapper::AuthFieldCheckbox;
+            using Type = libL4::Marshal::AuthFieldCheckbox;
             using FulfilledType = bool;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::SubmitButton>
+        struct FieldTypeData<libL4::AuthFieldType::SubmitButton>
         {
             using Type = std::monostate;
             using FulfilledType = bool;
         };
 
         template <>
-        struct FieldTypeData<Wrapper::AuthFieldType::OpenUrlAction>
+        struct FieldTypeData<libL4::AuthFieldType::OpenUrlAction>
         {
-            using Type = Wrapper::AuthFieldOpenUrlAction;
+            using Type = libL4::Marshal::AuthFieldOpenUrlAction;
             using FulfilledType = std::monostate;
         };
 
-        template <Wrapper::AuthFieldType Type>
+        template <libL4::AuthFieldType Type>
         using FieldT = typename FieldTypeData<Type>::Type;
 
-        template <Wrapper::AuthFieldType Type>
+        template <libL4::AuthFieldType Type>
         using FulfilledFieldT = typename FieldTypeData<Type>::FulfilledType;
     }
 
@@ -82,10 +80,10 @@ namespace L4::Plugin::Wrapper
     public:
         AuthForm() = default;
 
-        template <Wrapper::AuthFieldType Type, class... ArgTs>
+        template <libL4::AuthFieldType Type, class... ArgTs>
         void Add(const std::u8string& Id, const std::u8string& Name, ArgTs&&... Args)
         {
-            Fields.emplace_back(Wrapper::AuthField {
+            Fields.emplace_back(libL4::Marshal::AuthField {
                 .Id = Id,
                 .Name = Name,
                 .Type = Type,
@@ -93,27 +91,27 @@ namespace L4::Plugin::Wrapper
             });
         }
 
-        const std::vector<Wrapper::AuthField>& Build() const
+        const std::vector<libL4::Marshal::AuthField>& Build() const
         {
             return Fields;
         }
 
     private:
-        std::vector<Wrapper::AuthField> Fields;
+        std::vector<libL4::Marshal::AuthField> Fields;
     };
 
     class AuthFulfilledForm
     {
     public:
-        AuthFulfilledForm(const std::vector<Wrapper::AuthFulfilledField>& Fields) :
+        AuthFulfilledForm(const std::vector<libL4::Marshal::AuthFulfilledField>& Fields) :
             Fields(Fields)
         {
         }
 
-        template <Wrapper::AuthFieldType Type>
+        template <libL4::AuthFieldType Type>
         const auto& Get(const std::u8string& Id) const
         {
-            auto FieldItr = std::ranges::find(Fields, Id, &Wrapper::AuthFulfilledField::Id);
+            auto FieldItr = std::ranges::find(Fields, Id, &libL4::Marshal::AuthFulfilledField::Id);
             if (FieldItr == Fields.end())
             {
                 throw std::invalid_argument("No such id exists");
@@ -127,6 +125,6 @@ namespace L4::Plugin::Wrapper
         }
 
     private:
-        std::vector<Wrapper::AuthFulfilledField> Fields;
+        std::vector<libL4::Marshal::AuthFulfilledField> Fields;
     };
 }

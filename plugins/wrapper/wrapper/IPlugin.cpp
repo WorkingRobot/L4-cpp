@@ -4,7 +4,8 @@ namespace L4::Plugin::Wrapper
 {
     IPlugin* IPlugin::Instance = nullptr;
 
-    IPlugin::IPlugin(const libL4::ClientInterface* ClientInterface, std::unique_ptr<IAuth> AuthInterface, std::unique_ptr<IUpdate> UpdateInterface) :
+    IPlugin::IPlugin(libL4::Handle ClientHandle, const libL4::ClientInterface* ClientInterface, std::unique_ptr<IAuth> AuthInterface, std::unique_ptr<IUpdate> UpdateInterface) :
+        ClientHandle(ClientHandle),
         Client(ClientInterface),
         Auth(std::move(AuthInterface)),
         Update(std::move(UpdateInterface))
@@ -100,7 +101,7 @@ namespace L4::Plugin::Wrapper
         {
             throw std::overflow_error("Too many fields (>16)");
         }
-        std::ranges::transform(FieldVec, Fields, [](const AuthField& In) { return To(In); });
+        std::ranges::transform(FieldVec, Fields, [](const libL4::Marshal::AuthField& In) { return libL4::Marshal::To(In); });
         *FieldCount = FieldVec.size();
     }
 
@@ -126,8 +127,8 @@ namespace L4::Plugin::Wrapper
             throw std::invalid_argument("Session does not exist");
         }
 
-        std::vector<AuthFulfilledField> FieldVec(FieldCount);
-        std::ranges::transform(Fields, Fields + FieldCount, FieldVec.begin(), [](const auto& In) { return To(In); });
+        std::vector<libL4::Marshal::AuthFulfilledField> FieldVec(FieldCount);
+        std::ranges::transform(Fields, Fields + FieldCount, FieldVec.begin(), [](const auto& In) { return libL4::Marshal::To(In); });
 
         *Response = To(SessionPtr->Submit(FieldVec));
     }
@@ -144,8 +145,8 @@ namespace L4::Plugin::Wrapper
             throw std::invalid_argument("NewIdentity is null");
         }
 
-        Wrapper::AppIdentity UpdatedIdentity {};
-        if (!Instance->Update->CreateSessionInternal(Update, To(*OldIdentity), UpdatedIdentity))
+        libL4::Marshal::AppIdentity UpdatedIdentity {};
+        if (!Instance->Update->CreateSessionInternal(Update, libL4::Marshal::To(*OldIdentity), UpdatedIdentity))
         {
             throw std::invalid_argument("Session already exists");
         }

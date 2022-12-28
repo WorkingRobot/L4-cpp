@@ -2,7 +2,7 @@
 
 namespace L4::Plugin::FFXIV
 {
-    std::optional<Wrapper::UserIdentity> Auth::GetUser()
+    std::optional<libL4::Marshal::UserIdentity> Auth::GetUser()
     {
         return User;
     }
@@ -13,7 +13,7 @@ namespace L4::Plugin::FFXIV
         //std::make_unique<AuthSession>(*this);
     }
 
-    void Auth::SetIdentity(const Wrapper::UserIdentity& User)
+    void Auth::SetIdentity(const libL4::Marshal::UserIdentity& User)
     {
         this->User.emplace(User);
     }

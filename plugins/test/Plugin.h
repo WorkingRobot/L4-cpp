@@ -7,8 +7,8 @@ namespace L4::Plugin::Test
     class Plugin final : public Wrapper::IPlugin
     {
     public:
-        Plugin(const libL4::ClientInterface* Interface);
+        Plugin(libL4::Handle ClientHandle, const libL4::ClientInterface* Interface);
 
-        L4::Plugin::Wrapper::PluginIdentity GetIdentity() const final;
+        libL4::Marshal::PluginIdentity GetIdentity() const final;
     };
 }

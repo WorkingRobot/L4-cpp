@@ -2,7 +2,7 @@
 
 namespace L4::Plugin::Wrapper
 {
-    bool IUpdate::CreateSessionInternal(Handle ClientHandle, const AppIdentity& OldIdentity, AppIdentity& NewIdentity)
+    bool IUpdate::CreateSessionInternal(libL4::Handle ClientHandle, const libL4::Marshal::AppIdentity& OldIdentity, libL4::Marshal::AppIdentity& NewIdentity)
     {
         if (Sessions.find(ClientHandle) == Sessions.end())
         {
@@ -12,12 +12,12 @@ namespace L4::Plugin::Wrapper
         return false;
     }
 
-    bool IUpdate::CloseSessionInternal(Handle ClientHandle)
+    bool IUpdate::CloseSessionInternal(libL4::Handle ClientHandle)
     {
         return Sessions.erase(ClientHandle) == 1;
     }
 
-    IUpdateSession* IUpdate::GetSessionInternal(Handle ClientHandle)
+    IUpdateSession* IUpdate::GetSessionInternal(libL4::Handle ClientHandle)
     {
         auto Itr = Sessions.find(ClientHandle);
         if (Itr != Sessions.end())

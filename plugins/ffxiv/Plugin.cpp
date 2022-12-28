@@ -5,12 +5,12 @@
 
 namespace L4::Plugin::FFXIV
 {
-    Plugin::Plugin(const libL4::ClientInterface* Interface) :
-        IPlugin(Interface, std::make_unique<FFXIV::Auth>(), std::make_unique<FFXIV::Update>())
+    Plugin::Plugin(libL4::Handle ClientHandle, const libL4::ClientInterface* Interface) :
+        IPlugin(ClientHandle, Interface, std::make_unique<FFXIV::Auth>(), std::make_unique<FFXIV::Update>())
     {
     }
 
-    Wrapper::PluginIdentity Plugin::GetIdentity() const
+    libL4::Marshal::PluginIdentity Plugin::GetIdentity() const
     {
         return {
             .Id = u8"ffxiv",

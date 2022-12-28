@@ -9,15 +9,15 @@ namespace L4::Plugin::FFXIV
     public:
         Auth() = default;
 
-        std::optional<Wrapper::UserIdentity> GetUser() final;
+        std::optional<libL4::Marshal::UserIdentity> GetUser() final;
 
         std::unique_ptr<Wrapper::IAuthSession> CreateSession() final;
 
     private:
         friend class AuthSession;
 
-        void SetIdentity(const Wrapper::UserIdentity& User);
+        void SetIdentity(const libL4::Marshal::UserIdentity& User);
 
-        std::optional<Wrapper::UserIdentity> User;
+        std::optional<libL4::Marshal::UserIdentity> User;
     };
 }

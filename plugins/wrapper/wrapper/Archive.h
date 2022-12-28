@@ -9,16 +9,14 @@
 
 namespace L4::Plugin::Wrapper
 {
-    using namespace libL4::Marshal;
-
     class Archive
     {
     public:
-        Archive(Handle ClientHandle);
+        Archive(libL4::Handle ClientHandle);
 
-        ArchiveIdentity GetIdentity() const;
+        libL4::Marshal::ArchiveIdentity GetIdentity() const;
 
-        void SetIdentity(const ArchiveIdentity& NewIdentity);
+        void SetIdentity(const libL4::Marshal::ArchiveIdentity& NewIdentity);
 
         uint32_t GetStreamCount() const;
 
@@ -35,6 +33,6 @@ namespace L4::Plugin::Wrapper
         Stream OpenStreamWrite(const std::u8string& Id);
 
     private:
-        Handle ClientHandle;
+        libL4::Handle ClientHandle;
     };
 }

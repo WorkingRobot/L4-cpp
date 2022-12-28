@@ -2,7 +2,7 @@
 
 namespace L4::Plugin::Test
 {
-    UpdateSession::UpdateSession(Wrapper::Handle ClientHandle, const Wrapper::AppIdentity& OldIdentity, Wrapper::AppIdentity& NewIdentity) :
+    UpdateSession::UpdateSession(libL4::Handle ClientHandle, const libL4::Marshal::AppIdentity& OldIdentity, libL4::Marshal::AppIdentity& NewIdentity) :
         Wrapper::IUpdateSession(ClientHandle)
     {
         NewIdentity = OldIdentity;

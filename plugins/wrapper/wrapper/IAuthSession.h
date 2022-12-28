@@ -7,8 +7,6 @@
 
 namespace L4::Plugin::Wrapper
 {
-    using namespace libL4::Marshal;
-
     class IAuthSession
     {
     public:
@@ -16,7 +14,7 @@ namespace L4::Plugin::Wrapper
 
         virtual ~IAuthSession() = default;
 
-        virtual std::vector<AuthField> GetFields() = 0;
-        virtual AuthSubmitResponse Submit(const std::vector<AuthFulfilledField>& Fields) = 0;
+        virtual std::vector<libL4::Marshal::AuthField> GetFields() = 0;
+        virtual libL4::Marshal::AuthSubmitResponse Submit(const std::vector<libL4::Marshal::AuthFulfilledField>& Fields) = 0;
     };
 }

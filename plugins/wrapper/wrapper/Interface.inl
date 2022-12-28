@@ -8,14 +8,14 @@ static_assert(std::derived_from<PLUGIN_IMPL, ::L4::Plugin::Wrapper::IPlugin>, "P
 
 L4_EXPORT libL4::Initializer GetInitializer()
 {
-    return +[](const libL4::ClientInterface* Interface, libL4::PluginInterface* OutInterface) -> void {
+    return +[](libL4::Handle ClientHandle, const libL4::ClientInterface* Interface, libL4::PluginInterface* OutInterface) -> void {
         static std::optional<PLUGIN_IMPL> Singleton;
 
         if (Singleton.has_value())
         {
             throw std::invalid_argument("Already initialized");
         }
-        Singleton.emplace(Interface);
+        Singleton.emplace(ClientHandle, Interface);
         *OutInterface = Singleton->GetRawInterface();
     };
 }

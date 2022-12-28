@@ -9,7 +9,7 @@ namespace L4::Plugin::Test
     class UpdateSession final : public Wrapper::IUpdateSession
     {
     public:
-        UpdateSession(Wrapper::Handle ClientHandle, const Wrapper::AppIdentity& OldIdentity, Wrapper::AppIdentity& NewIdentity);
+        UpdateSession(libL4::Handle ClientHandle, const libL4::Marshal::AppIdentity& OldIdentity, libL4::Marshal::AppIdentity& NewIdentity);
 
         void Start(Wrapper::Archive Archive, std::chrono::milliseconds ProgressUpdateRate) final;
 

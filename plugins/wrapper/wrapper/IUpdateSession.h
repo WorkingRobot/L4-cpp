@@ -9,22 +9,20 @@
 
 namespace L4::Plugin::Wrapper
 {
-    using namespace libL4::Marshal;
-
     class IUpdateSession
     {
     public:
-        IUpdateSession(Handle ClientHandle);
+        IUpdateSession(libL4::Handle ClientHandle);
 
         virtual ~IUpdateSession() = default;
 
-        Wrapper::UpdateState GetState() const;
+        libL4::UpdateState GetState() const;
 
-        void OnStart(const Wrapper::UpdateStartInfo& Info);
+        void OnStart(const libL4::Marshal::UpdateStartInfo& Info);
 
-        void OnProgress(const Wrapper::UpdateProgressInfo& Info);
+        void OnProgress(const libL4::Marshal::UpdateProgressInfo& Info);
 
-        void OnPieceUpdate(uint64_t Id, Wrapper::UpdatePieceStatus Status);
+        void OnPieceUpdate(uint64_t Id, libL4::UpdatePieceStatus Status);
 
         void OnFinalize();
 
@@ -37,6 +35,6 @@ namespace L4::Plugin::Wrapper
         virtual void Resume() = 0;
 
     private:
-        Handle ClientHandle;
+        libL4::Handle ClientHandle;
     };
 }

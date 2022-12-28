@@ -19,7 +19,6 @@ namespace libL4
     {
         InterfaceVersion InterfaceVersion;
         ClientIdentity Identity;
-        Handle PluginHandle;
         String ConfigBaseDirectory;
 
         AuthOperations Auth;

@@ -9,6 +9,6 @@ namespace L4::Plugin::FFXIV
     public:
         Update() = default;
 
-        std::unique_ptr<Wrapper::IUpdateSession> CreateSession(Wrapper::Handle ClientHandle, const Wrapper::AppIdentity& OldIdentity, Wrapper::AppIdentity& NewIdentity) final;
+        std::unique_ptr<Wrapper::IUpdateSession> CreateSession(libL4::Handle ClientHandle, const libL4::Marshal::AppIdentity& OldIdentity, libL4::Marshal::AppIdentity& NewIdentity) final;
     };
 }

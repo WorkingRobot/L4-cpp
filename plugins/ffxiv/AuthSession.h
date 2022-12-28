@@ -12,11 +12,11 @@ namespace L4::Plugin::FFXIV
     public:
         AuthSession(Auth& AuthModule);
 
-        std::vector<Wrapper::AuthField> GetFields() final;
-        Wrapper::AuthSubmitResponse Submit(const std::vector<Wrapper::AuthFulfilledField>& Fields) final;
+        std::vector<libL4::Marshal::AuthField> GetFields() final;
+        libL4::Marshal::AuthSubmitResponse Submit(const std::vector<libL4::Marshal::AuthFulfilledField>& Fields) final;
 
     private:
-        Wrapper::AuthSubmitResponse SendToServer();
+        libL4::Marshal::AuthSubmitResponse SendToServer();
 
         enum class State : uint8_t
         {

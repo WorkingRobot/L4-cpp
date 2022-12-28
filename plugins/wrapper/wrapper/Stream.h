@@ -7,16 +7,14 @@
 
 namespace L4::Plugin::Wrapper
 {
-    using namespace libL4::Marshal;
-
     class Stream
     {
     public:
-        Stream(Handle ClientHandle);
+        Stream(libL4::Handle ClientHandle);
 
-        StreamIdentity GetIdentity() const;
+        libL4::Marshal::StreamIdentity GetIdentity() const;
 
-        void SetIdentity(const StreamIdentity& NewIdentity);
+        void SetIdentity(const libL4::Marshal::StreamIdentity& NewIdentity);
 
         uint32_t GetElementSize() const;
 
@@ -41,6 +39,6 @@ namespace L4::Plugin::Wrapper
         uint64_t WriteBytes(std::span<const std::byte> Src, uint64_t Offset);
 
     private:
-        Handle ClientHandle;
+        libL4::Handle ClientHandle;
     };
 }

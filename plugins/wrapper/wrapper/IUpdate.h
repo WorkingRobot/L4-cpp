@@ -10,8 +10,6 @@
 
 namespace L4::Plugin::Wrapper
 {
-    using namespace libL4::Marshal;
-
     class IUpdate
     {
     public:
@@ -19,14 +17,14 @@ namespace L4::Plugin::Wrapper
 
         virtual ~IUpdate() = default;
 
-        virtual std::unique_ptr<IUpdateSession> CreateSession(Handle ClientHandle, const AppIdentity& OldIdentity, AppIdentity& NewIdentity) = 0;
+        virtual std::unique_ptr<IUpdateSession> CreateSession(libL4::Handle ClientHandle, const libL4::Marshal::AppIdentity& OldIdentity, libL4::Marshal::AppIdentity& NewIdentity) = 0;
 
     private:
         friend class IPlugin;
-        bool CreateSessionInternal(Handle ClientHandle, const AppIdentity& OldIdentity, AppIdentity& NewIdentity);
-        bool CloseSessionInternal(Handle ClientHandle);
-        IUpdateSession* GetSessionInternal(Handle ClientHandle);
+        bool CreateSessionInternal(libL4::Handle ClientHandle, const libL4::Marshal::AppIdentity& OldIdentity, libL4::Marshal::AppIdentity& NewIdentity);
+        bool CloseSessionInternal(libL4::Handle ClientHandle);
+        IUpdateSession* GetSessionInternal(libL4::Handle ClientHandle);
 
-        std::unordered_map<Handle, std::unique_ptr<IUpdateSession>> Sessions;
+        std::unordered_map<libL4::Handle, std::unique_ptr<IUpdateSession>> Sessions;
     };
 }
