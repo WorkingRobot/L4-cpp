@@ -45,5 +45,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 s_add_subdirectories_in(deps)
 s_add_subdirectories_in(external)
+s_add_subdirectories_in(modules)
 s_add_subdirectories_in(plugins)
 add_subdirectory(src)
