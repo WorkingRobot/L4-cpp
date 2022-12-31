@@ -1,26 +1,19 @@
 #pragma once
 
-#include "Auth.h"
-
-#include <libL4/Interface.h>
 #include <libL4/marshal/Marshal.h>
 
 #include <filesystem>
 
-namespace L4::Plugin::Manager
+namespace L4::Manager
 {
-    class Plugin
+    class ClientInterface
     {
     public:
-        Plugin(const std::filesystem::path& FilePath, const libL4::Marshal::ClientIdentity& ClientIdentity, const std::filesystem::path& ConfigBaseDirectory);
+        ClientInterface(const libL4::Marshal::ClientIdentity& Identity, const std::filesystem::path& ConfigBaseDirectory);
 
-        ~Plugin();
-
-        void Initialize();
+        const libL4::ClientInterface& GetRawInterface() const noexcept;
 
     private:
-        libL4::ClientInterface GetRawInterface();
-
         struct RawOps
         {
             struct Auth
@@ -68,14 +61,6 @@ namespace L4::Plugin::Manager
             };
         };
 
-        using GetInitializerProc = libL4::Initializer (*)();
-
-        libL4::Marshal::ClientIdentity ClientIdentity;
-        std::filesystem::path ConfigBaseDirectory;
-        void* ModuleHandle;
-        libL4::Initializer InitializeProc;
-        libL4::PluginInterface Interface;
-
-        Auth Auth;
+        libL4::ClientInterface RawInterface;
     };
 }
