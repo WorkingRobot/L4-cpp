@@ -25,6 +25,8 @@ endfunction()
 ## Project Definition ##
 
 s_get_version_info(DEFAULT_BRANCH "main")
+set(PROJECT_NAME "L4") # Change the casing because it looks cooler
+
 project(${PROJECT_NAME}
     VERSION ${PROJECT_VERSION}
     DESCRIPTION ${PROJECT_DESCRIPTION}

@@ -16,10 +16,10 @@ namespace L4::Detail
          * Definitions of the bit-reflected domain constants k1,k2,k3, etc and
          * the CRC32+Barrett polynomials given at the end of the paper.
          */
-        static const uint64_t alignas(__m128i) k1k2[] = { 0x0154442bd4, 0x01c6e41596 };
-        static const uint64_t alignas(__m128i) k3k4[] = { 0x01751997d0, 0x00ccaa009e };
-        static const uint64_t alignas(__m128i) k5k0[] = { 0x0163cd6124, 0x0000000000 };
-        static const uint64_t alignas(__m128i) poly[] = { 0x01db710641, 0x01f7011641 };
+        alignas(__m128i) static const uint64_t k1k2[] = { 0x0154442bd4, 0x01c6e41596 };
+        alignas(__m128i) static const uint64_t k3k4[] = { 0x01751997d0, 0x00ccaa009e };
+        alignas(__m128i) static const uint64_t k5k0[] = { 0x0163cd6124, 0x0000000000 };
+        alignas(__m128i) static const uint64_t poly[] = { 0x01db710641, 0x01f7011641 };
         __m128i x0, x1, x2, x3, x4, x5, x6, x7, x8, y5, y6, y7, y8;
         /*
          * There's at least one block of 64.

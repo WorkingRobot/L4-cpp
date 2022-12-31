@@ -36,9 +36,14 @@ namespace L4::Config
         return CONFIG_VERSION_PATCH;
     }
 
+    uint8_t GetVersionTweak() noexcept
+    {
+        return CONFIG_VERSION_TWEAK;
+    }
+
     uint32_t GetVersionNumeric() noexcept
     {
-        return uint32_t(GetVersionMajor()) << 24 | uint32_t(GetVersionMinor()) << 16 | uint32_t(GetVersionPatch());
+        return uint32_t(GetVersionMajor()) << 24 | uint32_t(GetVersionMinor()) << 16 | uint32_t(GetVersionPatch()) << 8 | uint32_t(GetVersionTweak());
     }
 
     const char* GetVersionBranch() noexcept
