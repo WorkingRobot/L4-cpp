@@ -101,7 +101,7 @@ namespace L4::Plugin::Wrapper
         {
             throw std::overflow_error("Too many fields (>16)");
         }
-        std::ranges::transform(FieldVec, Fields, [](const libL4::Marshal::AuthField& In) { return libL4::Marshal::To(In); });
+        std::ranges::transform(FieldVec, Fields, [](const auto& In) { return libL4::Marshal::To(In); });
         *FieldCount = FieldVec.size();
     }
 
