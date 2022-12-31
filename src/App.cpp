@@ -1,5 +1,6 @@
 #include "App.h"
 
+#include "log/Log.h"
 #include "resources/Resources.h"
 
 #include <gtkmm/applicationwindow.h>
@@ -23,6 +24,11 @@ namespace L4
         Resources::GetResource()->register_global();
 
         Builder.emplace();
+
+        SetupLogging();
+
+        Modules.emplace();
+        Modules->InitializeModules();
 
         auto& MainWindow = Builder->GetWidget<Gtk::ApplicationWindow>("MainWindow");
         add_window(MainWindow);

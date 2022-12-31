@@ -66,4 +66,11 @@ namespace L4
     {
         return StartTime != StartTime.min() && StopTime == StopTime.min();
     }
+
+    Stopwatch Stopwatch::StartNew() noexcept
+    {
+        Stopwatch Ret;
+        Ret.Start();
+        return Ret;
+    }
 }

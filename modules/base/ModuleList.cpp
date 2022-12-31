@@ -15,10 +15,4 @@ namespace L4::Modules
         // std::vector doesn't guarantee reverse destruction like std::array does
         std::ranges::for_each(std::views::reverse(Modules), [](auto& Module) { Module.reset(); });
     }
-
-    template <class T>
-    void ModuleList::AddModule()
-    {
-        Modules.emplace_back(std::make_unique<T>(*this));
-    }
 }

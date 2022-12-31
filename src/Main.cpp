@@ -82,3 +82,8 @@ int main(int argc, char* argv[])
 {
     return L4::Main(argc, argv);
 }
+
+int WinMain()
+{
+    return L4::Main(__argc, __argv);
+}

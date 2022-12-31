@@ -12,7 +12,7 @@ namespace L4::Plugin::FFXIV
         std::optional<libL4::Marshal::UserIdentity> GetUser() final;
 
         std::unique_ptr<Wrapper::IAuthSession> CreateSession() final;
-
+        
     private:
         friend class AuthSession;
 

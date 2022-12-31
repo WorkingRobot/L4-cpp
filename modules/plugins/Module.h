@@ -1,6 +1,6 @@
 #pragma once
 
-#include "modules/base/Module.h"
+#include "modules/base/ModuleList.h"
 #include "manager/ClientInterface.h"
 #include "manager/Plugin.h"
 
@@ -9,7 +9,7 @@ namespace L4::Modules::Plugins
     class Module : public Base::Module
     {
     public:
-        Module();
+        Module(ModuleList& Ctx);
 
     private:
         Manager::ClientInterface Client;

@@ -46,7 +46,8 @@ namespace L4
             return FixedFilename;
         }
 
-        // Until this is fixed: https://godbolt.org/z/415z5jna9, this is a workaround
+        // Until this is fixed in MSVC: https://godbolt.org/z/415z5jna9, this is a workaround
+        // Update: Fixed in v19.29 VS16.10
         struct SourceLocation
         {
             [[nodiscard]] static constexpr SourceLocation Current(

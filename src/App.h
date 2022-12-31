@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/Builder.h"
+#include "ModuleList.h"
 
 #include <gtkmm/application.h>
 
@@ -25,5 +26,6 @@ namespace L4
 
     private:
         std::optional<Gui::Builder> Builder;
+        std::optional<ModuleList> Modules;
     };
 }

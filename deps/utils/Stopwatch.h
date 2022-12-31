@@ -22,6 +22,8 @@ namespace L4
 
         bool IsRunning() const noexcept;
 
+        static Stopwatch StartNew() noexcept;
+
     private:
         std::chrono::steady_clock::time_point StartTime;
         std::chrono::steady_clock::time_point StopTime;

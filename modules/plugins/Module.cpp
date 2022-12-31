@@ -4,7 +4,7 @@
 
 namespace L4::Modules::Plugins
 {
-    Module::Module() :
+    Module::Module(ModuleList& Ctx) :
         Client({
                    .Id = u8"l4",
                    .Name = u8"L4",
@@ -15,7 +15,8 @@ namespace L4::Modules::Plugins
     {
         for (auto& Entry : std::filesystem::directory_iterator(R"(J:\Code\Projects\L4\builds\msvc\lib\Debug)"))
         {
-            if (Entry.path().filename().string().starts_with("L4-plugin-"))
+            auto Filename = Entry.path().filename().string();
+            if (Filename.starts_with("L4-plugin-") && Filename.ends_with(".dll"))
             {
                 auto& Plugin = Plugins.emplace_back(Entry);
                 Plugin.OnAuthUserUpdated = []() {};

@@ -28,9 +28,12 @@ namespace L4::Modules
             throw std::logic_error("Could not find module");
         }
 
-    private:
+    protected:
         template<class T>
-        void AddModule();
+        void AddModule()
+        {
+            Modules.emplace_back(std::make_unique<T>(*this));
+        }
 
         std::vector<std::unique_ptr<Base::Module>> Modules;
     };
