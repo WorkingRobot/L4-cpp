@@ -4,7 +4,7 @@ s_link_libraries(PUBLIC L4::plugin::wrapper)
 s_link_libraries(PUBLIC L4::format)
 s_link_libraries(PUBLIC L4::web)
 s_link_libraries(PUBLIC L4::utils)
-s_link_libraries(PRIVATE L4::steam)
+s_link_libraries(PRIVATE ext::steam)
 s_link_libraries(PRIVATE L4::streams)
 
 s_add_dependency(OpenSSL PRIVATE)
