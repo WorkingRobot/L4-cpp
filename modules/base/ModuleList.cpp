@@ -5,7 +5,8 @@
 
 namespace L4::Modules
 {
-    ModuleList::ModuleList()
+    ModuleList::ModuleList() :
+        Store("settings.bin")
     {
     }
 

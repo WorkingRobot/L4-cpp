@@ -3,13 +3,13 @@
     "version-string": "0.1.0.0",
     "description": "The world's fastest game updater",
     "dependencies": [
-        "rapidjson",
         "cpr",
         "fmt",
         "gtkmm",
         "openssl",
+        "rapidjson",
         {
-            "name": "libbacktrace",
+            "name": "date",
             "platform": "linux"
         },
         {
@@ -17,7 +17,7 @@
             "platform": "linux"
         },
         {
-            "name": "date",
+            "name": "libbacktrace",
             "platform": "linux"
         }
     ]

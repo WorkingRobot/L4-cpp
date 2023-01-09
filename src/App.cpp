@@ -21,16 +21,14 @@ namespace L4
     {
         Gtk::Application::on_startup();
 
-        Resources::GetResource()->register_global();
-
-        Builder.emplace();
-
         SetupLogging();
+
+        Resources::GetResource()->register_global();
 
         Modules.emplace();
         Modules->InitializeModules();
 
-        auto& MainWindow = Builder->GetWidget<Gtk::ApplicationWindow>("MainWindow");
+        auto& MainWindow = Modules->GetWidget<Gtk::ApplicationWindow>("MainWindow");
         add_window(MainWindow);
     }
 
@@ -38,7 +36,7 @@ namespace L4
     {
         Gtk::Application::on_activate();
 
-        auto& MainWindow = Builder->GetWidget<Gtk::ApplicationWindow>("MainWindow");
+        auto& MainWindow = Modules->GetWidget<Gtk::ApplicationWindow>("MainWindow");
         
         // I'm really really sorry for this jank, but if the window already exists, it won't grab
         // focus from the user unless it's been minimized for some reason.

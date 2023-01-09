@@ -25,7 +25,6 @@ namespace L4
         int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine>& command_line) override;
 
     private:
-        std::optional<Gui::Builder> Builder;
         std::optional<ModuleList> Modules;
     };
 }
