@@ -16,10 +16,6 @@ namespace L4::Plugin::Wrapper
 
         void SetIdentity(const libL4::Marshal::StreamIdentity& NewIdentity);
 
-        uint32_t GetElementSize() const;
-
-        void SetElementSize(uint32_t NewElementSize);
-
         void ReadContext(std::span<std::byte> Dst) const;
 
         void WriteContext(std::span<const std::byte> Src);
@@ -34,9 +30,9 @@ namespace L4::Plugin::Wrapper
 
         void Resize(uint64_t NewSize);
 
-        uint64_t ReadBytes(std::span<std::byte> Dst, uint64_t Offset) const;
+        void ReadBytes(std::span<std::byte> Dst, uint64_t Offset) const;
 
-        uint64_t WriteBytes(std::span<const std::byte> Src, uint64_t Offset);
+        void WriteBytes(std::span<const std::byte> Src, uint64_t Offset);
 
     private:
         libL4::Handle ClientHandle;

@@ -26,10 +26,8 @@ Header:
 
 Stream Header:
 - ch8 Id[32]
-- u32 Version
-- u32 ElementSize
-- u8  Reserved[88]
-- u8  Context[128]
+- u8  Reserved[32]
+- u8  Context[192]
 
 Freelist:
 - u32 EntryCount

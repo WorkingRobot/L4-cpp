@@ -32,33 +32,11 @@ namespace L4::Plugin::Wrapper
         return IPlugin::Instance->Client->Archive.GetSectorSize(ClientHandle);
     }
 
-    uint32_t Archive::GetStreamIdxFromId(const std::u8string& Id) const
+    Stream Archive::OpenStream(const std::u8string& Id)
     {
         auto MarshalledId = libL4::Marshal::To(Id);
-        return IPlugin::Instance->Client->Archive.GetStreamIdxFromId(ClientHandle, &MarshalledId);
-    }
-
-    const Stream Archive::OpenStreamRead(uint32_t StreamIdx) const
-    {
         libL4::Handle OutStream {};
-        IPlugin::Instance->Client->Archive.OpenStreamRead(ClientHandle, StreamIdx, &OutStream);
+        IPlugin::Instance->Client->Archive.OpenStream(ClientHandle, &MarshalledId, &OutStream);
         return Stream(OutStream);
-    }
-
-    Stream Archive::OpenStreamWrite(uint32_t StreamIdx)
-    {
-        libL4::Handle OutStream {};
-        IPlugin::Instance->Client->Archive.OpenStreamWrite(ClientHandle, StreamIdx, &OutStream);
-        return Stream(OutStream);
-    }
-
-    const Stream Archive::OpenStreamRead(const std::u8string& Id) const
-    {
-        return OpenStreamRead(GetStreamIdxFromId(Id));
-    }
-
-    Stream Archive::OpenStreamWrite(const std::u8string& Id)
-    {
-        return OpenStreamWrite(GetStreamIdxFromId(Id));
     }
 }

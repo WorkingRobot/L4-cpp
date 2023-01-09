@@ -21,17 +21,7 @@ namespace L4::Plugin::Wrapper
         auto MarshalledIdentity = libL4::Marshal::To(NewIdentity);
         IPlugin::Instance->Client->Stream.SetIdentity(ClientHandle, &MarshalledIdentity);
     }
-
-    uint32_t Stream::GetElementSize() const
-    {
-        return IPlugin::Instance->Client->Stream.GetElementSize(ClientHandle);
-    }
-
-    void Stream::SetElementSize(uint32_t NewElementSize)
-    {
-        IPlugin::Instance->Client->Stream.SetElementSize(ClientHandle, NewElementSize);
-    }
-
+    
     void Stream::ReadContext(std::span<std::byte> Dst) const
     {
         IPlugin::Instance->Client->Stream.ReadContext(ClientHandle, Dst.data(), Dst.size());
@@ -67,12 +57,12 @@ namespace L4::Plugin::Wrapper
         IPlugin::Instance->Client->Stream.Resize(ClientHandle, NewSize);
     }
 
-    uint64_t Stream::ReadBytes(std::span<std::byte> Dst, uint64_t Offset) const
+    void Stream::ReadBytes(std::span<std::byte> Dst, uint64_t Offset) const
     {
         return IPlugin::Instance->Client->Stream.ReadBytes(ClientHandle, Dst.data(), Dst.size(), Offset);
     }
 
-    uint64_t Stream::WriteBytes(std::span<const std::byte> Src, uint64_t Offset)
+    void Stream::WriteBytes(std::span<const std::byte> Src, uint64_t Offset)
     {
         return IPlugin::Instance->Client->Stream.WriteBytes(ClientHandle, Src.data(), Src.size(), Offset);
     }
