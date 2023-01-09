@@ -8,9 +8,9 @@ namespace L4::Archive
     {
         struct Run
         {
-            uint32_t StreamSectorCount;
-            uint32_t SectorOffset;
+            uint32_t StreamSectorOffset;
             uint32_t SectorCount;
+            uint32_t SectorOffset;
             std::byte Reserved[4];
         };
 
