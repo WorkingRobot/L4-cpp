@@ -10,7 +10,7 @@ namespace L4::Manager
 {
     void* Plugin::LoadPlugin(const std::filesystem::path& Path)
     {
-        auto OSHandle = LoadLibraryW(Path.c_str());
+        auto OSHandle = LoadLibraryExW(Path.c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
         if (OSHandle == NULL)
         {
             throw CreateErrorWin32(GetLastError(), __FUNCTION__);
