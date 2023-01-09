@@ -4,8 +4,8 @@
 
 #include "Macros.h"
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
 namespace libL4::Marshal
 {
@@ -28,7 +28,7 @@ namespace libL4::Marshal
 
     using String = std::u8string;
 
-    static libL4::String To(const String& In)
+    static libL4::String To(std::u8string_view In)
     {
         if (In.size() > 250)
             throw std::out_of_range("String might be too big"); // TODO: remove before deployment, this is just a failsafe
@@ -37,6 +37,11 @@ namespace libL4::Marshal
         };
         In.copy(Ret.Data, Ret.Size);
         return Ret;
+    }
+
+    static libL4::String To(const String& In)
+    {
+        return To(std::u8string_view(In));
     }
 
     static String To(const libL4::String& In)
