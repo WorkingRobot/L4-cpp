@@ -72,14 +72,13 @@ namespace L4
         }
     };
 
-    template <class StreamT, class StringT = std::string, class... ArgTs>
-    static StringT DumpStreamData(ArgTs&&... Args)
+    template <class StreamT>
+    static std::unique_ptr<std::byte[]> DumpStreamData(auto&&... Args)
     {
-        StreamT Stream(std::forward<ArgTs>(Args)...);
-        StringT DataString {};
-        DataString.resize(Stream.Size() / sizeof(typename StringT::value_type));
-        Stream.ReadBytes(std::as_writable_bytes(std::span(DataString.data(), DataString.size())));
-        return DataString;
+        StreamT Stream(std::forward<decltype(Args)>(Args)...);
+        auto Data = std::make_unique_for_overwrite<std::byte[]>(Stream.Size());
+        Stream.ReadBytes(std::as_writable_bytes(std::span(Data.get(), Stream.Size())));
+        return Data;
     }
 
     template <class T>
