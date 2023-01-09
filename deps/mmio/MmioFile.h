@@ -38,14 +38,14 @@ namespace L4::Mmio
 
         size_t GetSize() const noexcept;
 
-        template <class T = void>
-        const T* Get(size_t ByteOffset = 0) const noexcept
+        template <class T = std::byte>
+        const T* Get(size_t ByteOffset) const noexcept
         {
             return reinterpret_cast<const T*>(static_cast<const char*>(GetBaseAddress()) + ByteOffset);
         }
 
-        template <class T = void>
-        T* Get(size_t ByteOffset = 0) noexcept requires(Writable)
+        template <class T = std::byte>
+        T* Get(size_t ByteOffset) noexcept requires(Writable)
         {
             return reinterpret_cast<T*>(static_cast<char*>(GetBaseAddress()) + ByteOffset);
         }
