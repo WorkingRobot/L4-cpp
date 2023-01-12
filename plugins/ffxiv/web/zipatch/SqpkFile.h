@@ -25,7 +25,7 @@ namespace L4::Plugin::FFXIV::ZiPatch
             uint8_t ExpacId = SubId >> 8;
             if (ExpacId)
             {
-                return FMT::format("ex{:d}", ExpacId);
+                return fmt::format("ex{:d}", ExpacId);
             }
             else
             {
@@ -40,23 +40,23 @@ namespace L4::Plugin::FFXIV::ZiPatch
 
         std::string GetFilePath() const
         {
-            return FMT::format("/sqpack/{:s}/{:02x}{:04x}.{:s}", GetExpansion(), MainId, SubId, GetPlatform());
+            return fmt::format("/sqpack/{:s}/{:02x}{:04x}.{:s}", GetExpansion(), MainId, SubId, GetPlatform());
         }
 
         std::string GetDatFilePath() const
         {
-            return FMT::format("/sqpack/{:s}/{:02x}{:04x}.{:s}.dat{:d}", GetExpansion(), MainId, SubId, GetPlatform(), FileId);
+            return fmt::format("/sqpack/{:s}/{:02x}{:04x}.{:s}.dat{:d}", GetExpansion(), MainId, SubId, GetPlatform(), FileId);
         }
 
         std::string GetIndexFilePath() const
         {
             if (FileId)
             {
-                return FMT::format("/sqpack/{:s}/{:02x}{:04x}.{:s}.index{:d}", GetExpansion(), MainId, SubId, GetPlatform(), FileId);
+                return fmt::format("/sqpack/{:s}/{:02x}{:04x}.{:s}.index{:d}", GetExpansion(), MainId, SubId, GetPlatform(), FileId);
             }
             else
             {
-                return FMT::format("/sqpack/{:s}/{:02x}{:04x}.{:s}.index", GetExpansion(), MainId, SubId, GetPlatform());
+                return fmt::format("/sqpack/{:s}/{:02x}{:04x}.{:s}.index", GetExpansion(), MainId, SubId, GetPlatform());
             }
         }
     };

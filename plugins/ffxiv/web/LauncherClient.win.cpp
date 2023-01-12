@@ -43,7 +43,7 @@ namespace L4::Plugin::FFXIV
         }
         // https://referencesource.microsoft.com/#mscorlib/system/environment.cs,1145
         // https://referencesource.microsoft.com/#mscorlib/system/operatingsystem.cs,129
-        return FMT::format(u"Microsoft Windows NT {:d}.{:d}.{:d}.{:d}", Version.dwMajorVersion, Version.dwMinorVersion, Version.dwBuildNumber, (Version.wServicePackMajor << 16) | Version.wServicePackMinor);
+        return fmt::format(u"Microsoft Windows NT {:d}.{:d}.{:d}.{:d}", Version.dwMajorVersion, Version.dwMinorVersion, Version.dwBuildNumber, (Version.wServicePackMajor << 16) | Version.wServicePackMinor);
     }
 
     static auto GetProcessorCount() noexcept
@@ -53,6 +53,6 @@ namespace L4::Plugin::FFXIV
 
     std::u16string GetComputerIdHashString()
     {
-        return FMT::format(u"{:s}{:s}{:s}{:d}", GetHostname(), GetUsername(), GetOSVersion(), GetProcessorCount());
+        return fmt::format(u"{:s}{:s}{:s}{:d}", GetHostname(), GetUsername(), GetOSVersion(), GetProcessorCount());
     }
 }

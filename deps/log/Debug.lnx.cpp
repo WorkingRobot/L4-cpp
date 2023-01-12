@@ -40,7 +40,7 @@ namespace L4::Debug
         {
             auto Entry = *this;
 
-            Itr = FMT::format_to(Itr, "{:#016x}", Entry.ProgramCounter);
+            Itr = fmt::format_to(Itr, "{:#016x}", Entry.ProgramCounter);
 
             if (Entry.Symbol.empty())
             {
@@ -50,18 +50,18 @@ namespace L4::Debug
             {
                 Entry.Function = "UnknownFunction";
             }
-            Itr = FMT::format_to(Itr, " {:s}!{:s}", Entry.Symbol, Entry.Function);
+            Itr = fmt::format_to(Itr, " {:s}!{:s}", Entry.Symbol, Entry.Function);
 
             if (Entry.SymbolValue)
             {
-                Itr = FMT::format_to(Itr, "({:#016x})", Entry.SymbolValue);
+                Itr = fmt::format_to(Itr, "({:#016x})", Entry.SymbolValue);
             }
 
             if (Entry.File.empty())
             {
                 Entry.File = "UnknownFile";
 
-                Itr = FMT::format_to(Itr, " [{:s}]", Entry.File);
+                Itr = fmt::format_to(Itr, " [{:s}]", Entry.File);
             }
             else
             {
@@ -72,7 +72,7 @@ namespace L4::Debug
                     Entry.File = Entry.File.substr(Offset + Pattern.size());
                 }
 
-                Itr = FMT::format_to(Itr, " [{:s}:{:d}]", Entry.File, Entry.LineNumber);
+                Itr = fmt::format_to(Itr, " [{:s}:{:d}]", Entry.File, Entry.LineNumber);
             }
 
             return Itr;

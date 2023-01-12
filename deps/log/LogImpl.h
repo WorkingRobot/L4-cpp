@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Debug.h"
-#include "format/Path.h"
 #include "Log.h"
 #include "utils/Config.h"
 
@@ -44,7 +43,7 @@ namespace L4
 
     static std::filesystem::path GetLogFilePath()
     {
-        return Config::GetFolder() / FMT::format("{:%Y-%m-%d_%H-%M-%S}.log", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        return Config::GetFolder() / fmt::format("{:%Y-%m-%d_%H-%M-%S}.log", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
     }
 
     static std::filesystem::path GetDumpFilePath()
@@ -67,7 +66,7 @@ namespace L4
     void LogMiniDump(const std::filesystem::path& DumpPath, bool DumpWritten)
     {
         Detail::LogRaw(LogLevel::Critical, Debug::GetStackTrace());
-        Detail::LogRaw(LogLevel::Critical, DumpWritten ? FMT::format("\nDump written to {:s}\n", DumpPath)
-                                                       : FMT::format("\nCould not write dump to {:s}\n", DumpPath));
+        Detail::LogRaw(LogLevel::Critical, DumpWritten ? fmt::format("\nDump written to {:s}\n", DumpPath)
+                                                       : fmt::format("\nCould not write dump to {:s}\n", DumpPath));
     }
 }

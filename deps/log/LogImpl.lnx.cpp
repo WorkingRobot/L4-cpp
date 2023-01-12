@@ -28,7 +28,7 @@ namespace L4
         {
             auto FilePath = GetLogFilePath();
             FileHandle = open(FilePath.c_str(), O_CREAT | O_WRONLY | O_APPEND);
-            Ensure<LogLevel::Error>(FileHandle != -1, "Could not open {} for logging", [&] { return FMT::make_format_args(FilePath); });
+            Ensure<LogLevel::Error>(FileHandle != -1, "Could not open {} for logging", [&] { return fmt::make_format_args(FilePath); });
         }
 
         ~LoggerFile() noexcept

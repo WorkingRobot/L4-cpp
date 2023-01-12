@@ -69,13 +69,13 @@ namespace L4
         template <LogLevel Level, class StoreT>
         [[nodiscard]] static inline std::string FormatDynamicMessage(const auto Message, const SourceLocation Location, StoreT Store)
         {
-            return FMT::format(MessageFormat, LogLevelToString(Level), FMT::vformat(Message, Store), Location.Function, Location.File, Location.Line, Location.Column);
+            return fmt::format(MessageFormat, LogLevelToString(Level), fmt::vformat(Message, Store), Location.Function, Location.File, Location.Line, Location.Column);
         }
 
         template <LogLevel Level>
         [[nodiscard]] static inline std::string FormatMessage(const std::string_view Message, const SourceLocation Location)
         {
-            return FMT::format(MessageFormat, LogLevelToString(Level), Message, Location.Function, Location.File, Location.Line, Location.Column);
+            return fmt::format(MessageFormat, LogLevelToString(Level), Message, Location.Function, Location.File, Location.Line, Location.Column);
         }
 
         template <class ArgsT>
@@ -84,7 +84,7 @@ namespace L4
         };
 
         template <class ContextT, class... ArgTs>
-#if FMT == fmt
+#if fmt == fmt
         struct FormatStringFor<fmt::format_arg_store<ContextT, ArgTs...>>
         {
             using Type = fmt::format_string<std::type_identity_t<ArgTs>...>;
@@ -99,8 +99,6 @@ namespace L4
 #else
 #error Unknown formatting library implementation
 #endif
-
-        static constexpr auto EmptyEvaluator = []() { return FMT::make_format_args(); };
 
         template <LogLevel Level, class StoreT>
         struct MessageCtx
@@ -132,6 +130,9 @@ namespace L4
             const SourceLocation Location;
         };
 
+        static constexpr auto EmptyArgs = fmt::make_format_args();
+        static constexpr auto EmptyEvaluator = []() -> const decltype(EmptyArgs)& { return EmptyArgs; };
+
         void Abort(const std::string& Message);
 
         void LogRaw(LogLevel Level, const std::string& Message);
@@ -152,6 +153,7 @@ namespace L4
         }
     }
 
+
     template <LogLevel Level, class FuncT>
     inline void Ensure(bool Condition, Detail::MessageCtx<Level, std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)
     {
@@ -162,10 +164,10 @@ namespace L4
     }
 }
 
-#define LOG(Level, Message, ...) (::L4::Log<LogLevel::Level>((Message), FMT::make_format_args(__VA_ARGS__)))
+#define LOG(Level, Message, ...) (::L4::Log<LogLevel::Level>((Message), fmt::make_format_args(__VA_ARGS__)))
 
-#define ENSURE(Level, Condition, Message, ...) (::L4::Ensure<LogLevel::Level>((Condition), (Message), []() { return FMT::make_format_args(__VA_ARGS__); }))
+#define ENSURE(Level, Condition, Message, ...) (::L4::Ensure<LogLevel::Level>((Condition), (Message), []() { return fmt::make_format_args(__VA_ARGS__); }))
 
-#define ABORT(Message, ...) (::L4::Log<LogLevel::Critical>((Message), FMT::make_format_args(__VA_ARGS__)))
+#define ABORT(Message, ...) (::L4::Log<LogLevel::Critical>((Message), fmt::make_format_args(__VA_ARGS__)))
 
-#define ASSUME(Condition, Message, ...) (::L4::Ensure<LogLevel::Critical>((Condition), (Message), []() { return FMT::make_format_args(__VA_ARGS__); }))
+#define ASSUME(Condition, Message, ...) (::L4::Ensure<LogLevel::Critical>((Condition), (Message), []() { return fmt::make_format_args(__VA_ARGS__); }))

@@ -33,7 +33,7 @@ namespace L4::Web::Http
     {
         if (Resp.error)
         {
-            return Response<T>(std::unexpect, Error { ErrorType::BadCurl, FMT::format("{:s} ({:d})", std::move(Resp.error.message), std::to_underlying(Resp.error.code)) } );
+            return Response<T>(std::unexpect, Error { ErrorType::BadCurl, fmt::format("{:s} ({:d})", std::move(Resp.error.message), std::to_underlying(Resp.error.code)) });
         }
 
         if constexpr (SuccessHttpCode == -1)
@@ -73,7 +73,7 @@ namespace L4::Web::Http
             rapidjson::ParseResult ParseResult = Document;
             if (!ParseResult)
             {
-                return Response<T>(std::unexpect, Error { ErrorType::BadJson, FMT::format("{:s} @ {:d}", rapidjson::GetParseError_En(ParseResult.Code()), ParseResult.Offset()) });
+                return Response<T>(std::unexpect, Error { ErrorType::BadJson, fmt::format("{:s} @ {:d}", rapidjson::GetParseError_En(ParseResult.Code()), ParseResult.Offset()) });
             }
             if constexpr (std::is_same_v<T, Json::DocumentBase<Enc>>)
             {

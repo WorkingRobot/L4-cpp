@@ -22,7 +22,7 @@ namespace L4::Plugin::FFXIV
 
         uint8_t Checksum[5] { uint8_t(-(Hash[0] + Hash[1] + Hash[2] + Hash[3])), Hash[0], Hash[1], Hash[2], Hash[3] };
 
-        return FMT::format("{:02x}", FMT::join(std::as_bytes(std::span(Checksum)), ""));
+        return fmt::format("{:02x}", fmt::join(std::as_bytes(std::span(Checksum)), ""));
     }
 
     static std::string GetUnixMsTimestamp()
@@ -32,11 +32,11 @@ namespace L4::Plugin::FFXIV
 
     static std::string GetFrontierReferer()
     {
-        return FMT::format("https://launcher.finalfantasyxiv.com/v620/index.html?rc_lang={:s}&time={:%F-%H-%M}", "en_us", std::chrono::system_clock::now());
+        return fmt::format("https://launcher.finalfantasyxiv.com/v620/index.html?rc_lang={:s}&time={:%F-%H-%M}", "en_us", std::chrono::system_clock::now());
     }
 
     LauncherClient::LauncherClient() :
-        UserAgent(FMT::format("SQEXAuthor/2.0.0(Windows 6.2; {:s}; {:s})", "ja-jp", GenerateComputerId())),
+        UserAgent(fmt::format("SQEXAuthor/2.0.0(Windows 6.2; {:s}; {:s})", "ja-jp", GenerateComputerId())),
         FrontierHeaders {
             { "Accept-Encoding", "gzip, deflate" },
             // vvvv https://github.com/goatcorp/FFXIVQuickLauncher/blob/9409ed827b087d5b86aad2293eab74c6fe4f2214/src/XIVLauncher.Common/Util/ApiHelpers.cs#L29
@@ -78,16 +78,16 @@ namespace L4::Plugin::FFXIV
     Response<Models::PatchListBoot> LauncherClient::GetBootPatchList(const std::string& Version)
     {
         return Web::Http::Get<Models::PatchListBoot>(
-            cpr::Url(FMT::format("http://patch-bootver.ffxiv.com/http/win32/ffxivneo_release_boot/{:s}/", Version)),
+            cpr::Url(fmt::format("http://patch-bootver.ffxiv.com/http/win32/ffxivneo_release_boot/{:s}/", Version)),
             cpr::Parameters {
-                { "time", FMT::format("{:%F-%H-%M}", std::chrono::floor<std::chrono::duration<int, std::ratio<60 * 10>>>(std::chrono::system_clock::now())) } },
+                { "time", fmt::format("{:%F-%H-%M}", std::chrono::floor<std::chrono::duration<int, std::ratio<60 * 10>>>(std::chrono::system_clock::now())) } },
             PatcherUserAgent);
     }
 
     Response<Models::PatchListGame> LauncherClient::GetGamePatchList(const std::string& Version, const std::string& SessionId, const Models::VersionReport& VersionReport)
     {
         return Web::Http::Post<Models::PatchListGame>(
-            cpr::Url(FMT::format("https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/{:s}/{:s}", Version, SessionId)),
+            cpr::Url(fmt::format("https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/{:s}/{:s}", Version, SessionId)),
             cpr::Body { VersionReport.Serialize() },
             cpr::Header {
                 { "X-Hash-Check", "enabled" } },
@@ -140,7 +140,7 @@ namespace L4::Plugin::FFXIV
                 Params.Add({ "ticket_size", std::to_string(SteamTicket->Length) });
             }
 
-            LoginTokenUrl = FMT::format("https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?{:s}", Params.GetContent({}));
+            LoginTokenUrl = fmt::format("https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?{:s}", Params.GetContent({}));
         }
 
         return Web::Http::Get<std::string>(
@@ -189,7 +189,7 @@ namespace L4::Plugin::FFXIV
         {
             if (Username != Token.SteamUsername)
             {
-                return std::unexpected(Web::Http::Error { Web::Http::ErrorType::BadHttpCode, FMT::format("This Steam account is linked to a different FFXIV account. Your steam account is linked to {:s}.", Token.SteamUsername.value()) });
+                return std::unexpected(Web::Http::Error { Web::Http::ErrorType::BadHttpCode, fmt::format("This Steam account is linked to a different FFXIV account. Your steam account is linked to {:s}.", Token.SteamUsername.value()) });
             }
         }
 

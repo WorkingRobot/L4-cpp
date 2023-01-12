@@ -176,7 +176,7 @@ namespace L4::Plugin::Test
             }
 
             CurrentState = State::SignUpCode;
-            return { true, FMT::format(u8"A confirmation code was sent to {:s}", Data.Email) };
+            return { true, fmt::format(u8"A confirmation code was sent to {:s}", Data.Email) };
         }
         case State::SignUpCode:
         {
@@ -214,7 +214,7 @@ namespace L4::Plugin::Test
             auto TotpString = std::to_string(Totp);
             if (std::u8string_view((char8_t*)TotpString.c_str(), TotpString.size()) != Code)
             {
-                return { false, FMT::format(u8"Invalid code. Should be {:d}", Totp) };
+                return { false, fmt::format(u8"Invalid code. Should be {:d}", Totp) };
             }
 
             AuthModule.SetIdentity({ .Id = Data.Username, .Name = Data.Username });
@@ -246,7 +246,7 @@ namespace L4::Plugin::Test
                 // Either use a custom protocol (i.e. riotclient://...) which launches a separate application that
                 // communicates back here or set up a local webserver on a unique port that the browser will redirect to.
 
-                LaunchBrowser(FMT::format(u8"https://auth.camora.dev/oauth{:s}", RememberMe ? u8"?remember_me" : u8""));
+                LaunchBrowser(fmt::format(u8"https://auth.camora.dev/oauth{:s}", RememberMe ? u8"?remember_me" : u8""));
 
                 return { false };
             }

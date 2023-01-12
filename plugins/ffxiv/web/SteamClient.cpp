@@ -76,7 +76,7 @@ namespace L4::Plugin::FFXIV
         Time -= 5;
         Time -= Time % 60;
 
-        std::string HexTicket = FMT::format("{:02x}", FMT::join(Ticket, ""));
+        std::string HexTicket = fmt::format("{:02x}", fmt::join(Ticket, ""));
 
         std::string EncodedTicket;
         {
