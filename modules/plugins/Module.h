@@ -1,8 +1,10 @@
 #pragma once
-
-#include "modules/base/ModuleList.h"
+#include "manager/App.h"
 #include "manager/ClientInterface.h"
 #include "manager/Plugin.h"
+#include "modules/base/ModuleList.h"
+
+#include <gtkmm/listview.h>
 
 namespace L4::Modules::Plugins
 {
@@ -11,8 +13,14 @@ namespace L4::Modules::Plugins
     public:
         Module(ModuleList& Ctx);
 
+        ~Module();
+
     private:
+        Gtk::ListView& AppView;
+        Gtk::ListView& PluginView;
+
         Manager::ClientInterface Client;
         std::vector<Manager::Plugin> Plugins;
+        std::vector<Manager::App> Apps;
     };
 }
