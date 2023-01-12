@@ -13,7 +13,7 @@ namespace L4
         AddModule<Modules::Plugins::Module>();
     }
 
-    template<class T>
+    template <class T>
     static consteval std::string_view GetModuleNamespace()
     {
         auto Name = type_name_v<Modules::Plugins::Module>;
@@ -36,6 +36,6 @@ namespace L4
         auto Timer = Stopwatch::StartNew();
         Modules::ModuleList::AddModule<T>();
         Timer.Stop();
-        Log<LogLevel::Info>("{:s} module loaded in {:.2f} ms", [&]() { return FMT::make_format_args(GetModuleNamespace<T>(), Timer.TimeElapsedMs()); });
+        LOG(Info, "{:s} module loaded in {:.2f} ms", GetModuleNamespace<T>(), Timer.TimeElapsedMs());
     }
 }
