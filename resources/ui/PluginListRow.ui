@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.10.3 -->
+<interface>
+  <requires lib="gtk" version="4.6"/>
+  <template class="GtkListItem">
+    <property name="child">
+      <object class="GtkLabel" id="PluginName">
+        <property name="label">some name</property>
+      </object>
+    </property>
+  </template>
+</interface>

@@ -10,12 +10,12 @@
           <object class="GtkBox">
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkListBox" id="AppSelectBox">
+              <object class="GtkListView" id="AppView">
                 <property name="vexpand">True</property>
               </object>
             </child>
             <child>
-              <object class="GtkDropDown" id="PluginSelectBox"/>
+              <object class="GtkListView" id="PluginView"/>
             </child>
           </object>
         </child>

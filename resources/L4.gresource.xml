@@ -2,5 +2,6 @@
 <gresources>
     <gresource prefix="/">
         <file compressed="true" preprocess="xml-stripblanks">ui/L4.ui</file>
+        <file compressed="true" preprocess="xml-stripblanks">ui/PluginListRow.ui</file>
     </gresource>
 </gresources>
