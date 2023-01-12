@@ -3,7 +3,7 @@
 namespace L4::Gui
 {
     Builder::Builder() :
-        BuilderImpl(Gtk::Builder::create_from_resource("/ui/L4.ui"))
+        Impl(Gtk::Builder::create_from_resource("/ui/L4.ui"))
     {
     }
 }

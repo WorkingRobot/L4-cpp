@@ -12,7 +12,7 @@ namespace L4::Gui
         template <class T>
         [[nodiscard]] T& GetWidget(const Glib::ustring& Name) const
         {
-            auto Ptr = BuilderImpl->get_widget<T>(Name);
+            auto Ptr = Impl->get_widget<T>(Name);
             if (!Ptr) [[unlikely]]
             {
                 throw std::runtime_error("Widget does not exist.");
@@ -21,6 +21,6 @@ namespace L4::Gui
         }
 
     private:
-        Glib::RefPtr<Gtk::Builder> BuilderImpl;
+        Glib::RefPtr<Gtk::Builder> Impl;
     };
 }

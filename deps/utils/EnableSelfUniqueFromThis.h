@@ -38,9 +38,12 @@ namespace L4
             {
                 *SelfPtr = static_cast<T*>(this);
             }
+
+            return *this;
         }
 
     public:
+        // Only valid if not moved from. GetSelfPtr() should be called before being moved.
         [[nodiscard]] T** GetSelfPtr() const noexcept
         {
             return SelfPtr.get();
