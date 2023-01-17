@@ -10,9 +10,5 @@ namespace L4
         using Modules::ModuleList::ModuleList;
 
         void InitializeModules();
-
-    private:
-        template <class T>
-        void AddModule();
     };
 }
