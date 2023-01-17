@@ -1,5 +1,7 @@
 #include "Crc32.h"
 
+#include <intrin.h>
+
 namespace L4::Detail
 {
     // We can't use CPU intrinsics because they use CRC32-C, and we use zlib/IEEE 802.3

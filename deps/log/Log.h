@@ -108,7 +108,12 @@ namespace L4
             using FormatStringForT = std::conditional_t<FormatStringFor::ArgCount == 0, std::string_view, typename FormatStringFor::Type>;
 
         public:
+#ifdef __INTELLISENSE__
+            // std::source_location::current() implodes intellisense for whatever reason, says "internal error", and refuses to function
+            consteval MessageCtx(std::convertible_to<FormatStringForT> auto Message, const std::source_location Location = {})
+#else
             consteval MessageCtx(std::convertible_to<FormatStringForT> auto Message, const std::source_location Location = std::source_location::current()) :
+#endif
                 Message(Message),
                 Location(Location)
             {
@@ -152,7 +157,6 @@ namespace L4
             Detail::Abort(Message.Format(Store));
         }
     }
-
 
     template <LogLevel Level, class FuncT>
     inline void Ensure(bool Condition, Detail::MessageCtx<Level, std::invoke_result_t<FuncT>> Message, FuncT Evaluator = Detail::EmptyEvaluator)

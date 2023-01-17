@@ -21,3 +21,9 @@ C2P Auth.Close
 
 On launch:
 C2P (TODO)
+
+Future endeavors:
+Steam - https://github.com/tpill90/steam-lancache-prefill
+Battle.net - https://github.com/tpill90/battlenet-lancache-prefill
+These show how to download all the data from the servers and deal with their APIs. I suppose
+L4 is just lancache but more vertically integrated?
