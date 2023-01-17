@@ -1,6 +1,7 @@
 #pragma once
 
 #include <giomm/listmodel.h>
+#include <giomm/liststore.h>
 
 namespace L4::Gui
 {
@@ -9,11 +10,25 @@ namespace L4::Gui
     {
         class WrapperItem;
 
-        using ContainerT = typename std::remove_cvref_t<T>;
-        using ValueT = typename ContainerT::value_type;
-        using IteratorT = typename ContainerT::iterator;
-        using RefT = Glib::RefPtr<WrapperItem>;
-        using ConstRefT = Glib::RefPtr<const WrapperItem>;
+        using ContainerT = std::remove_cvref_t<typename T>;
+        using ValueT = ContainerT::value_type;
+
+        class WrapperItem : public Glib::Object
+        {
+        public:
+            WrapperItem(ValueT& Ref) :
+                Ref(Ref)
+            {
+            }
+
+            ValueT& Get() noexcept
+            {
+                return Ref;
+            }
+
+        private:
+            ValueT& Ref;
+        };
 
     protected:
         ListContainerModel(ContainerT& Container) :
@@ -34,36 +49,6 @@ namespace L4::Gui
             Gio::ListModel::items_changed(position, removed, added);
         }
 
-        class WrapperItem : public Glib::Object
-        {
-        public:
-            WrapperItem(IteratorT Itr) :
-                Glib::ObjectBase(typeid(WrapperItem)),
-                Glib::Object(),
-                Itr(Itr)
-            {
-            }
-
-        public:
-            static Glib::RefPtr<WrapperItem> create(IteratorT Itr)
-            {
-                return Glib::make_refptr_for_instance<WrapperItem>(new WrapperItem(Itr));
-            }
-
-            const ValueT* operator->() const
-            {
-                return *Itr;
-            }
-
-            ValueT* operator->()
-            {
-                return *Itr;
-            }
-
-        private:
-            IteratorT Itr;
-        };
-
     protected:
         GType get_item_type_vfunc() override
         {
@@ -79,7 +64,7 @@ namespace L4::Gui
         {
             if (position < Container.size())
             {
-                return WrapperItem::create(Container.begin() + position)->gobj_copy();
+                return (new WrapperItem(Container[position]))->gobj();
             }
             return nullptr;
         }
